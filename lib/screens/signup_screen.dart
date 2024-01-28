@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:zalo_app/components/components.dart';
 import 'package:zalo_app/screens/home_screen.dart';
 import 'package:zalo_app/screens/login_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zalo_app/constants.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 
@@ -20,6 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late String _email;
   late String _password;
   late String _confirmPass;
+  // late String _
   bool _saving = false;
 
   @override
@@ -50,9 +50,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const ScreenTitle(title: 'Sign Up'),
+                          const ScreenTitle(title: 'ĐĂNG KÍ'),
                           CustomTextField(
-                            textField: TextField(
+                            textField: TextFormField(
                               onChanged: (value) {
                                 _email = value;
                               },
@@ -61,12 +61,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                               decoration: kTextInputDecoration.copyWith(
                                 hintText: 'Email',
+                                prefixIcon: const Icon(Icons.email),
                               ),
                             ),
                           ),
                           CustomTextField(
-                            textField: TextField(
-                              obscureText: true,
+                            textField: TextFormField(
                               onChanged: (value) {
                                 _password = value;
                               },
@@ -74,12 +74,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 fontSize: 20,
                               ),
                               decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password',
+                                hintText: 'Tên người dùng',
+                                prefixIcon: const Icon(Icons.person),
                               ),
                             ),
                           ),
                           CustomTextField(
-                            textField: TextField(
+                            textField: TextFormField(
                               obscureText: true,
                               onChanged: (value) {
                                 _confirmPass = value;
@@ -88,14 +89,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 fontSize: 20,
                               ),
                               decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Confirm Password',
+                                hintText: 'Mật khẩu',
+                                prefixIcon: const Icon(Icons.lock),
+                              ),
+                            ),
+                          ),
+                          CustomTextField(
+                            textField: TextFormField(
+                              obscureText: true,
+                              onChanged: (value) {
+                                _confirmPass = value;
+                              },
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
+                              decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Nhập lại mật khẩu',
+                                prefixIcon: const Icon(Icons.lock),
+                              ),
+                            ),
+                          ),
+                          CustomTextField(
+                            textField: TextFormField(
+                              obscureText: true,
+                              onChanged: (value) {
+                                _confirmPass = value;
+                              },
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
+                              decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Số điện thoại',
+                                prefixIcon: const Icon(Icons.phone),
                               ),
                             ),
                           ),
                           CustomBottomScreen(
-                            textButton: 'Sign Up',
+                            textButton: 'Đăng kí',
                             heroTag: 'signup_btn',
-                            question: 'Have an account?',
+                            question: 'Đã có tài khoản?',
                             buttonPressed: () async {
                               FocusManager.instance.primaryFocus?.unfocus();
                               setState(() {

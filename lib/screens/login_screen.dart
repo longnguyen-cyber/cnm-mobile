@@ -19,10 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   late String _email;
   late String _password;
   bool _saving = false;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
+    return WillPopScope.new(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, HomeScreen.id);
         return false;
@@ -39,13 +40,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   const TopScreenImage(screenImageName: 'welcome.png'),
                   Expanded(
                     flex: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const ScreenTitle(title: 'Login'),
-                        CustomTextField(
-                          textField: TextField(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const ScreenTitle(title: 'ĐĂNG NHẬP'),
+                          CustomTextField(
+                            textField: TextFormField(
                               onChanged: (value) {
                                 _email = value;
                               },
@@ -53,74 +56,97 @@ class _LoginScreenState extends State<LoginScreen> {
                                 fontSize: 20,
                               ),
                               decoration: kTextInputDecoration.copyWith(
-                                  hintText: 'Email')),
-                        ),
-                        CustomTextField(
-                          textField: TextField(
-                            obscureText: true,
-                            onChanged: (value) {
-                              _password = value;
-                            },
-                            style: const TextStyle(
-                              fontSize: 20,
+                                  contentPadding: const EdgeInsets.all(10),
+                                  hintText: 'Nhập email',
+                                  prefixIcon: const Icon(Icons.email)),
+                              validator: (value) =>
+                                  value!.isEmpty ? 'Vui lòng email' : null,
                             ),
-                            decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password'),
                           ),
-                        ),
-                        CustomBottomScreen(
-                          textButton: 'Login',
-                          heroTag: 'login_btn',
-                          question: 'Forgot password?',
-                          buttonPressed: () async {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            setState(() {
-                              _saving = true;
-                            });
-                            try {
-                              // await _auth.signInWithEmailAndPassword(
-                              //     email: _email, password: _password);
-
-                              if (context.mounted) {
-                                setState(() {
-                                  _saving = false;
-                                  Navigator.popAndPushNamed(
-                                      context, LoginScreen.id);
-                                });
-                                Navigator.pushNamed(context, WelcomeScreen.id);
-                              }
-                            } catch (e) {
-                              signUpAlert(
-                                context: context,
-                                onPressed: () {
-                                  setState(() {
-                                    _saving = false;
-                                  });
-                                  Navigator.popAndPushNamed(
-                                      context, LoginScreen.id);
-                                },
-                                title: 'WRONG PASSWORD OR EMAIL',
-                                desc:
-                                    'Confirm your email and password and try again',
-                                btnText: 'Try Now',
-                              ).show();
-                            }
-                          },
-                          questionPressed: () {
-                            signUpAlert(
-                              onPressed: () async {
-                                await FirebaseAuth.instance
-                                    .sendPasswordResetEmail(email: _email);
+                          CustomTextField(
+                            textField: TextFormField(
+                              obscureText: true,
+                              onChanged: (value) {
+                                _password = value;
                               },
-                              title: 'RESET YOUR PASSWORD',
-                              desc:
-                                  'Click on the button to reset your password',
-                              btnText: 'Reset Now',
-                              context: context,
-                            ).show();
-                          },
-                        ),
-                      ],
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
+                              decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Nhập mật khẩu',
+                                prefixIcon: Icon(Icons.lock),
+                              ),
+                            ),
+                          ),
+                          CustomBottomScreen(
+                            textButton: 'Đăng nhập',
+                            heroTag: 'login_btn',
+                            question: 'Quên mật khẩu',
+                            buttonPressed: () {
+                              // Validate returns true if the form is valid, or false otherwise.
+                              if (_formKey.currentState!.validate()) {
+                                // If the form is valid, display a snackbar. In the real world,
+                                // you'd often call a server or save the information in a database.
+                                // ScaffoldMessenger.of(context).showSnackBar(
+                                //   const SnackBar(
+                                //       content: Text('Processing Data')),
+                                // );
+                              }
+                            },
+                            // buttonPressed: () async {
+                            //   if (!_formKey.currentState!.validate()) {
+
+                            //   }
+                            //   FocusManager.instance.primaryFocus?.unfocus();
+                            //   setState(() {
+                            //     _saving = true;
+                            //   });
+                            //   try {
+                            //     // await _auth.signInWithEmailAndPassword(
+                            //     //     email: _email, password: _password);
+
+                            //     if (context.mounted) {
+                            //       setState(() {
+                            //         _saving = false;
+                            //         Navigator.popAndPushNamed(
+                            //             context, LoginScreen.id);
+                            //       });
+                            //       Navigator.pushNamed(
+                            //           context, WelcomeScreen.id);
+                            //     }
+                            //   } catch (e) {
+                            //     signUpAlert(
+                            //       context: context,
+                            //       onPressed: () {
+                            //         setState(() {
+                            //           _saving = false;
+                            //         });
+                            //         Navigator.popAndPushNamed(
+                            //             context, LoginScreen.id);
+                            //       },
+                            //       title: 'WRONG PASSWORD OR EMAIL',
+                            //       desc:
+                            //           'Confirm your email and password and try again',
+                            //       btnText: 'Try Now',
+                            //     ).show();
+                            //   }
+                            // },
+                            questionPressed: () {
+                              signUpAlert(
+                                onPressed: () async {
+                                  // await FirebaseAuth.instance
+                                  //     .sendPasswordResetEmail(email: _email);
+                                },
+                                title: 'RESET YOUR PASSWORD',
+                                desc:
+                                    'Click on the button to reset your password',
+                                btnText: 'Reset Now',
+                                context: context,
+                              ).show();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

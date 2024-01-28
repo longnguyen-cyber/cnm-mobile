@@ -26,9 +26,9 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      const ScreenTitle(title: 'Hello'),
+                      const ScreenTitle(title: 'Xin chào'),
                       const Text(
-                        'Welcome to Tasky, where you manage your daily tasks',
+                        'Chào mừng bạn đến vơi WORKCHAT, nền tảng chat online',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey,
@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                       Hero(
                         tag: 'login_btn',
                         child: CustomButton(
-                          buttonText: 'Login',
+                          buttonText: 'ĐĂNG NHẬP',
                           onPressed: () {
                             Navigator.pushNamed(context, LoginScreen.id);
                           },
@@ -53,7 +53,7 @@ class HomeScreen extends StatelessWidget {
                       Hero(
                         tag: 'signup_btn',
                         child: CustomButton(
-                          buttonText: 'Sign Up',
+                          buttonText: 'ĐĂNG KÍ',
                           isOutlined: true,
                           onPressed: () {
                             Navigator.pushNamed(context, SignUpScreen.id);
@@ -64,7 +64,7 @@ class HomeScreen extends StatelessWidget {
                         height: 25,
                       ),
                       const Text(
-                        'Sign up using',
+                        'Hoặc',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 16,

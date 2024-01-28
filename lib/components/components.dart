@@ -85,16 +85,16 @@ class ScreenTitle extends StatelessWidget {
 
 class CustomTextField extends StatelessWidget {
   CustomTextField({super.key, required this.textField});
-  final TextField textField;
+  final TextFormField textField;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 30,
+        horizontal: 10,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           width: 2.5,
           color: kTextColor,

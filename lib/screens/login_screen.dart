@@ -4,7 +4,6 @@ import 'package:zalo_app/constants.dart';
 import 'package:zalo_app/screens/welcome.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:zalo_app/screens/home_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,19 +48,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           const ScreenTitle(title: 'ĐĂNG NHẬP'),
                           CustomTextField(
                             textField: TextFormField(
-                              onChanged: (value) {
-                                _email = value;
-                              },
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                              decoration: kTextInputDecoration.copyWith(
-                                  contentPadding: const EdgeInsets.all(10),
-                                  hintText: 'Nhập email',
-                                  prefixIcon: const Icon(Icons.email)),
-                              validator: (value) =>
-                                  value!.isEmpty ? 'Vui lòng email' : null,
-                            ),
+                                onChanged: (value) {
+                                  _email = value;
+                                },
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                ),
+                                decoration: kTextInputDecoration.copyWith(
+                                    // contentPadding: const EdgeInsets.all(10),
+                                    hintText: 'Nhập email',
+                                    prefixIcon: const Icon(Icons.email)),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Vui lý nhập email';
+                                  }
+                                  if (!value.contains('@')) {
+                                    return 'Email không hợp lệ';
+                                  }
+                                  return null;
+                                }),
                           ),
                           CustomTextField(
                             textField: TextFormField(
@@ -74,8 +79,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               decoration: kTextInputDecoration.copyWith(
                                 hintText: 'Nhập mật khẩu',
-                                prefixIcon: Icon(Icons.lock),
+                                prefixIcon: const Icon(Icons.lock),
                               ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Vui lý nhập mật khẩu';
+                                }
+                                if (value.length < 6) {
+                                  return 'Mật khẩu ít nhất là 6 kí tự';
+                                }
+
+                                return null;
+                              },
                             ),
                           ),
                           CustomBottomScreen(
@@ -87,12 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (_formKey.currentState!.validate()) {
                                 // If the form is valid, display a snackbar. In the real world,
                                 // you'd often call a server or save the information in a database.
-                                // ScaffoldMessenger.of(context).showSnackBar(
-                                //   const SnackBar(
-                                //       content: Text('Processing Data')),
-                                // );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                    'Đang đăng nhập',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.blue),
+                                  )),
+                                );
+                                Navigator.pushNamed(context, WelcomeScreen.id);
                               }
                             },
+
                             // buttonPressed: () async {
                             //   if (!_formKey.currentState!.validate()) {
 

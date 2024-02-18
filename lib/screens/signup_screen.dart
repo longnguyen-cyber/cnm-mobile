@@ -1,8 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:zalo_app/components/components.dart';
+import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/screens/home_screen.dart';
 import 'package:zalo_app/screens/login_screen.dart';
 import 'package:zalo_app/constants.dart';

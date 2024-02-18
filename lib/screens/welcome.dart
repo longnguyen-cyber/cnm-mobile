@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zalo_app/components/components.dart';
+
+import '../components/index.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

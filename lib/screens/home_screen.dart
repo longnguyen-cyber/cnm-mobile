@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zalo_app/components/components.dart';
+import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/screens/login_screen.dart';
 import 'package:zalo_app/screens/signup_screen.dart';
 

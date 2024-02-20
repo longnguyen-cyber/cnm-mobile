@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zalo_app/components/index.dart';
-import 'package:zalo_app/screens/login_screen.dart';
-import 'package:zalo_app/screens/signup_screen.dart';
+import 'package:zalo_app/screens/auth/login_screen.dart';
+import 'package:zalo_app/screens/auth/signup_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

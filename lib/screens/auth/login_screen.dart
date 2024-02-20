@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:zalo_app/components/alert.dart';
 import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/constants.dart';
-import 'package:zalo_app/screens/welcome.dart';
+import 'package:zalo_app/screens/auth/welcome.dart';
 import 'package:loading_overlay/loading_overlay.dart';
-import 'package:zalo_app/screens/home_screen.dart';
+import 'package:zalo_app/screens/auth/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

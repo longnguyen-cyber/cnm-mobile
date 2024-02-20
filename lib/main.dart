@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:zalo_app/screens/home_screen.dart';
-import 'package:zalo_app/screens/login_screen.dart';
-import 'package:zalo_app/screens/signup_screen.dart';
-import 'package:zalo_app/screens/welcome.dart';
+import 'package:zalo_app/screens/auth/home_screen.dart';
+import 'package:zalo_app/screens/auth/login_screen.dart';
+import 'package:zalo_app/screens/auth/signup_screen.dart';
+import 'package:zalo_app/screens/auth/welcome.dart';
 // import 'package:firebase_core/firebase_core.dart';
 
 void main() async {

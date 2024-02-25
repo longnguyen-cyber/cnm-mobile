@@ -3,7 +3,7 @@ import 'package:zalo_app/screens/auth/home_screen.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/welcome.dart';
-import 'package:zalo_app/screens/home/chat_screen.dart';
+import 'package:zalo_app/screens/home/main_screen.dart';
 // import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Ubuntu',
         ),
       )),
-      home: ChatScreen(),
+      home: const MainScreen(),
       // initialRoute: ChatScreen.id,
       // routes: {
       //   HomeScreen.id: (context) => const HomeScreen(),

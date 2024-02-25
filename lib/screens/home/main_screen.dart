@@ -3,6 +3,8 @@ import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 
+import '../chat/chat_screen.dart';
+
 class BottomNavigator extends StatefulWidget {
   const BottomNavigator({super.key});
 
@@ -26,6 +28,42 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: const Icon(
+          Icons.search,
+          color: Colors.white,
+        ),
+        backgroundColor: Colors.blue,
+        title: TextField(
+          // controller: _searchController,
+          style: const TextStyle(color: Colors.white),
+          cursorColor: Colors.white,
+          decoration: const InputDecoration(
+            hintText: 'Tìm kiếm',
+            hintStyle: TextStyle(color: Colors.white54),
+            border: InputBorder.none,
+          ),
+
+          onChanged: (value) {
+            // Perform search functionality here
+          },
+        ),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(
+              Icons.qr_code,
+              color: Colors.white,
+            ),
+            onPressed: () {},
+          ),
+          IconButton(
+              icon: const Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
+              onPressed: () {}),
+        ],
+      ),
       bottomNavigationBar: MotionTabBar(
         controller: _motionTabBarController,
         initialSelectedTab: "Tin nhắn",
@@ -100,8 +138,8 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   }
 }
 
-class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +159,7 @@ List<IconData> buildIcons = [
 List<String> buildLabels = const ["Tin nhắn", "Bạn bè", "Nhật kí", "Cá nhân"];
 
 List<Widget> buildPages = const [
-  Center(
-    child: Text("Tin nhắn"),
-  ),
+  ChatScreen(),
   Center(
     child: Text("Bạn bè"),
   ),

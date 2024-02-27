@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zalo_app/screens/friend/friend_tab_screen.dart';
+import 'package:zalo_app/screens/friend/group_tab_screen.dart';
 
 class FriendScreen extends StatefulWidget {
   const FriendScreen({Key? key}) : super(key: key);
@@ -54,7 +55,7 @@ class _FriendScreenState extends State<FriendScreen>
                 controller: _tabController,
                 children: const [
                   Center(child: FriendTabScreen()),
-                  Center(child: Text('Nhóm')),
+                  Center(child: GroupTabScreen()),
                 ],
               ),
             ),

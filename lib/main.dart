@@ -26,13 +26,12 @@ class MyApp extends StatelessWidget {
         ),
       )),
       home: const MainScreen(),
-      // initialRoute: ChatScreen.id,
+      // initialRoute: HomeScreen.id,
       // routes: {
       //   HomeScreen.id: (context) => const HomeScreen(),
       //   LoginScreen.id: (context) => const LoginScreen(),
       //   SignUpScreen.id: (context) => const SignUpScreen(),
       //   WelcomeScreen.id: (context) => const WelcomeScreen(),
-      //   ChatScreen.id: (context) => const ChatScreen(),
       // },
     );
   }

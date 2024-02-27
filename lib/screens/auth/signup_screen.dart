@@ -148,26 +148,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 },
                               ),
                             ),
-                            CustomTextField(
-                              textField: TextFormField(
-                                obscureText: true,
-                                onChanged: (value) {
-                                  _phone = value;
-                                },
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                ),
-                                decoration: kTextInputDecoration.copyWith(
-                                  hintText: 'Số điện thoại',
-                                  prefixIcon: const Icon(Icons.phone),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Số điện thoại không được để trống';
-                                  }
-                                },
-                              ),
-                            ),
+                            // CustomTextField(
+                            //   textField: TextFormField(
+                            //     obscureText: true,
+                            //     onChanged: (value) {
+                            //       _phone = value;
+                            //     },
+                            //     style: const TextStyle(
+                            //       fontSize: 20,
+                            //     ),
+                            //     decoration: kTextInputDecoration.copyWith(
+                            //       hintText: 'Số điện thoại',
+                            //       prefixIcon: const Icon(Icons.phone),
+                            //     ),
+                            //     validator: (value) {
+                            //       if (value == null || value.isEmpty) {
+                            //         return 'Số điện thoại không được để trống';
+                            //       }
+                            //     },
+                            //   ),
+                            // ),
                             CustomBottomScreen(
                               textButton: 'Đăng kí',
                               heroTag: 'signup_btn',

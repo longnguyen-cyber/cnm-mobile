@@ -3,7 +3,7 @@ import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 
-import '../chat/chat_screen.dart';
+import 'chat/chat_screen.dart';
 
 class BottomNavigator extends StatefulWidget {
   const BottomNavigator({super.key});

@@ -22,7 +22,7 @@ class GroupTabScreen extends StatelessWidget {
           ),
         ),
       ),
-      Spacer(),
+      const Spacer(),
       Expanded(
         flex: 8,
         child: Container(

@@ -346,8 +346,8 @@ class _PersonState extends State<Person> {
                 SizedBox(
                   child: Column(
                     children: [
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           SizedBox(
                             width: 39,
                           ),

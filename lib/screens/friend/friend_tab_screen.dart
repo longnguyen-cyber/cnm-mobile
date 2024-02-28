@@ -71,43 +71,43 @@ class FriendItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    // return Container(
-    //   width: size.width,
-    //   padding: EdgeInsets.all(size.width * 0.02),
-    //   child: Row(children: [
-    //     Expanded(
-    //         flex: 2,
-    //         child: CircleAvatar(
-    //             radius: 30, backgroundImage: NetworkImage(iconUrl))),
-    //     const Spacer(),
-    //     Expanded(
-    //         flex: 6, child: Text(name, style: const TextStyle(fontSize: 16))),
-    //     const Expanded(
-    //       flex: 2,
-    //       child: Row(children: <Widget>[
-    //         Icon(Icons.call),
-    //         Spacer(),
-    //         Icon(Icons.video_call)
-    //       ]),
-    //     )
+    return Container(
+      width: size.width,
+      padding: EdgeInsets.all(size.width * 0.02),
+      child: Row(children: [
+        Expanded(
+            flex: 2,
+            child: CircleAvatar(
+                radius: 30, backgroundImage: NetworkImage(iconUrl))),
+        const Spacer(),
+        Expanded(
+            flex: 6, child: Text(name, style: const TextStyle(fontSize: 16))),
+        const Expanded(
+          flex: 2,
+          child: Row(children: <Widget>[
+            Icon(Icons.call),
+            Spacer(),
+            Icon(Icons.video_call)
+          ]),
+        )
+      ]),
+    );
+    // return Column(children: [
+    // Expanded(
+    //     flex: 2,
+    //     child:
+    //         CircleAvatar(radius: 30, backgroundImage: NetworkImage(iconUrl))),
+    // const Spacer(),
+    // Expanded(
+    //     flex: 6, child: Text(name, style: const TextStyle(fontSize: 16))),
+    // const Expanded(
+    //   flex: 2,
+    //   child: Row(children: <Widget>[
+    //     Icon(Icons.call),
+    //     Spacer(),
+    //     Icon(Icons.video_call)
     //   ]),
-    // );
-    return const Column(children: [
-      // Expanded(
-      //     flex: 2,
-      //     child:
-      //         CircleAvatar(radius: 30, backgroundImage: NetworkImage(iconUrl))),
-      // const Spacer(),
-      // Expanded(
-      //     flex: 6, child: Text(name, style: const TextStyle(fontSize: 16))),
-      // const Expanded(
-      //   flex: 2,
-      //   child: Row(children: <Widget>[
-      //     Icon(Icons.call),
-      //     Spacer(),
-      //     Icon(Icons.video_call)
-      //   ]),
-      // )
-    ]);
+    // )
+    // ]);
   }
 }

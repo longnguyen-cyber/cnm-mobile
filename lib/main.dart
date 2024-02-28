@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
@@ -14,6 +17,8 @@ import 'package:zalo_app/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  // prefs.clear();
   await dotenv.load(fileName: "lib/.env");
   runApp(MyApp(
     userService: UserService(),
@@ -23,11 +28,12 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp(
-      {super.key,
-      required this.userService,
-      required this.channelService,
-      required this.chatService});
+  const MyApp({
+    super.key,
+    required this.userService,
+    required this.channelService,
+    required this.chatService,
+  });
   final UserService userService;
   final ChannelService channelService;
   final ChatService chatService;

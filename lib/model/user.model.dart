@@ -14,16 +14,16 @@ class User {
   final String? twoFactorAuthenticationSecret;
 
   User({
-    required this.id,
-    required this.name,
-    required this.password,
-    required this.displayName,
-    required this.status,
-    required this.phone,
-    required this.email,
-    required this.avatar,
-    required this.isTwoFactorAuthenticationEnabled,
-    required this.twoFactorAuthenticationSecret,
+    this.id,
+    this.name,
+    this.password,
+    this.displayName,
+    this.status,
+    this.phone,
+    this.email,
+    this.avatar,
+    this.isTwoFactorAuthenticationEnabled,
+    this.twoFactorAuthenticationSecret,
   });
 
   User copyWith({

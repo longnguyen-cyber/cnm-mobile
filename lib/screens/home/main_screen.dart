@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
+import 'package:zalo_app/screens/auth/splash_screen.dart';
+import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/friend/friend_screen.dart';
 import 'package:zalo_app/screens/personal.dart';
 
@@ -140,14 +145,43 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   }
 }
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  late String _token = "";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchToken();
+  }
+
+  void fetchToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
+    setState(() {
+      _token = token;
+    });
+    // var userOfToken = prefs.getString(token) ?? "";
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: BottomNavigator(),
-    );
+    if (_token.toString() != "" && _token.toString() != "null") {
+      return const Scaffold(
+        body: BottomNavigator(),
+      );
+    } else {
+      return const WelcomeScreen(); // Show a loading spinner while navigating
+    }
+    // return const Scaffold(
+    //   body: BottomNavigator(),
+    // );
   }
 }
 

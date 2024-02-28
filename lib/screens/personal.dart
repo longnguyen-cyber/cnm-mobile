@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/model/user.model.dart';
 
@@ -11,27 +12,48 @@ class Person extends StatefulWidget {
 }
 
 class _PersonState extends State<Person> {
-  late User userExisting;
+  User? userExisting = User();
+  @override
+  void initState() {
+    super.initState();
+    getUser();
+  }
+
+  void getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
+    var userOfToken = prefs.getString(token) ?? "";
+    if (userOfToken != "") {
+      userExisting = User.fromJson(userOfToken);
+    } else {
+      userExisting = null;
+    }
+    setState(() {
+      userExisting = userExisting;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    print("userExisting: $userExisting");
     return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
-        if (state is LoginLoaded) {
-          userExisting = state.user;
-        } else {
-          userExisting = User(
-            id: '',
-            name: '',
-            password: '',
-            displayName: '',
-            status: '',
-            phone: '',
-            email: '',
-            avatar: '',
-            isTwoFactorAuthenticationEnabled: false,
-            twoFactorAuthenticationSecret: '',
-          );
-        }
+        // if (state is LoginLoaded) {
+        //   userExisting = state.user;
+        // } else {
+        //   userExisting = User(
+        //     id: '',
+        //     name: '',
+        //     password: '',
+        //     displayName: '',
+        //     status: '',
+        //     phone: '',
+        //     email: '',
+        //     avatar: '',
+        //     isTwoFactorAuthenticationEnabled: false,
+        //     twoFactorAuthenticationSecret: '',
+        //   );
+        // }
         return Scaffold(
           body: SingleChildScrollView(
             child: Column(
@@ -39,10 +61,10 @@ class _PersonState extends State<Person> {
                 const SizedBox(
                   height: 10,
                 ),
-                const CircleAvatar(
-                  backgroundImage: AssetImage(""),
-                  radius: 60,
-                ),
+                // CircleAvatar(
+                //   backgroundImage: AssetImage("${userExisting?.avatar}"),
+                //   radius: 60,
+                // ),
                 const SizedBox(
                   height: 30,
                 ),
@@ -50,7 +72,7 @@ class _PersonState extends State<Person> {
                   width: 210,
                   child: Center(
                     child: Text(
-                      userExisting.name ?? "Unconfirmed",
+                      userExisting?.name ?? "Unconfirmed",
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 20),
                     ),
@@ -84,7 +106,7 @@ class _PersonState extends State<Person> {
                         SizedBox(
                           width: 230,
                           child: Text(
-                            userExisting.name ?? "Unconfirmed",
+                            userExisting?.name ?? "Unconfirmed",
                             style: const TextStyle(
                                 color: Color(0xFF717171),
                                 fontWeight: FontWeight.w400,
@@ -149,7 +171,7 @@ class _PersonState extends State<Person> {
                           SizedBox(
                             width: 230,
                             child: Text(
-                              userExisting.phone ?? "Unconfirmed",
+                              userExisting?.phone ?? "Unconfirmed",
                               style: const TextStyle(
                                   color: Color(0xFF717171),
                                   fontWeight: FontWeight.w400,
@@ -215,7 +237,7 @@ class _PersonState extends State<Person> {
                           SizedBox(
                             width: 230,
                             child: Text(
-                              userExisting.email ?? "Unconfirmed",
+                              userExisting?.email ?? "Unconfirmed",
                               style: const TextStyle(
                                   color: Color(0xFF717171),
                                   fontWeight: FontWeight.w400,
@@ -281,7 +303,7 @@ class _PersonState extends State<Person> {
                           SizedBox(
                             width: 230,
                             child: Text(
-                              userExisting.email ?? "Unconfirmed",
+                              userExisting?.email ?? "Unconfirmed",
                               style: const TextStyle(
                                   color: Color(0xFF717171),
                                   fontWeight: FontWeight.w400,

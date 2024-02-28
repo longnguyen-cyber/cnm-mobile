@@ -16,7 +16,7 @@ class UserService {
   var baseUrl = dotenv.env['API_URL'];
 
   Future<Response?> login(String email, String password) async {
-    String url = "$baseUrl/login";
+    String url = "$baseUrl/users/login";
     final response = await _dio.post(url, data: {
       "email": email,
       "password": password,

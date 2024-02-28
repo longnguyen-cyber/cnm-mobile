@@ -1,5 +1,9 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/splash_screen.dart';
@@ -15,16 +19,16 @@ class MyAppRouter {
     routes: [
       GoRoute(
         name: MyAppRouteConstants.mainRouteName,
-        path: '/main',
+        path: '/',
         pageBuilder: (context, state) {
           return const MaterialPage(child: MainScreen());
         },
       ),
       GoRoute(
         name: MyAppRouteConstants.welcomeRouteName,
-        path: '/',
+        path: '/welcome',
         pageBuilder: (context, state) {
-          return const MaterialPage(child: MainScreen());
+          return const MaterialPage(child: WelcomeScreen());
         },
       ),
       // GoRoute(

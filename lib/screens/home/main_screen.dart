@@ -3,6 +3,7 @@ import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:zalo_app/screens/friend/friend_screen.dart';
+import 'package:zalo_app/screens/personal.dart';
 
 import '../chat/chat_screen.dart';
 
@@ -20,7 +21,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   void initState() {
     super.initState();
     _motionTabBarController = MotionTabBarController(
-      initialIndex: 1,
+      initialIndex: 0,
       length: 4,
       vsync: this,
     );
@@ -165,7 +166,5 @@ List<Widget> buildPages = const [
   Center(
     child: Text("Nhật kí"),
   ),
-  Center(
-    child: Text("Cá nhân"),
-  )
+  Person()
 ];

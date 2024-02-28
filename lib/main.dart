@@ -1,38 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:zalo_app/screens/auth/home_screen.dart';
-import 'package:zalo_app/screens/auth/login_screen.dart';
-import 'package:zalo_app/screens/auth/signup_screen.dart';
-import 'package:zalo_app/screens/auth/welcome.dart';
-import 'package:zalo_app/screens/home/main_screen.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
+import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
+import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
+import 'package:zalo_app/config/routes/app_route_config.dart';
+import 'package:zalo_app/repository/channel_repo.dart';
+import 'package:zalo_app/repository/chat_repo.dart';
+import 'package:zalo_app/repository/user_repo.dart';
+import 'package:zalo_app/services/channel_service.dart';
+import 'package:zalo_app/services/chat_service.dart';
+import 'package:zalo_app/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp();
-  runApp(const MyApp());
+  await dotenv.load(fileName: "lib/.env");
+  runApp(MyApp(
+    userService: UserService(),
+    channelService: ChannelService(),
+    chatService: ChatService(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp(
+      {super.key,
+      required this.userService,
+      required this.channelService,
+      required this.chatService});
+  final UserService userService;
+  final ChannelService channelService;
+  final ChatService chatService;
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-          textTheme: const TextTheme(
-        bodyMedium: TextStyle(
-          fontFamily: 'Ubuntu',
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<UserCubit>(
+          create: (BuildContext context) => UserCubit(
+            userRepo: UserRepository(
+              userService: widget.userService,
+            ),
+          ),
         ),
-      )),
-      home: const MainScreen(),
-      // initialRoute: HomeScreen.id,
-      // routes: {
-      //   HomeScreen.id: (context) => const HomeScreen(),
-      //   LoginScreen.id: (context) => const LoginScreen(),
-      //   SignUpScreen.id: (context) => const SignUpScreen(),
-      //   WelcomeScreen.id: (context) => const WelcomeScreen(),
-      // },
+        BlocProvider<ChannelCubit>(
+          create: (BuildContext context) => ChannelCubit(
+            channelRepo: ChannelRepository(
+              channelService: widget.channelService,
+            ),
+          ),
+        ),
+        BlocProvider<ChatCubit>(
+          create: (BuildContext context) => ChatCubit(
+            chatRepo: ChatRepository(
+              chatService: widget.chatService,
+            ),
+          ),
+        ),
+      ],
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+            textTheme: const TextTheme(
+          bodyMedium: TextStyle(
+            fontFamily: 'Ubuntu',
+          ),
+        )),
+        routerConfig: MyAppRouter().router,
+      ),
     );
   }
 }

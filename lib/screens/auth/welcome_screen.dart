@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/components/index.dart';
-import 'package:zalo_app/screens/auth/login_screen.dart';
-import 'package:zalo_app/screens/auth/signup_screen.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-  static String id = 'home_screen';
+class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      _prefs.then((SharedPreferences prefs) {
+        prefs.setInt('counter', 10);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +59,8 @@ class HomeScreen extends StatelessWidget {
                         child: CustomButton(
                           buttonText: 'ĐĂNG NHẬP',
                           onPressed: () {
-                            Navigator.pushNamed(context, LoginScreen.id);
+                            GoRouter.of(context)
+                                .pushNamed(MyAppRouteConstants.loginRouteName);
                           },
                         ),
                       ),
@@ -56,12 +73,10 @@ class HomeScreen extends StatelessWidget {
                           buttonText: 'ĐĂNG KÍ',
                           isOutlined: true,
                           onPressed: () {
-                            Navigator.pushNamed(context, SignUpScreen.id);
+                            GoRouter.of(context)
+                                .pushNamed(MyAppRouteConstants.signupRouteName);
                           },
                         ),
-                      ),
-                      const SizedBox(
-                        height: 25,
                       ),
                       const Text(
                         'Hoặc',

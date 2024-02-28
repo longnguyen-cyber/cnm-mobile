@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 
 import '../constants.dart';
@@ -24,12 +26,10 @@ class ChatItem extends StatelessWidget {
     Size size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const DetailChatScreen()))
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName)
       },
       onLongPress: () => {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const DetailChatScreen()))
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName)
       },
       child: Container(
         width: size.width,

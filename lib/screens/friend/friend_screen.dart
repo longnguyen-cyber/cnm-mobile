@@ -54,7 +54,8 @@ class _FriendScreenState extends State<FriendScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: const [
-                  Center(child: FriendTabScreen()),
+                  // Center(child: FriendTabScreen()),
+                  Text('Nhóm'),
                   Center(child: GroupTabScreen()),
                 ],
               ),

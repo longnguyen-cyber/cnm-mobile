@@ -12,19 +12,27 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late String _token = "";
+
   @override
   void initState() {
     super.initState();
+    fetchToken();
+  }
+
+  void fetchToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
     setState(() {
-      _prefs.then((SharedPreferences prefs) {
-        prefs.setInt('counter', 10);
-      });
+      _token = token;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_token.toString() != "") {
+      GoRouter.of(context).go(MyAppRouteConstants.mainRouteName);
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

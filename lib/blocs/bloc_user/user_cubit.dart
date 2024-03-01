@@ -51,6 +51,7 @@ class UserCubit extends Cubit<UserState> {
   Future<User?> updateUser(Object obj) async {
     try {
       var user = await userRepo.updateUser(obj);
+      emit(LoginLoaded(user: user!));
       return user;
     } catch (e) {
       if (kDebugMode) {

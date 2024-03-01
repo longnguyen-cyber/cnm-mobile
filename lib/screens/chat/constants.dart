@@ -9,3 +9,6 @@ const readMessageStyle = TextStyle(
   color: Colors.grey,
   fontWeight: FontWeight.normal,
 );
+
+const String sender = 'Sender';
+const String receiver = 'Receiver';

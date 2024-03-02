@@ -168,7 +168,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     // if (_token.toString() != "" && _token.toString() != "null") {
     //   return const Scaffold(
     //     body: BottomNavigator(),
@@ -179,7 +178,6 @@ class _MainScreenState extends State<MainScreen> {
     return const Scaffold(
       body: BottomNavigator(),
     );
-=======
     if (_token.toString() != "" && _token.toString() != "null") {
       return const Scaffold(
         body: BottomNavigator(),
@@ -187,7 +185,6 @@ class _MainScreenState extends State<MainScreen> {
     } else {
       return const WelcomeScreen();
     }
->>>>>>> 0922a4f952e4a39b34db4394c7bf9d68ab8bc865
   }
 }
 

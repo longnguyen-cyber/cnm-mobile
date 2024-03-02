@@ -425,7 +425,6 @@ class _PersonState extends State<Person> {
                   ],
                 ),
                 const SizedBox(
-<<<<<<< HEAD
                   height: 15,
                 ),
                 SizedBox(
@@ -544,9 +543,7 @@ class _PersonState extends State<Person> {
                       ),
                     ],
                   ),
-=======
                   height: 45,
->>>>>>> 0922a4f952e4a39b34db4394c7bf9d68ab8bc865
                 ),
                 if (isEdit)
                   ElevatedButton(

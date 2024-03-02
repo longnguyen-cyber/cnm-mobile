@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:zalo_app/screens/chat/constants.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
+
+import '../../../components/index.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble(
       {super.key,
       required this.user,
-      required this.content,
+      this.content,
       required this.type,
-      required this.timeSent});
+      required this.timeSent,
+      this.imageUrl,
+      this.videoUrl});
 
   final String user;
-  final String content;
+  final String? content;
   final MessageType type;
   final String timeSent;
+  final String? imageUrl;
+  final String? videoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +57,18 @@ class MessageBubble extends StatelessWidget {
                     color: Colors.black,
                   ),
             ),
+            if (imageUrl != null)
+              Image.network(imageUrl!, width: size.width * 0.5)
+            else
+              const SizedBox.shrink(),
+            if (videoUrl != null)
+              VideoPlayerView(
+                url:
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+                dataSourceType: DataSourceType.network,
+              )
+            else
+              const SizedBox.shrink(),
             Text(timeSent,
                 style: const TextStyle(
                   color: Colors.grey,

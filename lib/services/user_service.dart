@@ -32,7 +32,7 @@ class UserService {
   }
 
   Future<Response?> register(String email, String password, String name) async {
-    String url = "$baseUrl/register";
+    String url = "$baseUrl/users/register";
 
     final response = await _dio.post(url, data: {
       "name": name,
@@ -50,7 +50,7 @@ class UserService {
   }
 
   Future<Response?> twoFactorGenerate(String email) async {
-    String url = "$baseUrl/2fa/generate";
+    String url = "$baseUrl/users/2fa/generate";
     final response = await _dio.post(url, data: {
       "email": email,
     });
@@ -65,7 +65,7 @@ class UserService {
   }
 
   Future<Response?> twoFactorTurnOn(String email, String code) async {
-    String url = "$baseUrl/2fa/turn-on";
+    String url = "$baseUrl/users/2fa/turn-on";
     final response = await _dio.post(url, data: {
       "email": email,
       "code": code,
@@ -81,7 +81,7 @@ class UserService {
   }
 
   Future<Response?> twoFactorAuthenticate(String email, String code) async {
-    String url = "$baseUrl/2fa/authenticate";
+    String url = "$baseUrl/users/2fa/authenticate";
     final response = await _dio.post(url, data: {
       "email": email,
       "code": code,
@@ -97,7 +97,7 @@ class UserService {
   }
 
   Future<Response?> getUser(String id, String token) async {
-    String url = "$baseUrl/$id";
+    String url = "$baseUrl/users/$id";
     final response = await _dio.get(
       url,
       options: Options(
@@ -119,9 +119,8 @@ class UserService {
   }
 
   Future<Response?> updateUser(Object obj, String token) async {
-    String url = "$baseUrl/update";
-    print(obj);
-    print(token);
+    String url = "$baseUrl/users/update";
+
     final response = await _dio.put(
       url,
       data: obj,
@@ -144,7 +143,7 @@ class UserService {
   }
 
   Future<Response?> searchUser(String email) async {
-    String url = "$baseUrl/searchUser";
+    String url = "$baseUrl/users/searchUser";
     final response = await _dio.post(url, data: {
       "email": email,
     });

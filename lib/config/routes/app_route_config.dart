@@ -31,13 +31,6 @@ class MyAppRouter {
           return const MaterialPage(child: WelcomeScreen());
         },
       ),
-      // GoRoute(
-      //   name: MyAppRouteConstants.welcomeRouteName,
-      //   path: '/welcome',
-      //   pageBuilder: (context, state) {
-      //     return const MaterialPage(child: WelcomeSecreen());
-      //   },
-      // ),
       GoRoute(
         name: MyAppRouteConstants.splashRouteName,
         path: '/splash',
@@ -45,7 +38,6 @@ class MyAppRouter {
           return const MaterialPage(child: SplashScreen());
         },
       ),
-
       GoRoute(
         name: MyAppRouteConstants.loginRouteName,
         path: '/login',

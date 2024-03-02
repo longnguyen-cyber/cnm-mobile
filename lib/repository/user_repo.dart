@@ -18,8 +18,7 @@ class UserRepository {
       final SharedPreferences prefs = await prefs0;
       prefs.setString("token", response.data["data"]["token"]);
       prefs.setString(response.data["data"]["token"], user.toJson());
-      print(prefs.getString(response.data["data"]["token"]));
-      print(user.toJson());
+
       return user;
     } else {
       return null;
@@ -84,6 +83,7 @@ class UserRepository {
 
     if (response != null) {
       User user = User.fromMap(response.data["data"]);
+      prefs.setString(prefs.getString("token")!, user.toJson());
       return user;
     } else {
       return null;

@@ -16,7 +16,7 @@ import 'package:zalo_app/services/user_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  // prefs.clear();
+  // prefs.clear();  
   await dotenv.load(fileName: "lib/.env");
   runApp(MyApp(
     userService: UserService(),

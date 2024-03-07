@@ -59,28 +59,28 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     content: 'Hello',
                     sender: 'user',
                     timeSent: '10:29',
-                    type: MessageType.text,
+                    // type: MessageType.text,
                   ),
                   MessageBubble(
                     user: sender,
                     content: 'Hello, I am Here',
-                    type: MessageType.text,
+                    // type: MessageType.text,
                     timeSent: '10:29',
                     imageUrl: 'https://i.pravatar.cc/300',
                   ),
                   MessageBubble(
                     user: sender,
                     content: 'Hello, I am Here',
-                    type: MessageType.text,
+                    // type: MessageType.text,
                     timeSent: '10:29',
                     imageUrl: 'https://i.pravatar.cc/300',
                   ),
                   MessageBubble(
                     user: sender,
                     content: 'Hello, I am Here',
-                    type: MessageType.text,
+                    // type: MessageType.text,
                     timeSent: '10:29',
-                    videoUrl: 'https://youtu.be/aTjFy943qTQ',
+                    // videoUrl: 'https://youtu.be/aTjFy943qTQ',
                     // imageUrl: 'https://i.pravatar.cc/300',
                   )
                 ])),
@@ -151,4 +151,5 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   void _sendMessage() {
     // xử lý tin nhắn
   }
-}
+
+  }

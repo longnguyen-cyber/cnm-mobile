@@ -1,9 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:zalo_app/screens/friend/friend_tab_screen.dart';
 import 'package:zalo_app/screens/friend/group_tab_screen.dart';
 
 class FriendScreen extends StatefulWidget {
-  const FriendScreen({Key? key}) : super(key: key);
+  const FriendScreen({super.key});
 
   @override
   State<FriendScreen> createState() => _FriendScreenState();
@@ -29,17 +30,20 @@ class _FriendScreenState extends State<FriendScreen>
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.maxFinite,
-      height: 300,
-      child: Align(
-        alignment: Alignment.center,
+      height: double.maxFinite,
+      child: DefaultTabController(
+        length: 2,
         child: Column(
           children: [
-            TabBar(
+            const SizedBox(
+              height: 10,
+            ),
+            Container(
+              color: Colors.white,
+              child: TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(
-                    text: 'Bạn bè',
-                  ),
+                  Tab(text: 'Bạn bè'),
                   Tab(text: 'Nhóm'),
                 ],
                 labelColor: Colors.black,
@@ -49,14 +53,16 @@ class _FriendScreenState extends State<FriendScreen>
                 labelStyle: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
-                indicatorColor: Colors.blue),
+                indicatorColor: Colors.blue,
+              ),
+            ),
             Expanded(
               child: TabBarView(
+                dragStartBehavior: DragStartBehavior.start,
                 controller: _tabController,
                 children: const [
-                  Center(child: FriendTabScreen()),
-                  // Text('Nhóm'),
-                  Center(child: GroupTabScreen()),
+                  FriendTabScreen(),
+                  GroupTabScreen(),
                 ],
               ),
             ),

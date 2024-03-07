@@ -19,6 +19,7 @@ class ChannelService {
         },
       ),
     );
+    // print(response.data["data"] as List);
     try {
       return response;
     } catch (e) {
@@ -170,11 +171,11 @@ class ChannelService {
   }
 
   Future<Response?> createChannel(
-      CreateChannel createChannel, String token) async {
+      Map<String, dynamic> data, String token) async {
     String url = "$baseUrl/channels";
     final response = await _dio.post(
       url,
-      data: createChannel,
+      data: data,
       options: Options(
         headers: {
           'Content-Type': 'application/json',
@@ -183,6 +184,7 @@ class ChannelService {
         },
       ),
     );
+    print(response.data);
     try {
       return response;
     } catch (e) {

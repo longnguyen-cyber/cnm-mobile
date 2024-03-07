@@ -53,7 +53,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                 context: context,
                 bodyBuilder: (context) => ListItems(
                   onReactionSelected: handleReaction,
-                  onFunctionSelected: handleFunctionChat,
+                  onFunctionSelected: (func) {
+                    print('Selected function: $func');
+                  },
                 ),
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
@@ -122,15 +124,6 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
       ],
     );
-  }
-
-  handleFunctionChat(func) {
-    switch (func) {
-      case FunctionChat.delete:
-        break;
-      case FunctionChat.revert:
-        break;
-    }
   }
 
   void handleReaction(Reaction reaction) {

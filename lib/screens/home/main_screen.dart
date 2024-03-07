@@ -23,7 +23,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   void initState() {
     super.initState();
     _motionTabBarController = MotionTabBarController(
-      initialIndex: 3,
+      initialIndex: 0,
       length: 4,
       vsync: this,
     );
@@ -168,16 +168,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // if (_token.toString() != "" && _token.toString() != "null") {
-    //   return const Scaffold(
-    //     body: BottomNavigator(),
-    //   );
-    // } else {
-    //   return const WelcomeScreen(); // Show a loading spinner while navigating
-    // }
-    return const Scaffold(
-      body: BottomNavigator(),
-    );
     if (_token.toString() != "" && _token.toString() != "null") {
       return const Scaffold(
         body: BottomNavigator(),

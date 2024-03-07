@@ -6,4 +6,7 @@ class MyAppRouteConstants {
   static const String signupRouteName = 'signup';
   static const String chatRouteName = 'chat';
   static const String detailChatRouteName = 'detailChat';
+  static const String addFriendRouteName = 'addFriend';
+  static const String createChannelRouteName = 'createChannel';
+  static const String profileRouteName = 'profile';
 }

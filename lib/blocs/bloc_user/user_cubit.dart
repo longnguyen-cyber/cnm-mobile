@@ -48,6 +48,18 @@ class UserCubit extends Cubit<UserState> {
     return null;
   }
 
+  Future<List<User>> searchUser({required String name}) async {
+    try {
+      var users = await userRepo.searchUser(name);
+      return users;
+    } catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    }
+    return [];
+  }
+
   Future<User?> updateUser(Object obj) async {
     try {
       var user = await userRepo.updateUser(obj);

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
-import 'package:zalo_app/model/channel.model.dart';
-import 'package:zalo_app/model/chat.model.dart';
-import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
-
-import '../constants.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/utils/constants.dart';
 
 class ChatItem extends StatefulWidget {
   const ChatItem({
@@ -20,6 +18,34 @@ class ChatItem extends StatefulWidget {
 }
 
 class _ChatItemState extends State<ChatItem> {
+  late dynamic newEvent = null;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
+      var status = response['status'];
+      var data = response['data'];
+      if (status == 201) {
+        if (mounted) {
+          setState(() {
+            //!update data when new message
+            // {
+//     "messages": {
+//         "message": "test mention 45"
+//     },
+//     "chatId": "65e9d6612a5cccc5cf70c947",
+//     "receiveId": "65dd4ae4cbeffa04dbbc5b16",
+//     "id": "65e9e0404e8e1b2cd443049e",
+//     "timeThread": "2024-03-07T15:41:53.380Z"
+// }
+            // all.add(data);
+          });
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var map = widget.obj as Map<String, dynamic>;
@@ -27,10 +53,12 @@ class _ChatItemState extends State<ChatItem> {
     Size size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => {
-        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName)
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
+            extra: {"id": map["id"], "type": map["type"]})
       },
       onLongPress: () => {
-        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName)
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
+            extra: {"id": map["id"], "type": map["type"]})
       },
       child: Container(
         width: size.width,
@@ -41,147 +69,96 @@ class _ChatItemState extends State<ChatItem> {
           color: Colors.grey.shade300,
           width: 1,
         ))),
-        child: Row(children: <Widget>[
-          const SizedBox(
-            width: 10,
-          ),
-
-          map["userReceive"] != null && map["userReceive"]["avatar"] != null
-              ? SizedBox(
-                  height: 80,
-                  width: 80,
-                  child: Center(
-                    child: CircleAvatar(
-                      radius: 25,
-                      backgroundImage:
-                          NetworkImage(map["userReceive"]["avatar"]),
-                    ),
-                  ),
-                )
-              : Row(children: [
-                  //list image avatar from map["users"]
-                  map["users"] != null
-                      ? SizedBox(
-                          height: 80,
-                          width: 80,
-                          child: GridView.count(
-                            primary: false,
-                            padding: const EdgeInsets.all(10),
-                            crossAxisSpacing: 2,
-                            mainAxisSpacing: 2,
-                            crossAxisCount: 2,
-                            children: [
-                              for (var user in map["users"].take(4))
-                                CircleAvatar(
-                                  backgroundImage:
-                                      NetworkImage(user["avatar"] ?? ""),
-                                ),
-                            ],
-                          ),
-                        )
-                      : Container(),
-                ]),
-          const SizedBox(
-            width: 10,
-          ),
-
-          Row(
-            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: size.width * 0.55,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      map["userReceive"] != null
-                          ? map["userReceive"]["name"]
-                          : map["name"],
-                    ),
-                    SizedBox(
-                      height: size.height * 0.01,
-                    ),
-                    Text(
-                      (map["lastedThread"] != null
-                          ? (map["lastedThread"]["messages"]["message"]
-                                      .toString()
-                                      .length >
-                                  30
-                              ? "${map["lastedThread"]["messages"]["message"].toString().substring(0, 30)}..."
-                              : map["lastedThread"]["messages"]["message"]
-                                  .toString())
-                          : "New message"),
-                      style: map["lastedThread"] != null
-                          ? unReadMessageStyle
-                          : readMessageStyle,
-                    )
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: size.width * 0.27,
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        caculateTime(DateTime.parse(map["timeThread"])),
-                        style: map["lastedThread"] != null
-                            ? unReadMessageStyle
-                                .merge(const TextStyle(fontSize: 12))
-                            : readMessageStyle
-                                .merge(const TextStyle(fontSize: 12)),
+        child: Row(
+          children: <Widget>[
+            const SizedBox(
+              width: 10,
+            ),
+            map["user"] != null && map["user"]["avatar"] != null
+                ? SizedBox(
+                    height: 80,
+                    width: 80,
+                    child: Center(
+                      child: CircleAvatar(
+                        radius: 25,
+                        backgroundImage: NetworkImage(map["user"]["avatar"]),
                       ),
-                      // if (!widget.obj.read!)
-                      //   Container(
-                      //     padding: const EdgeInsets.all(3),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.red,
-                      //       borderRadius: BorderRadius.circular(10),
-                      //     ),
-                      //     child: const Text(
-                      //       'N',
-                      //       style: TextStyle(color: Colors.white),
-                      //     ),
-                      //   )
-                      // else
-                      //   Container(),
-                    ]),
-              )
-            ],
-          ),
-          // SizedBox(
-          //   width: size.width * 0.5,
-          //   child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       mainAxisAlignment: MainAxisAlignment.start,
-          //       children: [
-          //         const SizedBox(
-          //           height: 10,
-          //         ),
-          //         Text(
-          //           map["userReceive"] != null
-          //               ? map["userReceive"]["name"]
-          //               : map["name"],
-          //         ),
-          //         SizedBox(
-          //           height: size.height * 0.01,
-          //         ),
-          //         Text(
-          //           map["lastedThread"] != null
-          //               ? map["lastedThread"]["messages"]["message"]
-          //               : "New message",
-          //           style: map["lastedThread"] != null
-          //               ? unReadMessageStyle
-          //               : readMessageStyle,
-          //         )
-          //       ]),
-          // ),
-        ]),
+                    ),
+                  )
+                : Row(children: [
+                    map["users"] != null
+                        ? SizedBox(
+                            height: 70,
+                            width: 80,
+                            child: GridView.count(
+                              primary: false,
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.all(10),
+                              crossAxisSpacing: 2,
+                              mainAxisSpacing: 2,
+                              crossAxisCount: 2,
+                              children: [
+                                for (var user in map["users"].take(4))
+                                  CircleAvatar(
+                                    backgroundImage:
+                                        NetworkImage(user["avatar"] ?? ""),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : Container(),
+                  ]),
+            const SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    map["user"] != null ? map["user"]["name"] : map["name"],
+                  ),
+                  SizedBox(
+                    height: size.height * 0.01,
+                  ),
+                  Text(
+                    (map["lastedThread"] != null
+                        ? (map["lastedThread"]["messages"]["message"]
+                                    .toString()
+                                    .length >
+                                30
+                            ? "${map["lastedThread"]["messages"]["message"].toString().substring(0, 30)}..."
+                            : map["lastedThread"]["messages"]["message"]
+                                .toString())
+                        : "New message"),
+                    style: map["lastedThread"] != null
+                        ? unReadMessageStyle
+                        : readMessageStyle,
+                  )
+                ],
+              ),
+            ),
+            Container(
+              width: size.width * 0.27,
+              margin: const EdgeInsets.only(right: 0, top: 20),
+              alignment: Alignment.topCenter,
+              child: Text(
+                caculateTime(
+                  DateTime.parse(
+                    map["timeThread"],
+                  ),
+                ),
+                style: map["lastedThread"] != null
+                    ? unReadMessageStyle.merge(const TextStyle(fontSize: 12))
+                    : readMessageStyle.merge(const TextStyle(fontSize: 12)),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

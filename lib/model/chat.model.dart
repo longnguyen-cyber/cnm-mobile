@@ -1,23 +1,31 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:zalo_app/model/thread.model.dart';
+import 'package:zalo_app/model/user.model.dart';
+
 class Chat {
   final String? id;
   final String receiveId;
   final String senderId;
+  final bool isFriend;
+  final bool requestAdd;
+  final List<Thread>? threads;
+
   final DateTime? timeThread;
-  Chat({
-    required this.id,
-    required this.receiveId,
-    required this.senderId,
-    required this.timeThread,
-  });
+  final User? user;
+  Chat(
+      {required this.id,
+      required this.receiveId,
+      required this.senderId,
+      required this.isFriend,
+      required this.requestAdd,
+      required this.timeThread,
+      this.user,
+      this.threads});
 
   Chat copyWith({
     String? id,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    DateTime? deletedAt,
     String? receiveId,
     String? senderId,
     DateTime? timeThread,
@@ -26,6 +34,8 @@ class Chat {
       id: id ?? this.id,
       receiveId: receiveId ?? this.receiveId,
       senderId: senderId ?? this.senderId,
+      isFriend: isFriend,
+      requestAdd: requestAdd,
       timeThread: timeThread ?? this.timeThread,
     );
   }
@@ -36,6 +46,10 @@ class Chat {
       'receiveId': receiveId,
       'senderId': senderId,
       'timeThread': timeThread?.millisecondsSinceEpoch,
+      "isFriend": isFriend,
+      "requestAdd": requestAdd,
+      "user": user?.toMap(),
+      "threads": threads?.map((x) => x.toMap()).toList(),
     };
   }
 
@@ -44,7 +58,19 @@ class Chat {
       id: map['id'] as String,
       receiveId: map['receiveId'] as String,
       senderId: map['senderId'] as String,
-      timeThread: DateTime.fromMillisecondsSinceEpoch(map['timeThread'] as int),
+      isFriend: map['isFriend'] as bool,
+      requestAdd: map['requestAdd'] as bool,
+      user: map['user'] != null
+          ? User.fromMap(map['user'] as Map<String, dynamic>)
+          : null,
+      timeThread: map['timeThread'] != null
+          ? DateTime.parse(map['timeThread'] as String)
+          : null,
+      threads: map['threads'] != null
+          ? (map['threads'] as List<dynamic>)
+              .map<Thread>((x) => Thread.fromMap(x as Map<String, dynamic>))
+              .toList()
+          : [],
     );
   }
 
@@ -55,7 +81,7 @@ class Chat {
 
   @override
   String toString() {
-    return 'Chat(id: $id, receiveId: $receiveId, senderId: $senderId, timeThread: $timeThread)';
+    return 'Chat(id: $id, receiveId: $receiveId, senderId: $senderId, isFriend: $isFriend, requestAdd: $requestAdd, timeThread: $timeThread, user: $user, threads: $threads)';
   }
 
   @override

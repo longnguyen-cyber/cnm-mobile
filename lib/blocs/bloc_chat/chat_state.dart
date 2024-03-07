@@ -5,6 +5,7 @@ abstract class ChatState extends Equatable {
   const ChatState();
   @override
   List<Object> get props => [];
+  Object? get prop => null;
 }
 
 class ChatInitial extends ChatState {}
@@ -22,7 +23,7 @@ class GetChatLoaded extends ChatState {
   final Chat chat;
   const GetChatLoaded({required this.chat});
   @override
-  List<Object> get props => [chat];
+  Object get prop => chat;
 }
 
 class CreateChatLoaded extends ChatState {
@@ -32,19 +33,7 @@ class CreateChatLoaded extends ChatState {
   List<Object> get props => [chat];
 }
 
-class ReqAddFriendLoaded extends ChatState {}
-
-class AcceptAddFriendLoaded extends ChatState {}
-
-class DeleteFriendLoaded extends ChatState {}
-
 class DeleteChatLoaded extends ChatState {}
-
-class WhitelistFriendAcceptLoaded extends ChatState {}
-
-class WaitlistFriendAcceptLoaded extends ChatState {}
-
-class UnfriendLoaded extends ChatState {}
 
 class NumberError extends ChatState {
   final String message;

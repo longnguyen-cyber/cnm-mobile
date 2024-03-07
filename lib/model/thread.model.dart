@@ -1,9 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-
-import 'package:zalo_app/model/channel.model.dart';
-import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/message.model.dart';
 import 'package:zalo_app/model/react.model.dart';
@@ -24,9 +21,6 @@ class Thread {
   final List<Reaction>? reactions;
   final List<File>? files;
   final User? user;
-  final Chat? chats;
-  final Channel? channel;
-  final Thread? reply;
   final List<Thread>? replys;
   Thread({
     required this.id,
@@ -40,13 +34,10 @@ class Thread {
     this.channelId,
     this.threadId,
     this.messages,
-    required this.reactions,
-    required this.files,
+    this.reactions,
+    this.files,
     this.user,
-    this.chats,
-    this.channel,
-    this.reply,
-    required this.replys,
+    this.replys,
   });
 
   Thread copyWith({
@@ -66,9 +57,6 @@ class Thread {
     List<Reaction>? reactions,
     List<File>? files,
     User? user,
-    Chat? chats,
-    Channel? channel,
-    Thread? reply,
     List<Thread>? replys,
   }) {
     return Thread(
@@ -82,13 +70,10 @@ class Thread {
       chatId: chatId ?? this.chatId,
       channelId: channelId ?? this.channelId,
       threadId: threadId ?? this.threadId,
-      messages: messages ?? this.messages,
+      messages: messages ?? messages,
       reactions: reactions ?? this.reactions,
       files: files ?? this.files,
       user: user ?? this.user,
-      chats: chats ?? this.chats,
-      channel: channel ?? this.channel,
-      reply: reply ?? this.reply,
       replys: replys ?? this.replys,
     );
   }
@@ -109,9 +94,6 @@ class Thread {
       'reactions': reactions?.map((x) => x.toMap()).toList(),
       'files': files?.map((x) => x.toMap()).toList(),
       'user': user?.toMap(),
-      'chats': chats?.toMap(),
-      'channel': channel?.toMap(),
-      'reply': reply?.toMap(),
       'replys': replys?.map((x) => x.toMap()).toList(),
     };
   }
@@ -119,9 +101,9 @@ class Thread {
   factory Thread.fromMap(Map<String, dynamic> map) {
     return Thread(
       id: map['id'] as String,
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] != null
-          ? map['updatedAt'] as int
-          : DateTime.now().millisecondsSinceEpoch),
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : null,
       isEdited: map['isEdited'] != null ? map['isEdited'] as bool : null,
       isReply: map['isReply'] != null ? map['isReply'] as bool : null,
       isRecall: map['isRecall'] != null ? map['isRecall'] as bool : null,
@@ -133,34 +115,24 @@ class Thread {
       messages: map['messages'] != null
           ? Message.fromMap(map['messages'] as Map<String, dynamic>)
           : null,
-      reactions: List<Reaction>.from(
-        (map['reactions'] != null ? map['reactions'] as List<int> : [])
-            .map<Reaction>(
-          (x) => Reaction.fromMap(x as Map<String, dynamic>),
-        ),
-      ),
-      files: List<File>.from(
-        (map['files'] != null ? map['files'] as List<int> : []).map<File>(
-          (x) => File.fromMap(x as Map<String, dynamic>),
-        ),
-      ),
+      reactions: map['reactions'] != null
+          ? (map['reactions'] as List<dynamic>)
+              .map<Reaction>((e) => Reaction.fromMap(e as Map<String, dynamic>))
+              .toList()
+          : [],
+      files: map['files'] != null
+          ? (map['files'] as List<dynamic>)
+              .map<File>((e) => File.fromMap(e as Map<String, dynamic>))
+              .toList()
+          : [],
       user: map['user'] != null
           ? User.fromMap(map['user'] as Map<String, dynamic>)
           : null,
-      chats: map['chats'] != null
-          ? Chat.fromMap(map['chats'] as Map<String, dynamic>)
-          : null,
-      channel: map['channel'] != null
-          ? Channel.fromMap(map['channel'] as Map<String, dynamic>)
-          : null,
-      reply: map['reply'] != null
-          ? Thread.fromMap(map['reply'] as Map<String, dynamic>)
-          : null,
-      replys: List<Thread>.from(
-        (map['replys'] as List<int>).map<Thread>(
-          (x) => Thread.fromMap(x as Map<String, dynamic>),
-        ),
-      ),
+      replys: map['replys'] != null
+          ? (map['replys'] as List<dynamic>)
+              .map<Thread>((e) => Thread.fromMap(e as Map<String, dynamic>))
+              .toList()
+          : [],
     );
   }
 
@@ -171,7 +143,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, updatedAt: $updatedAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, chats: $chats, channel: $channel, reply: $reply, replys: $replys)';
+    return 'Thread(id: $id, updatedAt: $updatedAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
   }
 
   @override
@@ -192,9 +164,6 @@ class Thread {
         listEquals(other.reactions, reactions) &&
         listEquals(other.files, files) &&
         other.user == user &&
-        other.chats == chats &&
-        other.channel == channel &&
-        other.reply == reply &&
         listEquals(other.replys, replys);
   }
 
@@ -214,9 +183,6 @@ class Thread {
         reactions.hashCode ^
         files.hashCode ^
         user.hashCode ^
-        chats.hashCode ^
-        channel.hashCode ^
-        reply.hashCode ^
         replys.hashCode;
   }
 }

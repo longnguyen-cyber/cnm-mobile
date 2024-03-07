@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:zalo_app/model/thread.model.dart';
 
 import 'package:zalo_app/model/user.model.dart';
 
@@ -11,14 +12,18 @@ class Channel {
   final bool isPublic;
   final List<User>? users;
   final String? userCreated;
+  final List<Thread>? threads;
   final DateTime? timeThread;
+  final Thread? lastedThread;
   Channel({
     this.id,
     required this.name,
     required this.isPublic,
     this.users,
     this.userCreated,
+    this.threads,
     this.timeThread,
+    this.lastedThread,
   });
 
   Channel copyWith({
@@ -48,8 +53,10 @@ class Channel {
       'name': name,
       'isPublic': isPublic,
       'users': users?.map((x) => x.toMap()).toList(),
+      'threads': threads?.map((x) => x.toMap()).toList(),
       'userCreated': userCreated,
       'timeThread': timeThread?.millisecondsSinceEpoch,
+      "lastedThread": lastedThread?.toMap(),
     };
   }
 
@@ -58,13 +65,25 @@ class Channel {
       id: map['id'] as String,
       name: map['name'] as String,
       isPublic: map['isPublic'] as bool,
-      users: List<User>.from(
-        (map['users'] as List<int>).map<User>(
-          (x) => User.fromMap(x as Map<String, dynamic>),
-        ),
-      ),
+      users: map['users'] == null
+          ? []
+          : List<User>.from(
+              (map['users'] as List<dynamic>).map<User>(
+                (x) => User.fromMap(x),
+              ),
+            ),
+      threads: map['threads'] == null
+          ? []
+          : List<Thread>.from(
+              (map['threads'] as List<dynamic>).map<Thread>(
+                (x) => Thread.fromMap(x),
+              ),
+            ),
       userCreated: map['userCreated'] as String,
-      timeThread: DateTime.fromMillisecondsSinceEpoch(map['timeThread'] as int),
+      timeThread: DateTime.parse(map['timeThread'] as String),
+      lastedThread: map['lastedThread'] == null
+          ? null
+          : Thread.fromMap(map['lastedThread'] as Map<String, dynamic>),
     );
   }
 
@@ -75,7 +94,7 @@ class Channel {
 
   @override
   String toString() {
-    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread)';
+    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread, lastedThread: $lastedThread)';
   }
 
   @override

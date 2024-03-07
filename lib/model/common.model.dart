@@ -10,9 +10,9 @@ class RoleUser {
 class CreateChannel extends Channel {
   final List<String> members;
 
-  CreateChannel(
-    this.members, {
+  CreateChannel({
     required super.name,
     required super.isPublic,
+    required this.members,
   });
 }

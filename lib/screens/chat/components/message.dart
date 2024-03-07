@@ -33,7 +33,7 @@ class _MessageState extends State<Message> {
             MessageBubble(
               user: widget.sender,
               content: widget.content,
-              type: widget.type,
+              // type: widget.type,
               timeSent: widget.timeSent,
             ),
           ],

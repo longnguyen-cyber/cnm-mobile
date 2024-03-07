@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
+import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/constants.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
@@ -16,7 +17,7 @@ class MessageBubble extends StatefulWidget {
     this.reaction,
   });
 
-  final String user;
+  final User user;
   final String? content;
   final String timeSent;
   final String? imageUrl;
@@ -36,10 +37,11 @@ class _MessageBubbleState extends State<MessageBubble> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
 
-    final alignment =
-        (widget.user == sender) ? Alignment.centerRight : Alignment.centerLeft;
+    final alignment = (widget.user.name == sender)
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
 
-    final color = (widget.user == sender)
+    final color = (widget.user.name == sender)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
 

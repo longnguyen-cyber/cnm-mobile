@@ -128,7 +128,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     return MessageBubble(
                       user: userExisting!,
                       content: thread.messages!.message,
-                      type: MessageType.text,
+                      // type: MessageType.text,
                       timeSent: parseTime(thread.updatedAt!),
                     );
                   }

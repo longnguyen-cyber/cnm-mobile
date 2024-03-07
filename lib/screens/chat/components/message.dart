@@ -33,6 +33,7 @@ class _MessageState extends State<Message> {
             MessageBubble(
               user: widget.sender,
               content: widget.content,
+              isReverse: true,
               // type: widget.type,
               timeSent: widget.timeSent,
             ),

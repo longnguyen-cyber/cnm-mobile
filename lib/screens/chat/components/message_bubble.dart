@@ -7,15 +7,15 @@ import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
 class MessageBubble extends StatefulWidget {
-  const MessageBubble({
-    super.key,
-    required this.user,
-    this.content,
-    required this.timeSent,
-    this.imageUrl,
-    this.videoUrl,
-    this.reaction,
-  });
+  const MessageBubble(
+      {super.key,
+      required this.user,
+      this.content,
+      required this.timeSent,
+      this.imageUrl,
+      this.videoUrl,
+      this.reaction,
+      this.isReverse});
 
   final User user;
   final String? content;
@@ -23,6 +23,7 @@ class MessageBubble extends StatefulWidget {
   final String? imageUrl;
   final String? videoUrl;
   final Reaction? reaction;
+  final bool? isReverse;
 
   @override
   _MessageBubbleState createState() => _MessageBubbleState();
@@ -41,7 +42,7 @@ class _MessageBubbleState extends State<MessageBubble> {
         ? Alignment.centerRight
         : Alignment.centerLeft;
 
-    final color = (widget.user.name == sender)
+    var color = (widget.user.name == sender)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
 
@@ -54,11 +55,8 @@ class _MessageBubbleState extends State<MessageBubble> {
               showPopover(
                 context: context,
                 bodyBuilder: (context) => ListItems(
-                  onReactionSelected: handleReaction,
-                  onFunctionSelected: (func) {
-                    print('Selected function: $func');
-                  },
-                ),
+                    onReactionSelected: handleReaction,
+                    onFunctionSelected: handleFunction),
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
@@ -87,12 +85,21 @@ class _MessageBubbleState extends State<MessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.content ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Colors.black,
+                  widget.isReverse == true
+                      ? Text(
+                          'Tin nhắn đã được thu hồi',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: Colors.black,
+                                  ),
+                        )
+                      : Text(
+                          widget.content ?? '',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: Colors.black,
+                                  ),
                         ),
-                  ),
                   if (widget.imageUrl != null)
                     Image.network(widget.imageUrl!, width: size.width * 0.5)
                   else
@@ -170,6 +177,22 @@ class _MessageBubbleState extends State<MessageBubble> {
         setState(() {
           isReactionSelected = false;
         });
+    }
+  }
+
+  void handleFunction(FunctionChat function) {
+    switch (function) {
+      case FunctionChat.delete:
+        // delete fuc
+        break;
+      case FunctionChat.revert:
+      // revert fuc
+      case FunctionChat.reply:
+      // reply fuc
+      case FunctionChat.share:
+        // share fuc
+        break;
+      default:
     }
   }
 }

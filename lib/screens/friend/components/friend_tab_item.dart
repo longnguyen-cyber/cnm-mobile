@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 
 class FriendTabItem extends StatelessWidget {
   const FriendTabItem(
@@ -12,7 +14,9 @@ class FriendTabItem extends StatelessWidget {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.addFriendRouteName);
+      },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: size.height * 0.01),
         child: SizedBox(

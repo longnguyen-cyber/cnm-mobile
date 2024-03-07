@@ -14,7 +14,9 @@ class ChannelRepository {
     String token = prefs.getString('token')!;
     var response = await channelService.getAllChannels(token);
     if (response != null) {
-      return (response.data as List).map((e) => Channel.fromJson(e)).toList();
+      return (response.data["data"] as List)
+          .map((e) => Channel.fromMap(e))
+          .toList();
     }
     return [];
   }
@@ -22,9 +24,12 @@ class ChannelRepository {
   Future<Channel?> getChannel(String id) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
+
     var response = await channelService.getChannel(id, token);
     if (response != null) {
-      return Channel.fromJson(response.data);
+      var data = response.data["data"];
+
+      return Channel.fromMap(data);
     }
     return null;
   }
@@ -64,12 +69,16 @@ class ChannelRepository {
       String name, bool isPublic, List<String> members) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
-    var data = {"name": name, "isPublic": isPublic, "member": members};
-    var response =
-        await channelService.createChannel(data as CreateChannel, token);
+
+    var response = await channelService.createChannel({
+      "name": name,
+      "isPublic": isPublic,
+      "members": members,
+    }, token);
     if (response != null) {
-      return Channel.fromJson(response.data);
+      return Channel.fromMap(response.data);
     }
+
     return null;
   }
 
@@ -78,7 +87,7 @@ class ChannelRepository {
     String token = prefs.getString('token')!;
     var response = await channelService.updateChannel(id, obj, token);
     if (response != null) {
-      return Channel.fromJson(response.data);
+      return Channel.fromMap(response.data);
     }
     return null;
   }

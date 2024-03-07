@@ -73,6 +73,21 @@ class UserRepository {
     }
   }
 
+  Future<List<User>> searchUser(String name) async {
+    final Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();
+    final SharedPreferences prefs = await prefs0;
+
+    final response =
+        await userService.searchUser(name, prefs.getString("token")!);
+    if (response != null) {
+      List<User> users =
+          (response.data["data"] as List).map((e) => User.fromMap(e)).toList();
+      return users;
+    } else {
+      return [];
+    }
+  }
+
   //pass
   Future<User?> updateUser(Object obj) async {
     final Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();

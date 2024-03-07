@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/common.model.dart';
+import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/repository/channel_repo.dart';
 
 part 'channel_state.dart';
@@ -90,16 +91,19 @@ class ChannelCubit extends Cubit<ChannelState> {
     }
   }
 
-  Future<void> createChannel(
-      String name, bool isPublic, List<String> members) async {
+  Future<Channel?> createChannel(
+      {required String name,
+      required bool isPublic,
+      required List<String> members}) async {
     try {
-      await channelRepo.createChannel(name, isPublic, members);
-      emit(CreateChannelLoaded());
+      Channel? rs = await channelRepo.createChannel(name, isPublic, members);
+      return rs;
     } catch (e) {
       if (kDebugMode) {
         print(e.toString());
       }
     }
+    return null;
   }
 
   //Object contains name and isPublic

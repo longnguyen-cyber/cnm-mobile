@@ -32,7 +32,7 @@ class UserService {
   }
 
   Future<Response?> register(String email, String password, String name) async {
-    String url = "$baseUrl/users/register";
+    String url = "http://localhost:8080/api/users/register";
 
     final response = await _dio.post(url, data: {
       "name": name,
@@ -142,11 +142,18 @@ class UserService {
     return null;
   }
 
-  Future<Response?> searchUser(String email) async {
-    String url = "$baseUrl/users/searchUser";
-    final response = await _dio.post(url, data: {
-      "email": email,
-    });
+  Future<Response?> searchUser(String name, String token) async {
+    String url = "$baseUrl/users/search/$name";
+    final response = await _dio.get(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
     try {
       return response;
     } catch (e) {

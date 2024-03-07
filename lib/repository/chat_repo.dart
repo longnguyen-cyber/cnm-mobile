@@ -13,7 +13,9 @@ class ChatRepository {
     String token = prefs.getString('token')!;
     var response = await chatService.getChats(token);
     if (response != null) {
-      return (response.data as List).map((e) => Chat.fromJson(e)).toList();
+      return (response.data["data"] as List)
+          .map((e) => Chat.fromMap(e))
+          .toList();
     }
     return [];
   }
@@ -23,7 +25,8 @@ class ChatRepository {
     String token = prefs.getString('token')!;
     var response = await chatService.getChat(id, token);
     if (response != null) {
-      return Chat.fromJson(response.data);
+      //count type null and print it
+      return Chat.fromMap(response.data["data"]);
     }
     return null;
   }
@@ -38,10 +41,41 @@ class ChatRepository {
     return null;
   }
 
-  Future<void> reqAddFriend(String id, String receiveId) async {
+  Future<bool> reqAddFriend(String receiveId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
-    await chatService.reqAddfriend(id, receiveId, token);
+    var response = await chatService.reqAddfriend(receiveId, token);
+    if (response != null) {
+      return response.data["status"] == 200;
+    }
+    return false;
+  }
+
+  Future<bool> unReqAddFriend(String chatId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
+    var response = await chatService.unReqAddFriend(chatId, token);
+    if (response != null) {
+      return response.data["status"] == 200;
+    }
+    return false;
+  }
+
+  Future<Chat?> getFriendChatWaittingAccept(String receiveId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
+    var response =
+        await chatService.getFriendChatWaittingAccept(receiveId, token);
+    if (response != null) {
+      return Chat.fromMap(response.data["data"]);
+    }
+    return null;
+  }
+
+  Future<void> reqAddFriendHaveChat(String id, String receiveId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
+    await chatService.reqAddFriendHaveChat(id, receiveId, token);
   }
 
   Future<void> acceptAddFriend(String id) async {
@@ -50,16 +84,28 @@ class ChatRepository {
     await chatService.acceptAddFriend(id, token);
   }
 
-  Future<void> whitelistFriendAccept() async {
+  Future<List<Chat>> whitelistFriendAccept() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
-    await chatService.whitelistFriendAccept(token);
+    var response = await chatService.whitelistFriendAccept(token);
+    if (response != null) {
+      return (response.data["data"] as List)
+          .map((e) => Chat.fromMap(e))
+          .toList();
+    }
+    return [];
   }
 
-  Future<void> waitlistFriendAccept() async {
+  Future<List<Chat>> waitlistFriendAccept() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
-    await chatService.waitlistFriendAccept(token);
+    var response = await chatService.waitlistFriendAccept(token);
+    if (response != null) {
+      return (response.data["data"] as List)
+          .map((e) => Chat.fromMap(e))
+          .toList();
+    }
+    return [];
   }
 
   Future<void> unfriend(String id) async {

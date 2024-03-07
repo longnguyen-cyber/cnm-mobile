@@ -84,7 +84,77 @@ class ChatService {
     return null;
   }
 
-  Future<Response?> reqAddfriend(
+  Future<Response?> reqAddfriend(String receiveId, String token) async {
+    String url = "$baseUrl/chats/reqAddFriend";
+    final response = await _dio.put(
+      url,
+      data: {
+        "receiveId": receiveId,
+      },
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    try {
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error :$e");
+      }
+    }
+    return null;
+  }
+
+  Future<Response?> unReqAddFriend(String id, String token) async {
+    String url = "$baseUrl/chats/$id/unReqAddFriend";
+    final response = await _dio.put(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    try {
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error :$e");
+      }
+    }
+    return null;
+  }
+
+  Future<Response?> getFriendChatWaittingAccept(
+      String receiveId, String token) async {
+    String url = "$baseUrl/chats/$receiveId/friendChatWaittingAccept";
+    final response = await _dio.get(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    try {
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error :$e");
+      }
+    }
+    return null;
+  }
+
+  Future<Response?> reqAddFriendHaveChat(
       String id, String receiveId, String token) async {
     String url = "$baseUrl/chats/$id/reqAddFriend";
     final response = await _dio.put(
@@ -156,7 +226,7 @@ class ChatService {
 
   Future<Response?> waitlistFriendAccept(String token) async {
     String url = "$baseUrl/chats/friend/waitlistFriendAccept";
-    final response = await _dio.put(
+    final response = await _dio.get(
       url,
       options: Options(
         headers: {

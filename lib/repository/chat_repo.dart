@@ -25,7 +25,6 @@ class ChatRepository {
     String token = prefs.getString('token')!;
     var response = await chatService.getChat(id, token);
     if (response != null) {
-      //count type null and print it
       return Chat.fromMap(response.data["data"]);
     }
     return null;

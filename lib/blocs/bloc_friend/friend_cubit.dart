@@ -82,7 +82,6 @@ class FriendCubit extends Cubit<FriendState> {
   Future<void> waitlistFriendAccept() async {
     try {
       var waitings = await chatRepo.waitlistFriendAccept();
-      print("waitlist: $waitings");
       emit(WaitlistFriendAcceptLoaded(wattings: waitings));
     } catch (e) {
       if (kDebugMode) {

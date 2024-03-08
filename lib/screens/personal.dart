@@ -121,12 +121,9 @@ class _PersonState extends State<Person> {
                                           'png'
                                         ]),
                                     if (result == null)
-                                      {print("No file selected")}
+                                      {}
                                     else
-                                      {
-                                        for (var element in result!.files)
-                                          {print(element.name)}
-                                      }
+                                      {for (var element in result!.files) {}}
                                   },
                                   child: const Text('Edit image'),
                                 ),

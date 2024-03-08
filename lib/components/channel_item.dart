@@ -19,7 +19,6 @@ class ChannelItemState extends State<ChannelItem> {
   @override
   Widget build(BuildContext context) {
     var channel = widget.obj;
-    print(channel);
 
     Size size = MediaQuery.of(context).size;
     return GestureDetector(

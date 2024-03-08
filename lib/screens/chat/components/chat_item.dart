@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
-import 'package:zalo_app/config/socket/socket.dart';
-import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/utils/constants.dart';
 
 class ChatItem extends StatefulWidget {
@@ -18,34 +16,6 @@ class ChatItem extends StatefulWidget {
 }
 
 class _ChatItemState extends State<ChatItem> {
-  late dynamic newEvent = null;
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
-      var status = response['status'];
-      var data = response['data'];
-      if (status == 201) {
-        if (mounted) {
-          setState(() {
-            //!update data when new message
-            // {
-//     "messages": {
-//         "message": "test mention 45"
-//     },
-//     "chatId": "65e9d6612a5cccc5cf70c947",
-//     "receiveId": "65dd4ae4cbeffa04dbbc5b16",
-//     "id": "65e9e0404e8e1b2cd443049e",
-//     "timeThread": "2024-03-07T15:41:53.380Z"
-// }
-            // all.add(data);
-          });
-        }
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var map = widget.obj as Map<String, dynamic>;
@@ -99,10 +69,21 @@ class _ChatItemState extends State<ChatItem> {
                               crossAxisCount: 2,
                               children: [
                                 for (var user in map["users"].take(4))
-                                  CircleAvatar(
-                                    backgroundImage:
-                                        NetworkImage(user["avatar"] ?? ""),
-                                  ),
+                                  user["avatar"] != null
+                                      ? CircleAvatar(
+                                          backgroundImage: NetworkImage(
+                                              user["avatar"] ?? ""))
+                                      : Center(
+                                          child: CircleAvatar(
+                                            child: Text(
+                                              user["name"][0],
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 25,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                               ],
                             ),
                           )

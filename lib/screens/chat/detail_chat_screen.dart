@@ -57,8 +57,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.id);
-    print(widget.type);
     final viewInsets = MediaQuery.viewInsetsOf(context);
     return Scaffold(
       appBar: AppBar(

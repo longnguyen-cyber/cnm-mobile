@@ -79,28 +79,20 @@ class _FriendTabScreenState extends State<FriendTabScreen>
       var data = response['data'];
       if (status == 200) {
         if (mounted) {
-          if (data["type"] == "unReqAddFriend") {
-            setState(() {
+          setState(() {
+            if (data["type"] == "unReqAddFriend") {
               waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            });
-          } else if (data["type"] == "acceptAddFriend") {
-            setState(() {
+            } else if (data["type"] == "acceptAddFriend") {
               whiteList.add(Chat.fromMap(data["chat"]));
               waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            });
-          } else if (data["type"] == "rejectAddFriend") {
-            setState(() {
+            } else if (data["type"] == "rejectAddFriend") {
               waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            });
-          } else if (data["type"] == "unfriend") {
-            setState(() {
+            } else if (data["type"] == "unfriend") {
               whiteList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            });
-          } else if (data['receiveId'] == userId) {
-            setState(() {
+            } else if (data['receiveId'] == userId) {
               waitList.add(Chat.fromMap(data["chat"]));
-            });
-          }
+            }
+          });
         }
       }
     });

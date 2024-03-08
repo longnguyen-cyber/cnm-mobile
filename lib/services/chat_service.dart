@@ -49,6 +49,8 @@ class ChatService {
         },
       ),
     );
+    print(response);
+    print(id);
     try {
       return response;
     } catch (e) {

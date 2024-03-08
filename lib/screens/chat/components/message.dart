@@ -11,11 +11,13 @@ class Message extends StatefulWidget {
     required this.content,
     required this.type,
     required this.timeSent,
+    required this.onFuctionReply,
   });
   final User sender;
   final String content;
   final MessageType type;
   final String timeSent;
+  final Function(String, String) onFuctionReply;
 
   @override
   State<Message> createState() => _MessageState();
@@ -33,9 +35,10 @@ class _MessageState extends State<Message> {
             MessageBubble(
               user: widget.sender,
               content: widget.content,
-              isReverse: true,
+              // isReverse: true,
               // type: widget.type,
               timeSent: widget.timeSent,
+              onFuctionReply: widget.onFuctionReply,
             ),
           ],
         ),

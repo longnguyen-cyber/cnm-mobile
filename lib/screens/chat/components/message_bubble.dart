@@ -15,7 +15,9 @@ class MessageBubble extends StatefulWidget {
       this.imageUrl,
       this.videoUrl,
       this.reaction,
-      this.isReverse});
+      this.isReverse,
+      this.isReply,
+      required this.onFuctionReply});
 
   final User user;
   final String? content;
@@ -24,6 +26,8 @@ class MessageBubble extends StatefulWidget {
   final String? videoUrl;
   final Reaction? reaction;
   final bool? isReverse;
+  final bool? isReply;
+  final Function(String, String) onFuctionReply; // người rep và content
 
   @override
   _MessageBubbleState createState() => _MessageBubbleState();
@@ -45,7 +49,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     var color = (widget.user.name == sender)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
-
+    print(widget.isReply);
     return Stack(
       children: [
         Align(
@@ -93,13 +97,58 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     color: Colors.black,
                                   ),
                         )
-                      : Text(
-                          widget.content ?? '',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      : (widget.isReply == null || widget.isReply == false)
+                          ? Text(
+                              widget.content ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
                                     color: Colors.black,
                                   ),
-                        ),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width:
+                                            3, // Độ rộng của đường kẻ thẳng đứng
+                                        height:
+                                            20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                        color: Colors
+                                            .blue, // Màu sắc của đường kẻ thẳng
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      RichText(
+                                        textAlign: TextAlign.left,
+                                        text: TextSpan(
+                                          children: <TextSpan>[
+                                            TextSpan(
+                                              text: 'Đạt võ\n',
+                                              style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 12),
+                                            ),
+                                            TextSpan(
+                                              text: 'Bạn có khoẻ không',
+                                              style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                    ],
+                                  ),
+                                  Text(
+                                    widget.content ?? '',
+                                  )
+                                ]),
                   if (widget.imageUrl != null)
                     Image.network(widget.imageUrl!, width: size.width * 0.5)
                   else
@@ -188,7 +237,10 @@ class _MessageBubbleState extends State<MessageBubble> {
       case FunctionChat.revert:
       // revert fuc
       case FunctionChat.reply:
-      // reply fuc
+        String? sender = widget.user.name;
+        String? content = widget.content;
+        widget.onFuctionReply(sender!, content!);
+        break;
       case FunctionChat.share:
         // share fuc
         break;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
@@ -34,6 +35,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   final messageController = TextEditingController();
   bool isTextNotEmpty = false;
   final List<dynamic> messages = [];
+  String _replyUser = "";
+  String _replyContent = "";
+  bool _reply = false;
 
   void getUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -94,8 +98,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   context.read<ChatCubit>().getChat(widget.id);
                   return const CircularProgressIndicator();
                 } else if (state is GetChatLoaded) {
+                  context.read<ChatCubit>().getChat(widget.id);
+
                   Chat chat = state.chat;
                   List<Thread> threads = chat.threads!;
+                  print(threads);
                   return common(viewInsets, threads);
                 } else {
                   print('error');
@@ -107,6 +114,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads) {
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
         child: Container(
       width: double.infinity,
@@ -118,7 +126,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             top: 8.0,
             bottom: (viewInsets.bottom > 0) ? 8.0 : 0.0,
           ),
-          child: Column(children: [
+          child: Column(children: <Widget>[
             Expanded(
               child: ListView(
                 children: threads.map((thread) {
@@ -128,17 +136,88 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                       content: thread.messages!.message,
                       // type: MessageType.text,
                       timeSent: parseTime(thread.updatedAt!),
+                      onFuctionReply: (sender, content) {
+                        setState(() {
+                          _reply = true;
+                          _replyUser = sender;
+                          _replyContent = content;
+                        });
+                      },
                     );
                   }
                   return Message(
-                    sender: thread.user!,
-                    content: thread.messages!.message,
-                    type: MessageType.text,
-                    timeSent: parseTime(thread.updatedAt!),
-                  );
+                      sender: thread.user!,
+                      content: thread.messages!.message,
+                      type: MessageType.text,
+                      timeSent: parseTime(thread.updatedAt!),
+                      onFuctionReply: (sender, content) {
+                        setState(() {
+                          _reply = true;
+                          _replyUser = sender;
+                          _replyContent = content;
+                        });
+                      });
                 }).toList(),
               ),
             ),
+            _reply
+                ? Row(children: <Widget>[
+                    Container(
+                      width: size.width * 0.9,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white54,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                          ),
+                          Container(
+                            width: 3, // Độ rộng của đường kẻ thẳng đứng
+                            height:
+                                40, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                            color: Colors.blue, // Màu sắc của đường kẻ thẳng
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              children: <TextSpan>[
+                                TextSpan(
+                                  text: '  $_replyUser\n',
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 16),
+                                ),
+                                TextSpan(
+                                  text: _replyContent,
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _reply = false;
+                                });
+                              },
+                              icon: Icon(Icons.close),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ])
+                : Container(),
             Row(children: [
               IconButton(
                 onPressed: () {

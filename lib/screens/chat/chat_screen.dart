@@ -51,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
     //   });
     // } else {
     // }
+
     String url = "$baseUrl/all";
     final response = await _dio.get(
       url,
@@ -87,9 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
               .toList()
               .map((e) => e.id)
               .toList();
-          print(channel);
-          print(userId);
-          print(type);
+
           setState(() {
             if (userIds.contains(userId)) {
               print("userIds.contains(userId)");
@@ -143,10 +142,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    all.forEach((element) {
-      print("element $element");
-    });
-    print("-------------------");
     return ListView(
       children: [
         for (int i = 0; i < all.length; i++) ChatItem(obj: all[i]),

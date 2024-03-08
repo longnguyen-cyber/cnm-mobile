@@ -17,6 +17,8 @@ class MessageBubble extends StatefulWidget {
       this.reaction,
       this.isReverse,
       this.isReply,
+      this.replyContent,
+      this.replyUser,
       required this.onFuctionReply});
 
   final User user;
@@ -27,6 +29,8 @@ class MessageBubble extends StatefulWidget {
   final Reaction? reaction;
   final bool? isReverse;
   final bool? isReply;
+  final String? replyContent;
+  final String? replyUser;
   final Function(String, String) onFuctionReply; // người rep và content
 
   @override
@@ -125,17 +129,17 @@ class _MessageBubbleState extends State<MessageBubble> {
                                       ),
                                       RichText(
                                         textAlign: TextAlign.left,
-                                        text: TextSpan(
+                                        text: const TextSpan(
                                           children: <TextSpan>[
                                             TextSpan(
                                               text: 'Đạt võ\n',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                   color: Colors.black,
                                                   fontSize: 12),
                                             ),
                                             TextSpan(
                                               text: 'Bạn có khoẻ không',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                   color: Colors.grey,
                                                   fontSize: 10),
                                             ),

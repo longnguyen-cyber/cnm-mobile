@@ -102,7 +102,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
                   Chat chat = state.chat;
                   List<Thread> threads = chat.threads!;
-                  print(threads);
                   return common(viewInsets, threads);
                 } else {
                   print('error');

@@ -1,11 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
 import 'package:zalo_app/blocs/bloc_friend/friend_cubit.dart';
-import 'package:zalo_app/model/channel.model.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 
@@ -22,6 +26,42 @@ class CreateChannelScreen extends StatefulWidget {
 
 class _CreateChannelScreenState extends State<CreateChannelScreen>
     with TickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+    SocketConfig.listen(SocketEvent.channelWS, (response) {
+      var status = response['status'];
+      if (status == 201) {
+        if (mounted) {
+          SnackBar snackBar = const SnackBar(
+            content: Text('Tạo nhóm thành công'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          selectedUsersFinal.clear();
+          //delay 2s
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              // Check if the widget is still in the tree
+              GoRouter.of(context)
+                  .pushNamed(MyAppRouteConstants.friendRouteName, extra: 1);
+            }
+          });
+        }
+      } else {
+        if (mounted) {
+          SnackBar snackBar = const SnackBar(
+            content: Text('Tạo nhóm thất bại'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
+      }
+    });
+  }
+
+  void createChannel(dynamic obj) {
+    SocketConfig.emit(SocketMessage.createChannel, obj);
+  }
+
   late final TabController _tabController =
       TabController(length: 2, vsync: this);
   late String dropdownValue = 'Public';
@@ -117,15 +157,27 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
                           onPressed: () async {
                             List<String> users =
                                 selectedUsersFinal.map((e) => e.id!).toList();
-                            Channel? rs = await context
-                                .read<ChannelCubit>()
-                                .createChannel(
-                                    name: name,
-                                    isPublic: dropdownValue == 'Public'
-                                        ? false
-                                        : true,
-                                    members: users);
-                            print(rs);
+                            if (name.isEmpty) {
+                              SnackBar snackBar = const SnackBar(
+                                content: Text('Tên nhóm không được để trống'),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                            } else if (users.length < 2) {
+                              SnackBar snackBar = const SnackBar(
+                                content: Text('Nhóm phải có ít nhất 2 người'),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                            } else {
+                              Map<String, dynamic> obj = {
+                                "name": name,
+                                "isPublic":
+                                    dropdownValue == 'Public' ? false : true,
+                                "members": users
+                              };
+                              createChannel(obj);
+                            }
                           },
                           child: const Text(
                             'Tạo nhóm ',
@@ -245,92 +297,91 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
                       return const Text('Error');
                     }
                   }),
-                  Text('2')
-                  // BlocBuilder<FriendCubit, FriendState>(
-                  //   builder: (context, state) {
-                  //     if (state is FriendInitial) {
-                  //       context.read<FriendCubit>().whitelistFriendAccept();
-                  //       return const Center(child: CircularProgressIndicator());
-                  //     }
+                  BlocBuilder<FriendCubit, FriendState>(
+                    builder: (context, state) {
+                      if (state is FriendInitial) {
+                        context.read<FriendCubit>().whitelistFriendAccept();
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  //     if (state is WhitelistFriendAcceptLoaded) {
-                  //       List<Chat> all = state.chats;
-                  //       return SingleChildScrollView(
-                  //         child: Column(children: [
-                  //           for (int i = 0; i < all.length; i++)
-                  //             InkWell(
-                  //               onTap: () {
-                  //                 setState(() {
-                  //                   // ignore: collection_methods_unrelated_type
-                  //                   if (selectedUsersFinal
-                  //                       .map((e) => e.id)
-                  //                       .contains(all[i].user!.id)) {
-                  //                     selectedUsersFinal.remove(all[i].user);
-                  //                   } else {
-                  //                     selectedUsersFinal.add(all[i].user!);
-                  //                   }
-                  //                 });
-                  //               },
-                  //               child: Container(
-                  //                 width: size.width,
-                  //                 padding: EdgeInsets.all(size.width * 0.02),
-                  //                 child: Row(
-                  //                   children: [
-                  //                     Container(
-                  //                         margin:
-                  //                             const EdgeInsets.only(left: 20),
-                  //                         child: CircleAvatar(
-                  //                             radius: 30,
-                  //                             backgroundImage: NetworkImage(
-                  //                                 all[i].user!.avatar!))),
-                  //                     const SizedBox(
-                  //                       width: 20,
-                  //                     ),
-                  //                     Expanded(
-                  //                       flex: 1,
-                  //                       child: Column(
-                  //                         crossAxisAlignment:
-                  //                             CrossAxisAlignment.start,
-                  //                         mainAxisAlignment:
-                  //                             MainAxisAlignment.center,
-                  //                         children: <Widget>[
-                  //                           Text(
-                  //                             all[i].user!.name!,
-                  //                             style:
-                  //                                 const TextStyle(fontSize: 16),
-                  //                           ),
-                  //                           all[i].timeThread != null
-                  //                               ? Text(
-                  //                                   formatTime(
-                  //                                       all[i].timeThread!),
-                  //                                   style: const TextStyle(
-                  //                                       fontSize: 12,
-                  //                                       color: Colors.grey),
-                  //                                 )
-                  //                               : const SizedBox(),
-                  //                         ],
-                  //                       ),
-                  //                     ),
-                  //                     Radio<String>(
-                  //                       value: all[i].user!.id!,
-                  //                       groupValue: selectedUsersFinal
-                  //                               .map((e) => e.id)
-                  //                               .contains(all[i].user!.id!)
-                  //                           ? all[i].user!.id!
-                  //                           : null,
-                  //                       onChanged: (String? value) {},
-                  //                     )
-                  //                   ],
-                  //                 ),
-                  //               ),
-                  //             )
-                  //         ]),
-                  //       );
-                  //     } else {
-                  //       return const Text('Error');
-                  //     }
-                  //   },
-                  // ),
+                      if (state is WhitelistFriendAcceptLoaded) {
+                        List<Chat> all = state.chats;
+                        return SingleChildScrollView(
+                          child: Column(children: [
+                            for (int i = 0; i < all.length; i++)
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    // ignore: collection_methods_unrelated_type
+                                    if (selectedUsersFinal
+                                        .map((e) => e.id)
+                                        .contains(all[i].user!.id)) {
+                                      selectedUsersFinal.remove(all[i].user);
+                                    } else {
+                                      selectedUsersFinal.add(all[i].user!);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  width: size.width,
+                                  padding: EdgeInsets.all(size.width * 0.02),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(left: 20),
+                                          child: CircleAvatar(
+                                              radius: 30,
+                                              backgroundImage: NetworkImage(
+                                                  all[i].user!.avatar!))),
+                                      const SizedBox(
+                                        width: 20,
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            Text(
+                                              all[i].user!.name!,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            // all[i].timeThread != null
+                                            //     ? Text(
+                                            //         formatTime(
+                                            //             all[i].timeThread!),
+                                            //         style: const TextStyle(
+                                            //             fontSize: 12,
+                                            //             color: Colors.grey),
+                                            //       )
+                                            //     : const SizedBox(),
+                                          ],
+                                        ),
+                                      ),
+                                      Radio<String>(
+                                        value: all[i].user!.id!,
+                                        groupValue: selectedUsersFinal
+                                                .map((e) => e.id)
+                                                .contains(all[i].user!.id!)
+                                            ? all[i].user!.id!
+                                            : null,
+                                        onChanged: (String? value) {},
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              )
+                          ]),
+                        );
+                      } else {
+                        return const Text('Error');
+                      }
+                    },
+                  ),
                 ],
               ),
             ]),

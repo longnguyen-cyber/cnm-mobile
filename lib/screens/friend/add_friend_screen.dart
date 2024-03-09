@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
-import 'package:zalo_app/components/customer_text_field.dart';
 import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/components/user_item.dart';
 import 'package:zalo_app/constants.dart';
@@ -60,9 +59,19 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 onPressed: () async {
                   List<User> users =
                       await context.read<UserCubit>().searchUser(name: name);
-                  setState(() {
-                    this.users = users;
-                  });
+                  if (users.isNotEmpty) {
+                    setState(() {
+                      this.users = users;
+                    });
+                  } else {
+                    SnackBar snackBar = const SnackBar(
+                        content: Text('Không tìm thấy người dùng'));
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    setState(() {
+                      this.users = [];
+                    });
+                  }
                 },
               ),
               ListView(

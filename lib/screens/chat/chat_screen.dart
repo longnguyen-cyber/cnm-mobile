@@ -43,7 +43,6 @@ class _ChatScreenState extends State<ChatScreen> {
     //   prefs.setBool('isFirstRun', false);
     // }
     var token = prefs.getString("token") ?? "";
-    print(token);
     // var localData = prefs.getString("all");
     // if (localData != null) {
     //   setState(() {
@@ -91,7 +90,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
           setState(() {
             if (userIds.contains(userId)) {
-              print("userIds.contains(userId)");
               if (type == "updateChannel") {
                 int index =
                     all.indexWhere((element) => element["id"] == channel["id"]);

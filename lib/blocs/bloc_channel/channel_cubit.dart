@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/common.model.dart';
-import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/repository/channel_repo.dart';
 
 part 'channel_state.dart';

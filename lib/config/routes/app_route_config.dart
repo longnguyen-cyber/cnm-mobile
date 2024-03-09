@@ -21,7 +21,10 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          return const MaterialPage(child: MainScreen());
+          return MaterialPage(
+              child: MainScreen(
+            index: 0,
+          ));
         },
       ),
       GoRoute(
@@ -31,6 +34,16 @@ class MyAppRouter {
           return const MaterialPage(child: WelcomeScreen());
         },
       ),
+      GoRoute(
+          name: MyAppRouteConstants.friendRouteName,
+          path: '/friend',
+          pageBuilder: (context, state) {
+            int index = state.extra as int;
+            return MaterialPage(
+                child: MainScreen(
+              index: index,
+            ));
+          }),
       GoRoute(
         name: MyAppRouteConstants.splashRouteName,
         path: '/splash',

@@ -53,7 +53,6 @@ class _MessageBubbleState extends State<MessageBubble> {
     var color = (widget.user.name == sender)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
-    print(widget.isReply);
     return Stack(
       children: [
         Align(
@@ -65,7 +64,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                 bodyBuilder: (context) => ListItems(
                     onReactionSelected: handleReaction,
                     onFunctionSelected: handleFunction),
-                onPop: () => print('Popover was popped!'),
+                onPop: () {},
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
                 height: 200,

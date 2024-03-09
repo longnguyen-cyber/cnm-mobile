@@ -19,7 +19,6 @@ class ChannelService {
         },
       ),
     );
-    // print(response.data["data"] as List);
     try {
       return response;
     } catch (e) {

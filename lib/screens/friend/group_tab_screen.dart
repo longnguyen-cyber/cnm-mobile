@@ -61,36 +61,39 @@ class GroupTabScreen extends StatelessWidget {
               child: CircularProgressIndicator(),
             );
           } else if (state is GetAllChannelsLoaded) {
+            context.read<ChannelCubit>().getAllChannels();
             List<Channel> channels = state.channels;
             return Container(
               padding: EdgeInsets.all(size.width * 0.02),
               width: size.width,
-              child: Column(
-                children: [
-                  topGroupItem,
-                  SizedBox(
-                    height: size.height * 0.01,
-                  ),
-                  const Divider(
-                    color: Colors.grey,
-                  ),
-                  SizedBox(
-                    height: size.height * 0.01,
-                  ),
-                  const Row(
-                    children: <Widget>[
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text('Danh sách nhóm', style: TextStyle(fontSize: 16)),
-                      Spacer(),
-                      Text('Xem tất cả',
-                          style: TextStyle(fontSize: 16, color: Colors.blue)),
-                    ],
-                  ),
-                  for (int i = 0; i < channels.length; i++)
-                    ChannelItem(obj: channels[i]),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    topGroupItem,
+                    SizedBox(
+                      height: size.height * 0.01,
+                    ),
+                    const Divider(
+                      color: Colors.grey,
+                    ),
+                    SizedBox(
+                      height: size.height * 0.01,
+                    ),
+                    const Row(
+                      children: <Widget>[
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text('Danh sách nhóm', style: TextStyle(fontSize: 16)),
+                        Spacer(),
+                        // Text('Xem tất cả',
+                        //     style: TextStyle(fontSize: 16, color: Colors.blue)),
+                      ],
+                    ),
+                    for (int i = 0; i < channels.length; i++)
+                      ChannelItem(obj: channels[i]),
+                  ],
+                ),
               ),
             );
           } else {

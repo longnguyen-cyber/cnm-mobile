@@ -106,14 +106,12 @@ class _FriendTabScreenState extends State<FriendTabScreen>
           iconUrl: 'assets/icons/invite-friends.svg',
           name: 'Thêm bạn bè',
         ),
-        Expanded(
-          child: ListView(children: [
-            for (int i = 0; i < waitList.length; i++)
-              FriendItem(
-                chat: waitList[i],
-              )
-          ]),
-        ),
+        Column(children: [
+          for (int i = 0; i < waitList.length; i++)
+            FriendItem(
+              chat: waitList[i],
+            )
+        ]),
         const Divider(
           color: Colors.grey,
         ),
@@ -168,7 +166,6 @@ class _FriendItemState extends State<FriendItem> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getToken();
   }
@@ -243,7 +240,7 @@ class _FriendItemState extends State<FriendItem> {
             ),
           ),
           Expanded(
-            flex: 2,
+            flex: 1,
             child: chat.requestAdd
                 ? Row(
                     children: [
@@ -283,14 +280,21 @@ class _FriendItemState extends State<FriendItem> {
                   )
                 : Row(
                     children: <Widget>[
-                      const Icon(Icons.call),
                       const Spacer(),
+                      const Icon(Icons.call),
+                      const SizedBox(
+                        width: 10,
+                      ),
                       const Icon(Icons.video_call),
+                      const SizedBox(
+                        width: 10,
+                      ),
                       ElevatedButton(
-                          onPressed: () {
-                            unFriend(chat.id!);
-                          },
-                          child: const Icon(Icons.remove_circle_outlined))
+                        onPressed: () {
+                          unFriend(chat.id!);
+                        },
+                        child: const Icon(Icons.remove_circle_outlined),
+                      )
                     ],
                   ),
           )

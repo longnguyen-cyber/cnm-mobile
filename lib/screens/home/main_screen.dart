@@ -10,7 +10,11 @@ import 'package:zalo_app/screens/personal.dart';
 import '../chat/chat_screen.dart';
 
 class BottomNavigator extends StatefulWidget {
-  const BottomNavigator({super.key});
+  const BottomNavigator({
+    super.key,
+    required this.index,
+  });
+  final int index;
 
   @override
   State<BottomNavigator> createState() => _BottomNavigatorsState();
@@ -23,7 +27,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   void initState() {
     super.initState();
     _motionTabBarController = MotionTabBarController(
-      initialIndex: 0,
+      initialIndex: widget.index,
       length: 4,
       vsync: this,
     );
@@ -143,8 +147,9 @@ class _BottomNavigatorsState extends State<BottomNavigator>
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  MainScreen({super.key, this.index});
 
+  int? index;
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -155,7 +160,13 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+
     fetchToken();
+    if (widget.index == null) {
+      setState(() {
+        widget.index = 0;
+      });
+    }
   }
 
   void fetchToken() async {
@@ -169,8 +180,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     if (_token.toString() != "" && _token.toString() != "null") {
-      return const Scaffold(
-        body: BottomNavigator(),
+      return Scaffold(
+        body: BottomNavigator(
+          index: widget.index!,
+        ),
       );
     } else {
       return const WelcomeScreen();

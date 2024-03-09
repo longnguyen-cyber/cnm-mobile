@@ -1,8 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/friend/friend_screen.dart';
 import 'package:zalo_app/screens/personal.dart';
@@ -22,10 +27,56 @@ class BottomNavigator extends StatefulWidget {
 
 class _BottomNavigatorsState extends State<BottomNavigator>
     with TickerProviderStateMixin {
+  List<Chat> waitList = [];
+  final Dio _dio = Dio();
+  var baseUrl = dotenv.env['API_URL'];
+  void getAll() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var token = prefs.getString("token") ?? "";
+
+    String url = "$baseUrl/chats/friend/waitlistFriendAccept";
+    final response = await _dio.get(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    if (mounted) {
+      setState(() {
+        waitList = (response.data["data"] as List)
+            .map((e) => Chat.fromMap(e))
+            .toList();
+      });
+    }
+  }
+
   MotionTabBarController? _motionTabBarController;
   @override
   void initState() {
     super.initState();
+    SocketConfig.listen(SocketEvent.chatWS, (response) {
+      var status = response['status'];
+      var data = response['data'];
+      if (status == 200) {
+        if (mounted) {
+          if (data["type"] == "unReqAddFriend" ||
+              data["type"] == "acceptAddFriend" ||
+              data["type"] == "rejectAddFriend") {
+            waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+          }
+        }
+      }
+      setState(() {
+        waitList = waitList;
+      });
+    });
+    getAll();
     _motionTabBarController = MotionTabBarController(
       initialIndex: widget.index,
       length: 4,
@@ -35,6 +86,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
 
   @override
   Widget build(BuildContext context) {
+    print(waitList.length);
     return Scaffold(
       appBar: AppBar(
         leading: const Icon(
@@ -85,18 +137,19 @@ class _BottomNavigatorsState extends State<BottomNavigator>
             size: 18,
           ),
 
-          // custom badge Widget
-          Container(
-            color: Colors.black,
-            padding: const EdgeInsets.all(2),
-            child: const Text(
-              '11',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
+          waitList.length == 0
+              ? const SizedBox()
+              : Container(
+                  color: Colors.black,
+                  padding: const EdgeInsets.all(2),
+                  child: Text(
+                    waitList.length.toString(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
 
           // allow null
           null,
@@ -146,6 +199,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   }
 }
 
+// ignore: must_be_immutable
 class MainScreen extends StatefulWidget {
   MainScreen({super.key, this.index});
 

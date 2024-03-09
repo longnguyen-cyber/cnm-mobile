@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/constants.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
@@ -23,7 +24,7 @@ class MessageBubble extends StatefulWidget {
 
   final User user;
   final String? content;
-  final String timeSent;
+  final DateTime timeSent;
   final String? imageUrl;
   final String? videoUrl;
   final Reaction? reaction;
@@ -42,17 +43,41 @@ class _MessageBubbleState extends State<MessageBubble> {
   Icon reactionIcon = const Icon(
     FontAwesomeIcons.heart,
   );
+
+  User? userExisting = User();
+
+  void getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
+    var userOfToken = prefs.getString(token) ?? "";
+    if (userOfToken != "") {
+      userExisting = User.fromJson(userOfToken);
+    } else {
+      userExisting = null;
+    }
+    setState(() {
+      userExisting = userExisting;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUser();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
 
-    final alignment = (widget.user.name == sender)
+    final alignment = (widget.user.name == userExisting!.name)
         ? Alignment.centerRight
         : Alignment.centerLeft;
 
-    var color = (widget.user.name == sender)
+    var color = (widget.user.name == userExisting!.name)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
+    // print(checkTimeSentWithCurrentTime(widget.timeSent));
     return Stack(
       children: [
         Align(
@@ -64,7 +89,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                 bodyBuilder: (context) => ListItems(
                     onReactionSelected: handleReaction,
                     onFunctionSelected: handleFunction),
-                onPop: () {},
+                onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
                 height: 200,
@@ -164,8 +189,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                   else
                     const SizedBox.shrink(),
                   // Container()
-                  Text(widget.timeSent,
+                  Text(parseTime(widget.timeSent),
                       style: Theme.of(context).textTheme.bodySmall),
+
                   // if (widget.reaction != null)
                   // Icon(
                   //   FontAwesomeIcons.heart,
@@ -185,6 +211,20 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
       ],
     );
+  }
+
+  String parseTime(DateTime time) {
+    return '${time.hour}:${time.minute}';
+  }
+
+  bool checkTimeSentWithCurrentTime(DateTime timeSent) {
+    var currentTime = DateTime.now();
+    var timeSentString = timeSent.toString();
+    var currentTimeString = currentTime.toString();
+    if (timeSentString.substring(0, 10) == currentTimeString.substring(0, 10)) {
+      return true;
+    }
+    return false;
   }
 
   void handleReaction(Reaction reaction) {

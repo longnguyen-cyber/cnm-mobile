@@ -113,6 +113,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads) {
+    bool isTodayTextShown = false;
     Size size = MediaQuery.of(context).size;
     return SafeArea(
         child: Container(
@@ -127,14 +128,18 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           ),
           child: Column(children: <Widget>[
             Expanded(
-              child: ListView(
-                children: threads.map((thread) {
+              child: ListView.builder(
+                itemCount: threads.length,
+                itemBuilder: (BuildContext context, int index) {
+                  Thread thread = threads[index];
+                  bool nameExisted = index > 0 &&
+                      threads[index - 1].user!.name == thread.user!.name;
+
                   if (thread.user!.id == userExisting!.id) {
                     return MessageBubble(
                       user: userExisting!,
                       content: thread.messages!.message,
-                      // type: MessageType.text,
-                      timeSent: parseTime(thread.updatedAt!),
+                      timeSent: (thread.updatedAt!),
                       onFuctionReply: (sender, content) {
                         setState(() {
                           _reply = true;
@@ -144,19 +149,64 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                       },
                     );
                   }
+                  if (checkTimeSentWithCurrentTime(thread.updatedAt!)) {
+                    List<Widget> children = [
+                      Message(
+                        sender: thread.user!,
+                        content: thread.messages!.message,
+                        type: MessageType.text,
+                        timeSent: thread.updatedAt!,
+                        onFuctionReply: (sender, content) {
+                          setState(() {
+                            _reply = true;
+                            _replyUser = sender;
+                            _replyContent = content;
+                          });
+                        },
+                        exist: !nameExisted,
+                      ),
+                    ];
+
+                    if (!isTodayTextShown) {
+                      children.insert(
+                          0,
+                          const Column(
+                            children: [
+                              Divider(
+                                color: Colors.grey,
+                              ),
+                              Center(
+                                child: Text(
+                                  "Hôm nay",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ));
+                      isTodayTextShown = true;
+                    }
+
+                    return Column(children: children);
+                  }
+
                   return Message(
-                      sender: thread.user!,
-                      content: thread.messages!.message,
-                      type: MessageType.text,
-                      timeSent: parseTime(thread.updatedAt!),
-                      onFuctionReply: (sender, content) {
-                        setState(() {
-                          _reply = true;
-                          _replyUser = sender;
-                          _replyContent = content;
-                        });
+                    sender: thread.user!,
+                    content: thread.messages!.message,
+                    type: MessageType.text,
+                    timeSent: thread.updatedAt!,
+                    onFuctionReply: (sender, content) {
+                      setState(() {
+                        _reply = true;
+                        _replyUser = sender;
+                        _replyContent = content;
                       });
-                }).toList(),
+                    },
+                    exist: !nameExisted,
+                  );
+                },
               ),
             ),
             _reply
@@ -209,7 +259,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                   _reply = false;
                                 });
                               },
-                              icon: Icon(Icons.close),
+                              icon: const Icon(Icons.close),
                             ),
                           ),
                         ],
@@ -282,8 +332,14 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   //parse time to HH:ss with input Datetime
-  String parseTime(DateTime time) {
-    return '${time.hour}:${time.minute}';
+  bool checkTimeSentWithCurrentTime(DateTime timeSent) {
+    var currentTime = DateTime.now();
+    var timeSentString = timeSent.toString();
+    var currentTimeString = currentTime.toString();
+    if (timeSentString.substring(0, 10) == currentTimeString.substring(0, 10)) {
+      return true;
+    }
+    return false;
   }
 
   void _sendMessage() {

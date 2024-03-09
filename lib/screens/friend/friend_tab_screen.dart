@@ -27,14 +27,20 @@ class _FriendTabScreenState extends State<FriendTabScreen>
   late dynamic newEvent = null;
   late String userId = "";
 
-  List<Chat> waitList = [];
   List<Chat> whiteList = [];
+  List<Chat> waitList = [];
 
   void getAll() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     var token = prefs.getString("token") ?? "";
-
+    var userOfToken = prefs.getString(token) ?? "";
+    if (userOfToken != "") {
+      userId = User.fromJson(userOfToken).id!;
+      setState(() {
+        userId = userId;
+      });
+    }
     String url = "$baseUrl/chats/friend/waitlistFriendAccept";
     final response = await _dio.get(
       url,
@@ -56,22 +62,9 @@ class _FriendTabScreenState extends State<FriendTabScreen>
     }
   }
 
-  void getUser() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var token = prefs.getString("token") ?? "";
-    var userOfToken = prefs.getString(token) ?? "";
-    if (userOfToken != "") {
-      userId = User.fromJson(userOfToken).id!;
-      setState(() {
-        userId = userId;
-      });
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    getUser();
     getAll();
     // listen to the chatWS event with function get all request add friend
     SocketConfig.listen(SocketEvent.chatWS, (response) {

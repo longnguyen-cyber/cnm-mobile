@@ -12,11 +12,13 @@ class Message extends StatefulWidget {
     required this.type,
     required this.timeSent,
     required this.onFuctionReply,
+    required this.exist,
   });
+  final bool exist;
   final User sender;
   final String content;
   final MessageType type;
-  final String timeSent;
+  final DateTime timeSent;
   final Function(String, String) onFuctionReply;
 
   @override
@@ -24,19 +26,27 @@ class Message extends StatefulWidget {
 }
 
 class _MessageState extends State<Message> {
+  Map<String, bool> nameExit = {};
+
+  @override
+  void initState() {
+    super.initState();
+    nameExit[widget.sender.name!] = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Avatar(imageUrl: widget.sender.avatar!, radius: 12),
+        widget.exist == true
+            ? Avatar(imageUrl: widget.sender.avatar!, radius: 12)
+            : const SizedBox(width: 30),
         Column(
           children: <Widget>[
             MessageBubble(
               user: widget.sender,
               content: widget.content,
-              // isReverse: true,
-              // type: widget.type,
               timeSent: widget.timeSent,
               onFuctionReply: widget.onFuctionReply,
             ),

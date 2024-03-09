@@ -21,15 +21,15 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(
-          //     child: MainScreen(
-          //   index: 0,
-          // ));
-          return const MaterialPage(
-              child: DetailChatScreen(
-            id: "65e480261644570261cadca4",
-            type: "channel",
+          return MaterialPage(
+              child: MainScreen(
+            index: 0,
           ));
+          // return const MaterialPage(
+          //     child: DetailChatScreen(
+          //   id: "65e480261644570261cadca4",
+          //   type: "channel",
+          // ));
         },
       ),
       GoRoute(

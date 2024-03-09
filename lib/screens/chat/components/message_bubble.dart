@@ -3,7 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/model/user.model.dart';
-import 'package:zalo_app/screens/chat/constants.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
@@ -214,7 +213,13 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   String parseTime(DateTime time) {
-    return '${time.hour}:${time.minute}';
+    var vietnameseTime = time.add(const Duration(hours: 7));
+    // return '${vietnameseTime.hour}:${vietnameseTime.minute}';
+    //if minute < 10, add 0 before minute
+    if (vietnameseTime.minute < 10) {
+      return '${vietnameseTime.hour}:0${vietnameseTime.minute}';
+    }
+    return '${vietnameseTime.hour}:${vietnameseTime.minute}';
   }
 
   bool checkTimeSentWithCurrentTime(DateTime timeSent) {

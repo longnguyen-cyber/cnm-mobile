@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
@@ -38,6 +42,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   String _replyUser = "";
   String _replyContent = "";
   bool _reply = false;
+  List<Thread> threadsChannel = [];
+  List<Thread> threadsChat = [];
 
   void getUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -57,6 +63,26 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   void initState() {
     super.initState();
     getUser();
+
+    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
+      var members =
+          (response['members'] as List<dynamic>).map((e) => e["id"]).toList();
+
+      if (members.contains(userExisting!.id)) {
+        if (mounted) {
+          if (widget.id == response['channelId']) {
+            setState(() {
+              threadsChannel.add(Thread.fromMap(response['thread']));
+            });
+          } else {
+            setState(() {
+              threadsChat.add(Thread.fromMap(response['thread']));
+            });
+          }
+        }
+      }
+      print(threadsChannel);
+    });
   }
 
   @override
@@ -85,8 +111,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   return const CircularProgressIndicator();
                 } else if (state is GetChannelLoaded) {
                   Channel channel = state.channel;
-                  List<Thread> threads = channel.threads!;
-                  return common(viewInsets, threads);
+                  threadsChannel = channel.threads!;
+                  return common(viewInsets, threadsChannel);
                 } else {
                   return const CircularProgressIndicator();
                 }
@@ -101,8 +127,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   context.read<ChatCubit>().getChat(widget.id);
 
                   Chat chat = state.chat;
-                  List<Thread> threads = chat.threads!;
-                  return common(viewInsets, threads);
+                  threadsChat = chat.threads!;
+                  return common(viewInsets, threadsChat);
                 } else {
                   print('error');
                   return const CircularProgressIndicator();
@@ -115,6 +141,25 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads) {
     bool isTodayTextShown = false;
     Size size = MediaQuery.of(context).size;
+    ScrollController controller = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller.hasClients) {
+        controller.jumpTo(controller.position.maxScrollExtent);
+      }
+    });
+    bool isDifferentDay(int index) {
+      if (index == threads.length - 1) {
+        return false; // Always false for the last message
+      }
+
+      DateTime currentMessageDate = (threads[index].updatedAt!);
+      DateTime nextMessageDate = (threads[index + 1].updatedAt!);
+
+      return currentMessageDate.day != nextMessageDate.day ||
+          currentMessageDate.month != nextMessageDate.month ||
+          currentMessageDate.year != nextMessageDate.year;
+    }
+
     return SafeArea(
         child: Container(
       width: double.infinity,
@@ -129,28 +174,32 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           child: Column(children: <Widget>[
             Expanded(
               child: ListView.builder(
+                controller: controller,
                 itemCount: threads.length,
                 itemBuilder: (BuildContext context, int index) {
                   Thread thread = threads[index];
                   bool nameExisted = index > 0 &&
                       threads[index - 1].user!.name == thread.user!.name;
 
+                  List<Widget> children = [];
+
                   if (thread.user!.id == userExisting!.id) {
-                    return MessageBubble(
-                      user: userExisting!,
-                      content: thread.messages!.message,
-                      timeSent: (thread.updatedAt!),
-                      onFuctionReply: (sender, content) {
-                        setState(() {
-                          _reply = true;
-                          _replyUser = sender;
-                          _replyContent = content;
-                        });
-                      },
+                    children.add(
+                      MessageBubble(
+                        user: userExisting!,
+                        content: thread.messages!.message,
+                        timeSent: (thread.updatedAt!),
+                        onFuctionReply: (sender, content) {
+                          setState(() {
+                            _reply = true;
+                            _replyUser = sender;
+                            _replyContent = content;
+                          });
+                        },
+                      ),
                     );
-                  }
-                  if (checkTimeSentWithCurrentTime(thread.updatedAt!)) {
-                    List<Widget> children = [
+                  } else {
+                    children.add(
                       Message(
                         sender: thread.user!,
                         content: thread.messages!.message,
@@ -165,47 +214,46 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                         },
                         exist: !nameExisted,
                       ),
-                    ];
-
-                    if (!isTodayTextShown) {
-                      children.insert(
-                          0,
-                          const Column(
-                            children: [
-                              Divider(
-                                color: Colors.grey,
-                              ),
-                              Center(
-                                child: Text(
-                                  "Hôm nay",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ));
-                      isTodayTextShown = true;
-                    }
-
-                    return Column(children: children);
+                    );
                   }
 
-                  return Message(
-                    sender: thread.user!,
-                    content: thread.messages!.message,
-                    type: MessageType.text,
-                    timeSent: thread.updatedAt!,
-                    onFuctionReply: (sender, content) {
-                      setState(() {
-                        _reply = true;
-                        _replyUser = sender;
-                        _replyContent = content;
-                      });
-                    },
-                    exist: !nameExisted,
-                  );
+                  if (isDifferentDay(index)) {
+                    DateTime currentMessageDate = (threads[index].updatedAt!);
+                    DateTime now = DateTime.now();
+
+                    String formattedDate;
+                    if (currentMessageDate.year == now.year &&
+                        currentMessageDate.month == now.month &&
+                        currentMessageDate.day == now.day - 1) {
+                      formattedDate = 'Hôm qua';
+                    } else {
+                      formattedDate =
+                          DateFormat('dd/MM/yyyy').format(currentMessageDate);
+                    }
+
+                    children.add(
+                      Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 60),
+                            child: const Divider(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            formattedDate,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(children: children);
                 },
               ),
             ),
@@ -331,18 +379,27 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     ));
   }
 
-  //parse time to HH:ss with input Datetime
-  bool checkTimeSentWithCurrentTime(DateTime timeSent) {
-    var currentTime = DateTime.now();
-    var timeSentString = timeSent.toString();
-    var currentTimeString = currentTime.toString();
-    if (timeSentString.substring(0, 10) == currentTimeString.substring(0, 10)) {
-      return true;
-    }
-    return false;
+  bool checkTimeSentWithCurrentTime(DateTime time) {
+    var timeSent = time.toLocal().toString().split(" ")[0];
+    var now = DateTime.now().toString().split(" ")[0];
+
+    return timeSent == now;
   }
 
   void _sendMessage() {
+    //     "messages":{
+    //   "message":"test mention 2"
+    // },
+    // "channelId":"65e480261644570261cadca4"
     // xử lý tin nhắn
+    if (messageController.text.isNotEmpty) {
+      SocketConfig.emit(SocketMessage.sendThread, {
+        "messages": {
+          "message": messageController.text,
+        },
+        "channelId": widget.id,
+      });
+      messageController.clear();
+    }
   }
 }

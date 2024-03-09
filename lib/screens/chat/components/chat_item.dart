@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/utils/constants.dart';
 
@@ -146,8 +147,9 @@ class _ChatItemState extends State<ChatItem> {
 
   //caculate time with now
   String caculateTime(DateTime time) {
+    var vietnameseTime = time.add(const Duration(hours: 7));
     var now = DateTime.now();
-    var duration = now.difference(time);
+    var duration = now.difference(vietnameseTime);
     if (duration.inDays > 0) {
       return "${duration.inDays} ngày trước";
     } else if (duration.inHours > 0) {

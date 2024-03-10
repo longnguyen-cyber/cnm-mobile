@@ -8,7 +8,7 @@ import 'package:zalo_app/model/user.model.dart';
 
 class Thread {
   final String? id;
-  final DateTime? updatedAt;
+  final DateTime? createdAt;
   final bool? isEdited;
   final bool? isReply;
   final bool? isRecall;
@@ -24,7 +24,7 @@ class Thread {
   final List<Thread>? replys;
   Thread({
     required this.id,
-    required this.updatedAt,
+    required this.createdAt,
     this.isEdited,
     this.isReply,
     this.isRecall,
@@ -43,7 +43,6 @@ class Thread {
   Thread copyWith({
     String? id,
     DateTime? createdAt,
-    DateTime? updatedAt,
     DateTime? deletedAt,
     bool? isEdited,
     bool? isReply,
@@ -61,7 +60,7 @@ class Thread {
   }) {
     return Thread(
       id: id ?? this.id,
-      updatedAt: updatedAt ?? this.updatedAt,
+      createdAt: createdAt ?? this.createdAt,
       isEdited: isEdited ?? this.isEdited,
       isReply: isReply ?? this.isReply,
       isRecall: isRecall ?? this.isRecall,
@@ -81,7 +80,7 @@ class Thread {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'updatedAt': updatedAt?.millisecondsSinceEpoch,
+      'createdAt': createdAt?.millisecondsSinceEpoch,
       'isEdited': isEdited,
       'isReply': isReply,
       'isRecall': isRecall,
@@ -101,8 +100,8 @@ class Thread {
   factory Thread.fromMap(Map<String, dynamic> map) {
     return Thread(
       id: map['id'] as String,
-      updatedAt: map['updatedAt'] != null
-          ? DateTime.parse(map['updatedAt'] as String)
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
           : null,
       isEdited: map['isEdited'] != null ? map['isEdited'] as bool : null,
       isReply: map['isReply'] != null ? map['isReply'] as bool : null,
@@ -143,7 +142,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, updatedAt: $updatedAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
+    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
   }
 
   @override
@@ -151,7 +150,7 @@ class Thread {
     if (identical(this, other)) return true;
 
     return other.id == id &&
-        other.updatedAt == updatedAt &&
+        other.createdAt == createdAt &&
         other.isEdited == isEdited &&
         other.isReply == isReply &&
         other.isRecall == isRecall &&
@@ -170,7 +169,7 @@ class Thread {
   @override
   int get hashCode {
     return id.hashCode ^
-        updatedAt.hashCode ^
+        createdAt.hashCode ^
         isEdited.hashCode ^
         isReply.hashCode ^
         isRecall.hashCode ^

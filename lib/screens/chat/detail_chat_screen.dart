@@ -152,8 +152,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         return false; // Always false for the last message
       }
 
-      DateTime currentMessageDate = (threads[index].updatedAt!);
-      DateTime nextMessageDate = (threads[index + 1].updatedAt!);
+      DateTime currentMessageDate = (threads[index].createdAt!);
+      DateTime nextMessageDate = (threads[index + 1].createdAt!);
 
       return currentMessageDate.day != nextMessageDate.day ||
           currentMessageDate.month != nextMessageDate.month ||
@@ -188,7 +188,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                       MessageBubble(
                         user: userExisting!,
                         content: thread.messages!.message,
-                        timeSent: (thread.updatedAt!),
+                        timeSent: (thread.createdAt!),
                         onFuctionReply: (sender, content) {
                           setState(() {
                             _reply = true;
@@ -204,7 +204,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                         sender: thread.user!,
                         content: thread.messages!.message,
                         type: MessageType.text,
-                        timeSent: thread.updatedAt!,
+                        timeSent: thread.createdAt!,
                         onFuctionReply: (sender, content) {
                           setState(() {
                             _reply = true;
@@ -218,7 +218,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   }
 
                   if (isDifferentDay(index)) {
-                    DateTime currentMessageDate = (threads[index].updatedAt!);
+                    DateTime currentMessageDate = (threads[index].createdAt!);
                     DateTime now = DateTime.now();
 
                     String formattedDate;
@@ -392,14 +392,14 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     // },
     // "channelId":"65e480261644570261cadca4"
     // xử lý tin nhắn
-    if (messageController.text.isNotEmpty) {
-      SocketConfig.emit(SocketMessage.sendThread, {
-        "messages": {
-          "message": messageController.text,
-        },
-        "channelId": widget.id,
-      });
-      messageController.clear();
-    }
+    // if (messageController.text.isNotEmpty) {
+    //   SocketConfig.emit(SocketMessage.sendThread, {
+    //     "messages": {
+    //       "message": messageController.text,
+    //     },
+    //     "channelId": widget.id,
+    //   });
+    //   messageController.clear();
+    // }
   }
 }

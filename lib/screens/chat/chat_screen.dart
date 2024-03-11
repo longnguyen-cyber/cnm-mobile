@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -43,30 +45,29 @@ class _ChatScreenState extends State<ChatScreen> {
     //   prefs.setBool('isFirstRun', false);
     // }
     var token = prefs.getString("token") ?? "";
-    // var localData = prefs.getString("all");
-    // if (localData != null) {
-    //   setState(() {
-    //     all = json.decode(localData);
-    //   });
-    // } else {
-    // }
-
-    String url = "$baseUrl/all";
-    final response = await _dio.get(
-      url,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    if (mounted) {
+    var localData = prefs.getString("all");
+    if (localData != null) {
       setState(() {
-        all = response.data;
+        all = json.decode(localData);
       });
+    } else {
+      String url = "$baseUrl/all";
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          all = response.data;
+        });
+      }
     }
   }
 

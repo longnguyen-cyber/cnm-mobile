@@ -10,4 +10,5 @@ class MyAppRouteConstants {
   static const String createChannelRouteName = 'createChannel';
   static const String profileRouteName = 'profile';
   static const String friendRouteName = 'friend';
+  static const String moreRouteName = 'more';
 }

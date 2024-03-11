@@ -54,9 +54,11 @@ class _MessageBubbleState extends State<MessageBubble> {
     } else {
       userExisting = null;
     }
-    setState(() {
-      userExisting = userExisting;
-    });
+    if (mounted) {
+      setState(() {
+        userExisting = userExisting;
+      });
+    }
   }
 
   @override

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/splash_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
+import 'package:zalo_app/screens/chat/components/more_info.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 import 'package:zalo_app/screens/friend/add_friend_screen.dart';
 import 'package:zalo_app/screens/friend/create_channel_screen.dart';
@@ -21,20 +23,21 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(
-          //     child: MainScreen(
-          //   index: 0,
-          // ));
+          return MaterialPage(
+              child: MainScreen(
+            index: 0,
+          ));
           // return const MaterialPage(
           //     child: DetailChatScreen(
           //   id: "65e480261644570261cadca4",
           //   type: "channel",
+          //   name: "lam dep",
           // ));
-          return const MaterialPage(
-              child: DetailChatScreen(
-            id: "65ea7527798ba90473c6a2da",
-            type: "chat",
-          ));
+          // return const MaterialPage(
+          //     child: DetailChatScreen(
+          //   id: "65ea7527798ba90473c6a2da",
+          //   type: "chat",
+          // ));
         },
       ),
       GoRoute(
@@ -111,15 +114,45 @@ class MyAppRouter {
         name: MyAppRouteConstants.detailChatRouteName,
         path: '/detailChat',
         pageBuilder: (context, state) {
-          dynamic params = state.extra as Map<String, dynamic>;
-          String id = params["id"] as String;
-          String type = params["type"] as String;
+          dynamic params = state.extra as dynamic;
+          dynamic data;
+          if (params["type"] == "channel") {
+            data = {
+              "id": params["id"],
+              "type": "channel",
+              "name": params["name"],
+              "members": (params["users"] as List<dynamic>).length
+            };
+          } else {
+            data = {
+              "id": params["id"],
+              "type": "chat",
+              "name": params["user"]["name"],
+            };
+          }
 
-          return MaterialPage(
-              child: DetailChatScreen(
-            id: id,
-            type: type,
-          ));
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: DetailChatScreen(
+              data: data,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.moreRouteName,
+        path: '/more',
+        pageBuilder: (context, state) {
+          dynamic params = state.extra as dynamic;
+
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: MoreInfo(
+              data: params,
+            ),
+          );
         },
       ),
     ],
@@ -128,6 +161,28 @@ class MyAppRouter {
           child: Center(
         child: Text('ErrorPage'),
       ));
+    },
+  );
+}
+
+CustomTransitionPage buildPageWithDefaultTransition<T>({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      var begin = const Offset(1.0, 0.0);
+      var end = Offset.zero;
+      var tween = Tween(begin: begin, end: end);
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
     },
   );
 }

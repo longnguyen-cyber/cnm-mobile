@@ -20,16 +20,15 @@ class _ChatItemState extends State<ChatItem> {
   @override
   Widget build(BuildContext context) {
     var map = widget.obj as Map<String, dynamic>;
-
     Size size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => {
-        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
-            extra: {"id": map["id"], "type": map["type"]})
+        GoRouter.of(context)
+            .pushNamed(MyAppRouteConstants.detailChatRouteName, extra: map)
       },
       onLongPress: () => {
-        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
-            extra: {"id": map["id"], "type": map["type"]})
+        GoRouter.of(context)
+            .pushNamed(MyAppRouteConstants.detailChatRouteName, extra: map)
       },
       child: Container(
         width: size.width,

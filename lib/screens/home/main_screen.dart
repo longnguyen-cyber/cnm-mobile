@@ -86,7 +86,6 @@ class _BottomNavigatorsState extends State<BottomNavigator>
 
   @override
   Widget build(BuildContext context) {
-    print(waitList.length);
     return Scaffold(
       appBar: AppBar(
         leading: const Icon(

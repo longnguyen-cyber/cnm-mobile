@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
-import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
@@ -18,14 +20,8 @@ import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 import 'components/index.dart';
 
 class DetailChatScreen extends StatefulWidget {
-  const DetailChatScreen({
-    super.key,
-    required this.id,
-    required this.type,
-    // required this.chatRoom
-  });
-  final String id;
-  final String type;
+  const DetailChatScreen({super.key, required this.data});
+  final dynamic data;
 
   // final ChatRoom chatRoom;
 
@@ -65,32 +61,67 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     getUser();
 
     SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
-      var members =
-          (response['members'] as List<dynamic>).map((e) => e["id"]).toList();
-
+      var members = response['members'] != null
+          ? (response['members'] as List<dynamic>).map((e) => e["id"]).toList()
+          : [];
       if (members.contains(userExisting!.id)) {
         if (mounted) {
-          if (widget.id == response['channelId']) {
-            setState(() {
-              threadsChannel.add(Thread.fromMap(response['thread']));
-            });
-          } else {
-            setState(() {
-              threadsChat.add(Thread.fromMap(response['thread']));
-            });
-          }
+          setState(() {
+            threadsChannel.add(Thread.fromMap(response['thread']));
+          });
+        }
+      } else if (response["receiveId"] == userExisting!.id) {
+        if (mounted) {
+          setState(() {
+            threadsChat.add(Thread.fromMap(response['thread']));
+          });
         }
       }
-      print(threadsChannel);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
+    final String id = widget.data["id"];
+    final String name = widget.data["name"];
+    final String type = widget.data["type"];
+    late int members;
+    if (widget.data["type"] == "channel") {
+      members = widget.data["members"];
+    }
+
+    late dynamic data;
+    print(id);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tin nhắn', style: TextStyle(color: Colors.white)),
+        title: Column(
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+            if (type == "channel")
+              Text(
+                "$members thành viên",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              GoRouter.of(context).pushNamed(MyAppRouteConstants.moreRouteName,
+                  extra: {"data": data, "type": type});
+            },
+            icon: const Icon(Icons.format_list_bulleted),
+          ),
+        ],
         backgroundColor: Colors.blue,
         elevation: 0,
         leading: IconButton(
@@ -103,14 +134,18 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           },
         ),
       ),
-      body: widget.type == 'channel'
+      body: type == 'channel'
           ? BlocBuilder<ChannelCubit, ChannelState>(
               builder: (context, state) {
                 if (state is ChannelInitial) {
-                  context.read<ChannelCubit>().getChannel(widget.id);
+                  context.read<ChannelCubit>().getChannel(id);
+
                   return const CircularProgressIndicator();
                 } else if (state is GetChannelLoaded) {
+                  context.read<ChannelCubit>().getChannel(id);
+
                   Channel channel = state.channel;
+                  data = channel;
                   threadsChannel = channel.threads!;
                   return common(viewInsets, threadsChannel);
                 } else {
@@ -121,12 +156,13 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           : BlocBuilder<ChatCubit, ChatState>(
               builder: (context, state) {
                 if (state is ChatInitial) {
-                  context.read<ChatCubit>().getChat(widget.id);
+                  context.read<ChatCubit>().getChat(id);
                   return const CircularProgressIndicator();
                 } else if (state is GetChatLoaded) {
-                  context.read<ChatCubit>().getChat(widget.id);
+                  context.read<ChatCubit>().getChat(id);
 
                   Chat chat = state.chat;
+                  data = chat;
                   threadsChat = chat.threads!;
                   return common(viewInsets, threadsChat);
                 } else {
@@ -139,7 +175,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads) {
-    bool isTodayTextShown = false;
     Size size = MediaQuery.of(context).size;
     ScrollController controller = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {

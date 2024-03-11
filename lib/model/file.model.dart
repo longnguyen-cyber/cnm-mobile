@@ -14,9 +14,9 @@ class File {
     required this.filename,
     required this.path,
     required this.size,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.deletedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
 
   File copyWith({

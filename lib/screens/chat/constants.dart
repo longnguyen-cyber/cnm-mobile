@@ -10,3 +10,4 @@ const readMessageStyle = TextStyle(
 
 const String sender = 'Sender';
 const String receiver = 'Receiver';
+const String recordMessage = 'Bấm để ghi âm';

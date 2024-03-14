@@ -49,6 +49,7 @@ class _MessageState extends State<Message> {
               content: widget.content,
               timeSent: widget.timeSent,
               onFuctionReply: widget.onFuctionReply,
+              isReverse: true,
             ),
           ],
         ),

@@ -45,30 +45,31 @@ class _ChatScreenState extends State<ChatScreen> {
     //   prefs.setBool('isFirstRun', false);
     // }
     var token = prefs.getString("token") ?? "";
-    var localData = prefs.getString("all");
-    if (localData != null) {
+    // var localData = prefs.getString("all");
+    // if (localData != null) {
+    //   setState(() {
+    //     all = json.decode(localData);
+    //   });
+    // } else {
+    print(token);
+    String url = "$baseUrl/all";
+    final response = await _dio.get(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    print(response.data);
+    if (mounted) {
       setState(() {
-        all = json.decode(localData);
+        all = response.data;
       });
-    } else {
-      String url = "$baseUrl/all";
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
-
-      if (mounted) {
-        setState(() {
-          all = response.data;
-        });
-      }
     }
+    // }
   }
 
   @override
@@ -141,9 +142,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // for (int i = 0; i < all.length; i++) print('Dữ liệu' + all[i] + '');
     return ListView(
       children: [
-        for (int i = 0; i < all.length; i++) ChatItem(obj: all[i]),
+        for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])
+        // print(all[i]) ,
       ],
     );
   }

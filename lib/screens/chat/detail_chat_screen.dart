@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,9 +14,11 @@ import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
+import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
+import 'package:zalo_app/screens/chat/constants.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 
 import 'components/index.dart';
@@ -195,6 +199,15 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           currentMessageDate.year != nextMessageDate.year;
     }
 
+    handleFilePicked() async {
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      if (result != null) {
+        // gửi file
+      } else {
+        // Xu ly khi khong chon file
+      }
+    }
+
     return SafeArea(
         child: Container(
       width: double.infinity,
@@ -224,6 +237,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                         user: userExisting!,
                         content: thread.messages!.message,
                         timeSent: (thread.createdAt!),
+                        isReply: thread.isReply,
                         onFuctionReply: (sender, content) {
                           setState(() {
                             _reply = true;
@@ -352,9 +366,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 : Container(),
             Row(children: [
               IconButton(
-                onPressed: () {
-                  // TODO: Send an image
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.more_vert),
               ),
               Expanded(
@@ -386,14 +398,67 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              onPressed: () {
-                                // Xử lý sự kiện cho icon 1
-                              },
+                              onPressed: () => handleFilePicked(),
                               icon: const Icon(Icons.attach_file),
                             ),
                             IconButton(
                               onPressed: () {
-                                // Xử lý sự kiện cho icon 2
+                                showModalBottomSheet(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return Container(
+                                        height: size.height * 0.4,
+                                        width: size.width,
+                                        // color: Colors.white,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                        ),
+                                        child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Container(
+                                                width: size.width * 0.8,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            18.0)),
+                                                child: const Center(
+                                                    child: Text(
+                                                  'Đang ghi âm...',
+                                                )),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              const CircularProgressIndicator(),
+                                              const SizedBox(height: 20),
+                                              const Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: <Widget>[
+                                                  RecordFunction(
+                                                    icon:
+                                                        FontAwesomeIcons.trash,
+                                                    title: 'Huỷ',
+                                                  ),
+                                                  RecordFunction(
+                                                    icon: Icons.send,
+                                                    title: 'Gửi',
+                                                  ),
+                                                  RecordFunction(
+                                                    icon: FontAwesomeIcons
+                                                        .clockRotateLeft,
+                                                    title: 'Nghe lại',
+                                                  )
+                                                ],
+                                              )
+                                            ]),
+                                      );
+                                    });
                               },
                               icon: const Icon(Icons.mic),
                             ),
@@ -436,5 +501,77 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     //   });
     //   messageController.clear();
     // }
+  }
+}
+
+class RecordFunction extends StatelessWidget {
+  const RecordFunction({
+    super.key,
+    required this.title,
+    required this.icon,
+  });
+  final String title;
+  final IconData icon;
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      InkWell(
+        child: IconButton(
+          onPressed: () {},
+          icon: Icon(
+            icon,
+            // color: Colors.white,
+            size: 40,
+          ),
+        ),
+      ),
+      Text(title)
+    ]);
+  }
+}
+
+class RecordWidgetStart extends StatelessWidget {
+  const RecordWidgetStart({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+    return Container(
+      height: size.height * 0.4,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
+      child: Center(
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+            const Text(
+              recordMessage,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            InkWell(
+              child: Container(
+                  // padding:
+                  //     const EdgeInsets.all(
+                  //         20),
+                  // color: Colors.blue,
+                  decoration: const BoxDecoration(
+                      color: Colors.blue, shape: BoxShape.circle),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.mic,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  )),
+            )
+          ])),
+    );
   }
 }

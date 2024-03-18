@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
@@ -366,8 +369,12 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 : Container(),
             Row(children: [
               IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.more_vert),
+                onPressed: () async {
+                  final ImagePicker picker = ImagePicker();
+                  final XFile? image =
+                      await picker.pickImage(source: ImageSource.camera);
+                },
+                icon: const Icon(Icons.camera_alt),
               ),
               Expanded(
                   child: TextFormField(
@@ -463,8 +470,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                               icon: const Icon(Icons.mic),
                             ),
                             IconButton(
-                              onPressed: () {
-                                // Xử lý sự kiện cho icon 2
+                              onPressed: () async {
+                                final ImagePicker picker = ImagePicker();
+                                // Pick an image
+                                final List<XFile> medias =
+                                    await picker.pickMultipleMedia();
+                                // showModalBottomSheet(
+                                //     context: context,
+                                //     builder: (BuildContext context) {
+                                //       return ImageGallery();
+                                //     });
                               },
                               icon: const Icon(Icons.image),
                             ),
@@ -503,6 +518,74 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     // }
   }
 }
+
+class ImageGallery extends StatefulWidget {
+  const ImageGallery({super.key});
+
+  @override
+  _ImageGalleryState createState() => _ImageGalleryState();
+}
+
+class _ImageGalleryState extends State<ImageGallery> {
+  List<dynamic> _imageFiles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _imageFiles = [
+      const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.camera),
+            Text('Chụp ảnh'),
+          ]),
+      Image.network('https://picsum.photos/200/300'),
+      Image.network('https://picsum.photos/200/300'),
+      Image.network('https://picsum.photos/200/300'),
+      Image.network('https://picsum.photos/200/300'),
+      Image.network('https://picsum.photos/200/300'),
+    ];
+    // _loadImages();
+  }
+
+  // viết lại việc lấy tất cả ảnh trong máy
+  Future<void> _loadImages() async {
+    Directory appDir = await getApplicationDocumentsDirectory();
+    List<FileSystemEntity> entities = appDir.listSync();
+
+    setState(() {
+      _imageFiles = entities.whereType<File>().toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4.0,
+          mainAxisSpacing: 4.0,
+        ),
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              // You can implement image preview or any other action here
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8.0),
+              child: _imageFiles[index],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+// test wiget
 
 class RecordFunction extends StatelessWidget {
   const RecordFunction({

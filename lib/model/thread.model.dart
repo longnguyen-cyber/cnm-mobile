@@ -19,7 +19,7 @@ class Thread {
   final String? threadId;
   final Message? messages;
   final List<Reaction>? reactions;
-  final List<File>? files;
+  final List<FileModel>? files;
   final User? user;
   final List<Thread>? replys;
   Thread({
@@ -54,7 +54,7 @@ class Thread {
     String? threadId,
     Message? messages,
     List<Reaction>? reactions,
-    List<File>? files,
+    List<FileModel>? files,
     User? user,
     List<Thread>? replys,
   }) {
@@ -121,7 +121,8 @@ class Thread {
           : [],
       files: map['files'] != null
           ? (map['files'] as List<dynamic>)
-              .map<File>((e) => File.fromMap(e as Map<String, dynamic>))
+              .map<FileModel>(
+                  (e) => FileModel.fromMap(e as Map<String, dynamic>))
               .toList()
           : [],
       user: map['user'] != null

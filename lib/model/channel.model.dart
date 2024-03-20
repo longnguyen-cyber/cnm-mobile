@@ -62,9 +62,9 @@ class Channel {
 
   factory Channel.fromMap(Map<String, dynamic> map) {
     return Channel(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      isPublic: map['isPublic'] as bool,
+      id: map['id'] != null ? map['id'] as String : null,
+      name: map['name'] != null ? map['name'] as String : "",
+      isPublic: map['isPublic'] != null ? map['isPublic'] as bool : false,
       users: map['users'] == null
           ? []
           : List<User>.from(
@@ -79,8 +79,11 @@ class Channel {
                 (x) => Thread.fromMap(x),
               ),
             ),
-      userCreated: map['userCreated'] as String,
-      timeThread: DateTime.parse(map['timeThread'] as String),
+      userCreated:
+          map['userCreated'] != null ? map['userCreated'] as String : "",
+      timeThread: DateTime.parse(map['timeThread'] != null
+          ? map['timeThread'] as String
+          : DateTime.now().toString()),
       lastedThread: map['lastedThread'] == null
           ? null
           : Thread.fromMap(map['lastedThread'] as Map<String, dynamic>),

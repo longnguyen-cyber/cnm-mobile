@@ -24,7 +24,7 @@ class MoreInfo extends StatefulWidget {
 class _MoreInfoState extends State<MoreInfo> {
   late Channel? channel = null;
   final Dio _dio = Dio();
-  List<File> files = [];
+  List<FileModel> files = [];
   var baseUrl = dotenv.env['API_URL'];
   Future<void> getChannel() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -60,7 +60,7 @@ class _MoreInfoState extends State<MoreInfo> {
     getChannel();
     files = List.generate(
       5,
-      (index) => File(
+      (index) => FileModel(
         id: 'id_$index', // Generate unique IDs
         filename: 'file_${index + 1}.txt', // Generate filenames
         path: 'https://picsum.photos/200/300', // Generate random URLs

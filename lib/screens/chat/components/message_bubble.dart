@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/screens/chat/components/voice_messenge.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
@@ -119,13 +120,14 @@ class _MessageBubbleState extends State<MessageBubble> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   widget.isReverse == true
-                      ? Text(
-                          'Tin nhắn đã được thu hồi',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Colors.black,
-                                  ),
-                        )
+                      ? const VoiceMessenge()
+                      // Text(
+                      //     'Tin nhắn đã được thu hồi',
+                      //     style:
+                      //         Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      //               color: Colors.black,
+                      //             ),
+                      //   )
                       : (widget.isReply == null || widget.isReply == false)
                           ? Text(
                               widget.content ?? '',
@@ -154,17 +156,17 @@ class _MessageBubbleState extends State<MessageBubble> {
                                       ),
                                       RichText(
                                         textAlign: TextAlign.left,
-                                        text: const TextSpan(
+                                        text: TextSpan(
                                           children: <TextSpan>[
                                             TextSpan(
-                                              text: 'Đạt võ\n',
-                                              style: TextStyle(
+                                              text: '  ${widget.replyUser}\n',
+                                              style: const TextStyle(
                                                   color: Colors.black,
                                                   fontSize: 12),
                                             ),
                                             TextSpan(
-                                              text: 'Bạn có khoẻ không',
-                                              style: TextStyle(
+                                              text: '${widget.replyContent}\n',
+                                              style: const TextStyle(
                                                   color: Colors.grey,
                                                   fontSize: 10),
                                             ),

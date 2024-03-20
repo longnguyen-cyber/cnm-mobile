@@ -24,7 +24,9 @@ class MyAppRouter {
         path: '/',
         pageBuilder: (context, state) {
           return MaterialPage(
-              child: MainScreen(
+              child:
+                  // LoginScreen());
+                  MainScreen(
             index: 0,
           ));
           // return const MaterialPage(

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 class CountDownVoiceMessage extends StatefulWidget {
@@ -79,12 +78,9 @@ class _CountDownVoiceMessageState extends State<CountDownVoiceMessage> {
   }
 
   String printDuration(Duration duration) {
-    String negativeSign = duration.isNegative ? '-' : '';
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes =
-        twoDigits(duration.inMinutes.remainder(60).abs()).toString();
-    String twoDigitSeconds =
-        twoDigits(duration.inSeconds.remainder(60).abs()).toString();
+    twoDigits(duration.inMinutes.remainder(60).abs()).toString();
+    twoDigits(duration.inSeconds.remainder(60).abs()).toString();
     return "00 : 02 : 09";
   }
 }

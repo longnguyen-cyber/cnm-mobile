@@ -123,6 +123,7 @@ class _PersonState extends State<Person> {
                                     if (result == null)
                                       {}
                                     else
+                                      // ignore: unused_local_variable
                                       {for (var element in result!.files) {}}
                                   },
                                   child: const Text('Edit image'),
@@ -144,7 +145,7 @@ class _PersonState extends State<Person> {
                                       context: context,
                                       builder: (BuildContext context) {
                                         return Dialog(
-                                          child: Container(
+                                          child: SizedBox(
                                             width: size.width * 0.8,
                                             // height: size.height * 0.8,
                                             child: Image.network(

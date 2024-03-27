@@ -1,14 +1,9 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
@@ -17,14 +12,14 @@ import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
-import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
-import 'package:zalo_app/screens/chat/constants.dart';
+import 'package:zalo_app/screens/chat/controllers/voice_controller.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 
 import 'components/index.dart';
+import 'components/on_record_voice_message.dart';
 
 class DetailChatScreen extends StatefulWidget {
   const DetailChatScreen({super.key, required this.data});
@@ -99,7 +94,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     }
 
     late dynamic data;
-    print(id);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -173,7 +167,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat = chat.threads!;
                   return common(viewInsets, threadsChat);
                 } else {
-                  print('error');
                   return const CircularProgressIndicator();
                 }
               },
@@ -413,58 +406,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                 showModalBottomSheet(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return Container(
-                                        height: size.height * 0.4,
-                                        width: size.width,
-                                        // color: Colors.white,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                        ),
-                                        child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Container(
-                                                width: size.width * 0.8,
-                                                height: 50,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            18.0)),
-                                                child: const Center(
-                                                    child: Text(
-                                                  'Đang ghi âm...',
-                                                )),
-                                              ),
-                                              const SizedBox(height: 20),
-                                              const CircularProgressIndicator(),
-                                              const SizedBox(height: 20),
-                                              const Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceAround,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: <Widget>[
-                                                  RecordFunction(
-                                                    icon:
-                                                        FontAwesomeIcons.trash,
-                                                    title: 'Huỷ',
-                                                  ),
-                                                  RecordFunction(
-                                                    icon: Icons.send,
-                                                    title: 'Gửi',
-                                                  ),
-                                                  RecordFunction(
-                                                    icon: FontAwesomeIcons
-                                                        .clockRotateLeft,
-                                                    title: 'Nghe lại',
-                                                  )
-                                                ],
-                                              )
-                                            ]),
-                                      );
+                                      VoiceController voiceController =
+                                          VoiceController();
+                                      voiceController.record();
+                                      return OnRecordMessage(
+                                          voiceController: voiceController);
                                     });
                               },
                               icon: const Icon(Icons.mic),
@@ -475,11 +421,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                 // Pick an image
                                 final List<XFile> medias =
                                     await picker.pickMultipleMedia();
-                                // showModalBottomSheet(
-                                //     context: context,
-                                //     builder: (BuildContext context) {
-                                //       return ImageGallery();
-                                //     });
                               },
                               icon: const Icon(Icons.image),
                             ),
@@ -519,142 +460,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 }
 
-class ImageGallery extends StatefulWidget {
-  const ImageGallery({super.key});
+// 
 
-  @override
-  _ImageGalleryState createState() => _ImageGalleryState();
-}
 
-class _ImageGalleryState extends State<ImageGallery> {
-  List<dynamic> _imageFiles = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _imageFiles = [
-      const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.camera),
-            Text('Chụp ảnh'),
-          ]),
-      Image.network('https://picsum.photos/200/300'),
-      Image.network('https://picsum.photos/200/300'),
-      Image.network('https://picsum.photos/200/300'),
-      Image.network('https://picsum.photos/200/300'),
-      Image.network('https://picsum.photos/200/300'),
-    ];
-    // _loadImages();
-  }
-
-  // viết lại việc lấy tất cả ảnh trong máy
-  Future<void> _loadImages() async {
-    Directory appDir = await getApplicationDocumentsDirectory();
-    List<FileSystemEntity> entities = appDir.listSync();
-
-    setState(() {
-      _imageFiles = entities.whereType<File>().toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4.0,
-          mainAxisSpacing: 4.0,
-        ),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              // You can implement image preview or any other action here
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8.0),
-              child: _imageFiles[index],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-// test wiget
-
-class RecordFunction extends StatelessWidget {
-  const RecordFunction({
-    super.key,
-    required this.title,
-    required this.icon,
-  });
-  final String title;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      InkWell(
-        child: IconButton(
-          onPressed: () {},
-          icon: Icon(
-            icon,
-            // color: Colors.white,
-            size: 40,
-          ),
-        ),
-      ),
-      Text(title)
-    ]);
-  }
-}
-
-class RecordWidgetStart extends StatelessWidget {
-  const RecordWidgetStart({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Container(
-      height: size.height * 0.4,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
-      child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-            const Text(
-              recordMessage,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            InkWell(
-              child: Container(
-                  // padding:
-                  //     const EdgeInsets.all(
-                  //         20),
-                  // color: Colors.blue,
-                  decoration: const BoxDecoration(
-                      color: Colors.blue, shape: BoxShape.circle),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.mic,
-                      color: Colors.white,
-                      size: 50,
-                    ),
-                  )),
-            )
-          ])),
-    );
-  }
-}

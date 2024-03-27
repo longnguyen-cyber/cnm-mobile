@@ -3,25 +3,31 @@ import 'package:sizer/sizer.dart';
 import 'package:record/record.dart';
 
 class VoiceController {
-  final AudioRecorder audioRecorder;
-  final AudioPlayer audioPlayer;
-  bool isRecording = false;
+  late AudioRecorder audioRecorder;
+  late AudioPlayer audioPlayer;
 
-  VoiceController({required this.audioRecorder, required this.audioPlayer});
+  VoiceController() {
+    audioRecorder = AudioRecorder();
+    audioPlayer = AudioPlayer();
+  }
 
   Future<void> record() async {
     try {
       if (await audioRecorder.hasPermission()) {
-        final stream = await audioRecorder
+        await audioRecorder
             .startStream(const RecordConfig(encoder: AudioEncoder.pcm16bits));
       }
 
-      final path = await audioRecorder.stop();
+      // final path = await audioRecorder.stop();
 
       // upload to s3 api
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<void> stop() async {
+    await audioRecorder.stop();
   }
 }
 

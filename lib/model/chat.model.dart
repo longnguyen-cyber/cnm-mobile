@@ -55,11 +55,11 @@ class Chat {
 
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
-      id: map['id'] as String,
-      receiveId: map['receiveId'] as String,
-      senderId: map['senderId'] as String,
-      isFriend: map['isFriend'] as bool,
-      requestAdd: map['requestAdd'] as bool,
+      id: map['id'] != null ? map['id'] as String : null,
+      receiveId: map['receiveId'] != null ? map['receiveId'] as String : "",
+      senderId: map['senderId'] != null ? map['senderId'] as String : "",
+      isFriend: map['isFriend'] != null ? map['isFriend'] as bool : false,
+      requestAdd: map['requestAdd'] != null ? map['requestAdd'] as bool : false,
       user: map['user'] != null
           ? User.fromMap(map['user'] as Map<String, dynamic>)
           : null,

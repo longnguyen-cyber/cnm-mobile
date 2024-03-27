@@ -64,8 +64,26 @@ class _ChatScreenState extends State<ChatScreen> {
     print(response.data);
     if (mounted) {
       setState(() {
-        all = response.data;
+        // all = json.decode(localData);
       });
+    } else {
+      String url = "$baseUrl/all";
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          all = response.data;
+        });
+      }
     }
     // }
   }

@@ -11,4 +11,6 @@ class MyAppRouteConstants {
   static const String profileRouteName = 'profile';
   static const String friendRouteName = 'friend';
   static const String moreRouteName = 'more';
+  static const String forgotRouteName = 'forgot';
+  static const String searchRouteName = 'search';
 }

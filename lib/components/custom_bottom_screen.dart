@@ -19,15 +19,15 @@ class CustomBottomScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 30,
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: 20,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
             child: GestureDetector(
               onTap: () {
                 questionPressed();
@@ -35,21 +35,21 @@ class CustomBottomScreen extends StatelessWidget {
               child: Text(question),
             ),
           ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Hero(
-            tag: heroTag,
-            child: CustomButton(
-              buttonText: textButton,
-              width: 150,
-              onPressed: () {
-                buttonPressed();
-              },
+          Align(
+            alignment: Alignment.centerRight,
+            child: Hero(
+              tag: heroTag,
+              child: CustomButton(
+                buttonText: textButton,
+                width: 150,
+                onPressed: () {
+                  buttonPressed();
+                },
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

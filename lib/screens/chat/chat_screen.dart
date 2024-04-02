@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 import 'components/index.dart';
 
@@ -16,11 +17,10 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final Dio _dio = Dio();
-  var baseUrl = dotenv.env['API_URL'];
   // ignore: avoid_init_to_null
   late dynamic newEvent = null;
   late String userId = "";
+  final api = API();
 
   List<dynamic> all = [];
   void getUser() async {
@@ -36,56 +36,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void getAll() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    // bool isFirstRun = prefs.getBool('isFirstRun')!;
-    // if (isFirstRun) {
-    //   prefs.remove("all");
-    //   prefs.setBool('isFirstRun', false);
-    // }
-    var token = prefs.getString("token") ?? "";
-    // var localData = prefs.getString("all");
-    // if (localData != null) {
-    //   setState(() {
-    //     all = json.decode(localData);
-    //   });
-    // } else {
-    print(token);
-    String url = "$baseUrl/all";
-    final response = await _dio.get(
-      url,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-    print(response.data);
+    final response = await api.get("all", {});
     if (mounted) {
       setState(() {
-        // all = json.decode(localData);
+        all = response;
       });
-    } else {
-      String url = "$baseUrl/all";
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
-
-      if (mounted) {
-        setState(() {
-          all = response.data;
-        });
-      }
     }
-    // }
   }
 
   @override
@@ -115,8 +71,6 @@ class _ChatScreenState extends State<ChatScreen> {
               } else if (type == "deleteChannel") {
                 all.removeWhere((c) => c["id"] == channel["id"]);
               } else if (type == "addUserToChannel") {
-                // input: usersAddedName: [long, tuyen]
-                // output: long, tuyen duoc them vao nhom
                 int index =
                     all.indexWhere((element) => element["id"] == channel["id"]);
                 all[index] =
@@ -154,16 +108,53 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     });
+
+    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
+      if (response["typeMsg"] == null) {
+        var receiveId;
+        var members;
+        if (response["type"] == "chat") {
+          receiveId = response["receiveId"];
+        } else {
+          members =
+              (response["members"] as List).map((e) => e.toString()).toList();
+        }
+
+        var data = {
+          "lastedThread": {
+            "messages": {"message": response["messages"]["message"]},
+          },
+          "isReply": response["isReply"],
+          "isRecall": response["isRecall"],
+          "user": response["user"],
+          "timeThread": response["timeThread"],
+          "id": response["type"] == "chat"
+              ? response["chatId"]
+              : response["channelId"],
+          "type": response["type"],
+        };
+
+        if (mounted) {
+          if (userId == receiveId || members.contains(userId)) {
+            var index =
+                all.indexWhere((element) => element["id"] == data["id"]);
+            setState(() {
+              all[index] = data;
+              all.sort((a, b) {
+                return DateTime.parse(b["timeThread"])
+                    .compareTo(DateTime.parse(a["timeThread"]));
+              });
+            });
+          }
+        }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // for (int i = 0; i < all.length; i++) print('Dữ liệu' + all[i] + '');
     return ListView(
-      children: [
-        for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])
-        // print(all[i]) ,
-      ],
+      children: [for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])],
     );
   }
 }

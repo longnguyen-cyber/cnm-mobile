@@ -9,9 +9,9 @@ import 'package:zalo_app/model/user.model.dart';
 class Thread {
   final String? id;
   final DateTime? createdAt;
-  final bool? isEdited;
+  late final bool? isEdited;
   final bool? isReply;
-  final bool? isRecall;
+  bool? isRecall;
   final String? receiveId;
   final String? senderId;
   final String? chatId;
@@ -99,8 +99,8 @@ class Thread {
 
   factory Thread.fromMap(Map<String, dynamic> map) {
     return Thread(
-      id: map['id'] as String,
-      createdAt: map['createdAt'] != null
+      id: map['id'] != null ? map['id'] as String : null,
+      createdAt: map['createdAt'] is String
           ? DateTime.parse(map['createdAt'] as String)
           : null,
       isEdited: map['isEdited'] != null ? map['isEdited'] as bool : null,

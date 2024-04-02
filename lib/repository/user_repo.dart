@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/user_service.dart';
 
@@ -18,7 +19,7 @@ class UserRepository {
       final SharedPreferences prefs = await prefs0;
       prefs.setString("token", response.data["data"]["token"]);
       prefs.setString(response.data["data"]["token"], user.toJson());
-
+      SocketConfig.connect(response.data["data"]["token"]);
       return user;
     } else {
       return null;

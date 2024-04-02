@@ -8,8 +8,9 @@ import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key, this.user});
+  const Profile({super.key, this.user, required this.id});
   final User? user;
+  final String id;
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -19,21 +20,11 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     late bool isRequest = false;
-    late String chatId = "";
+    late String chatId = widget.id;
+    print("chatId: $chatId");
     Size size = MediaQuery.of(context).size;
     //  User(id: 65dd4ae4cbeffa04dbbc5b16, name: nesw, password: null, displayName: null, status: null, phone: null, email: 01635080905l@gmail.com, avatar: null, isTwoFactorAuthenticationEnabled: null, twoFactorAuthenticationSecret: null)
-    User userDefine = User(
-      id: '65dd4ae4cbeffa04dbbc5b16',
-      name: 'nesw',
-      password: null,
-      displayName: "kuga",
-      status: null,
-      phone: "01635080905",
-      email: '01635080905l@gmail.com',
-      avatar:
-          "https://workchat.s3.ap-southeast-1.amazonaws.com/Screenshot-from-2024-02-25-13-48-02.png",
-      isTwoFactorAuthenticationEnabled: null,
-    );
+    User userDefine = widget.user!;
 
     return Scaffold(
       appBar: AppBar(

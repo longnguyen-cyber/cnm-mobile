@@ -1,15 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
-import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
@@ -17,6 +15,7 @@ import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
 import 'package:zalo_app/screens/chat/controllers/voice_controller.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 import 'components/index.dart';
 import 'components/on_record_voice_message.dart';
@@ -42,11 +41,41 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   bool _reply = false;
   List<Thread> threadsChannel = [];
   List<Thread> threadsChat = [];
+  late dynamic data;
+
+  final api = API();
+
+  void getData() async {
+    String type = widget.data["type"];
+    String id = widget.data["id"];
+    if (mounted) {
+      if (type == "chat") {
+        final response = await api.get("chats/$id", {});
+        if (response != null) {
+          Chat chat = Chat.fromMap(response["data"]);
+          setState(() {
+            threadsChat = chat.threads!;
+            data = chat;
+          });
+        }
+      } else {
+        final response = await api.get("channels/$id", {});
+        if (response != null) {
+          Channel channel = Channel.fromMap(response["data"]);
+          setState(() {
+            threadsChannel = channel.threads!;
+            data = channel;
+          });
+        }
+      }
+    }
+  }
 
   void getUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
     var userOfToken = prefs.getString(token) ?? "";
+    // SocketConfig.connect(token);
     if (userOfToken != "") {
       userExisting = User.fromJson(userOfToken);
     } else {
@@ -61,22 +90,65 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   void initState() {
     super.initState();
     getUser();
+    getData();
 
     SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
       var members = response['members'] != null
-          ? (response['members'] as List<dynamic>).map((e) => e["id"]).toList()
+          ? (response['members'] as List<dynamic>).map((e) => e).toList()
           : [];
-      if (members.contains(userExisting!.id)) {
-        if (mounted) {
+
+      if (mounted) {
+        if (response["typeMsg"] == "recall" ||
+            response["typeMsg"] == "delete") {
           setState(() {
-            threadsChannel.add(Thread.fromMap(response['thread']));
+            if (response["type"] == "chat") {
+              var indexOfThread = threadsChat
+                  .indexWhere((element) => element.id == response['threadId']);
+              if (indexOfThread != -1) {
+                if (response["typeMsg"] == "delete") {
+                  threadsChat.removeAt(indexOfThread);
+                } else {
+                  threadsChat[indexOfThread].isRecall = true;
+                  threadsChat[indexOfThread].messages!.message =
+                      "Tin nhắn đã bị thu hồi";
+                }
+              }
+            } else {
+              var indexOfThread = threadsChannel
+                  .indexWhere((element) => element.id == response['threadId']);
+              if (indexOfThread != -1) {
+                if (response["typeMsg"] == "delete") {
+                  threadsChannel.removeAt(indexOfThread);
+                } else {
+                  threadsChannel[indexOfThread].isRecall = true;
+                  threadsChannel[indexOfThread].messages!.message =
+                      "Tin nhắn đã bị thu hồi";
+                }
+              }
+            }
           });
-        }
-      } else if (response["receiveId"] == userExisting!.id) {
-        if (mounted) {
-          setState(() {
-            threadsChat.add(Thread.fromMap(response['thread']));
-          });
+        } else {
+          //send new message
+          var data = {
+            "id": "234234234",
+            "messages": {"message": response['messages']['message']},
+            "user": response['user'],
+            "isReply": response['isReply'],
+            "isRecall": response['isRecall'],
+            "createdAt": response['timeThread'] as String,
+            "receiveId": response['receiveId']
+          };
+          Thread thread = Thread.fromMap(data);
+          if (members.contains(userExisting!.id)) {
+            setState(() {
+              threadsChannel.add(thread);
+            });
+          } else if (response["receiveId"] == userExisting!.id ||
+              response["user"]["id"] == userExisting!.id) {
+            setState(() {
+              threadsChat.add(thread);
+            });
+          }
         }
       }
     });
@@ -85,96 +157,62 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final String id = widget.data["id"];
+
     final String name = widget.data["name"];
     final String type = widget.data["type"];
-    late int members;
+    late dynamic members;
     if (widget.data["type"] == "channel") {
       members = widget.data["members"];
     }
 
-    late dynamic data;
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          children: [
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 20,
-              ),
-            ),
-            if (type == "channel")
+        appBar: AppBar(
+          title: Column(
+            children: [
               Text(
-                "$members thành viên",
+                name,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal,
+                  fontSize: 20,
                 ),
               ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              GoRouter.of(context).pushNamed(MyAppRouteConstants.moreRouteName,
-                  extra: {"data": data, "type": type});
-            },
-            icon: const Icon(Icons.format_list_bulleted),
+              if (type == "channel")
+                Text(
+                  "${members.length} thành viên",
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+            ],
           ),
-        ],
-        backgroundColor: Colors.blue,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: type == 'channel'
-          ? BlocBuilder<ChannelCubit, ChannelState>(
-              builder: (context, state) {
-                if (state is ChannelInitial) {
-                  context.read<ChannelCubit>().getChannel(id);
-
-                  return const CircularProgressIndicator();
-                } else if (state is GetChannelLoaded) {
-                  context.read<ChannelCubit>().getChannel(id);
-
-                  Channel channel = state.channel;
-                  data = channel;
-                  threadsChannel = channel.threads!;
-                  return common(viewInsets, threadsChannel);
-                } else {
-                  return const CircularProgressIndicator();
-                }
+          actions: [
+            IconButton(
+              onPressed: () {
+                GoRouter.of(context).pushNamed(
+                    MyAppRouteConstants.moreRouteName,
+                    extra: {"data": data, "type": type});
               },
-            )
-          : BlocBuilder<ChatCubit, ChatState>(
-              builder: (context, state) {
-                if (state is ChatInitial) {
-                  context.read<ChatCubit>().getChat(id);
-                  return const CircularProgressIndicator();
-                } else if (state is GetChatLoaded) {
-                  context.read<ChatCubit>().getChat(id);
-
-                  Chat chat = state.chat;
-                  data = chat;
-                  threadsChat = chat.threads!;
-                  return common(viewInsets, threadsChat);
-                } else {
-                  return const CircularProgressIndicator();
-                }
-              },
+              icon: const Icon(Icons.format_list_bulleted),
             ),
-    );
+          ],
+          backgroundColor: Colors.blue,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+        body: type == 'channel'
+            ? common(viewInsets, threadsChannel, type)
+            : common(viewInsets, threadsChat, type));
   }
 
-  SafeArea common(EdgeInsets viewInsets, List<Thread> threads) {
+  SafeArea common(EdgeInsets viewInsets, List<Thread> threads, String type) {
     Size size = MediaQuery.of(context).size;
     ScrollController controller = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -222,44 +260,64 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 itemCount: threads.length,
                 itemBuilder: (BuildContext context, int index) {
                   Thread thread = threads[index];
-                  bool nameExisted = index > 0 &&
-                      threads[index - 1].user!.name == thread.user!.name;
-
                   List<Widget> children = [];
-
-                  if (thread.user!.id == userExisting!.id) {
+                  if (thread.user == null) {
                     children.add(
-                      MessageBubble(
-                        user: userExisting!,
-                        content: thread.messages!.message,
-                        timeSent: (thread.createdAt!),
-                        isReply: thread.isReply,
-                        onFuctionReply: (sender, content) {
-                          setState(() {
-                            _reply = true;
-                            _replyUser = sender;
-                            _replyContent = content;
-                          });
-                        },
+                      Text(
+                        thread.messages!.message,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                     );
                   } else {
-                    children.add(
-                      Message(
-                        sender: thread.user!,
-                        content: thread.messages!.message,
-                        type: MessageType.text,
-                        timeSent: thread.createdAt!,
-                        onFuctionReply: (sender, content) {
-                          setState(() {
-                            _reply = true;
-                            _replyUser = sender;
-                            _replyContent = content;
-                          });
-                        },
-                        exist: !nameExisted,
-                      ),
-                    );
+                    bool nameExisted = index > 0 &&
+                        threads[index - 1].user != null &&
+                        threads[index - 1].user!.name == thread.user!.name;
+
+                    if (thread.user!.id == userExisting!.id) {
+                      children.add(
+                        MessageBubble(
+                          threadId: thread.id!,
+                          user: userExisting!,
+                          receiveId:
+                              thread.receiveId != null ? thread.receiveId! : "",
+                          type: type,
+                          content: thread.messages!.message,
+                          timeSent: (thread.createdAt!),
+                          isReply: thread.isReply,
+                          isRecall: thread.isRecall,
+                          onFuctionReply: (sender, content) {
+                            setState(() {
+                              _reply = true;
+                              _replyUser = sender;
+                              _replyContent = content;
+                            });
+                          },
+                        ),
+                      );
+                    } else {
+                      children.add(
+                        Message(
+                          threadId: thread.id!,
+                          sender: thread.user!,
+                          type: type,
+                          content: thread.messages!.message,
+                          messageType: MessageType.text,
+                          timeSent: thread.createdAt!,
+                          onFuctionReply: (sender, content) {
+                            setState(() {
+                              _reply = true;
+                              _replyUser = sender;
+                              _replyContent = content;
+                            });
+                          },
+                          exist: !nameExisted,
+                          isRecall: thread.isRecall!,
+                        ),
+                      );
+                    }
                   }
 
                   if (isDifferentDay(index)) {
@@ -443,23 +501,36 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   void _sendMessage() {
-    //     "messages":{
-    //   "message":"test mention 2"
-    // },
-    // "channelId":"65e480261644570261cadca4"
-    // xử lý tin nhắn
-    // if (messageController.text.isNotEmpty) {
-    //   SocketConfig.emit(SocketMessage.sendThread, {
-    //     "messages": {
-    //       "message": messageController.text,
-    //     },
-    //     "channelId": widget.id,
-    //   });
-    //   messageController.clear();
-    // }
+    late String receiveId;
+    late dynamic members;
+    if (widget.data["type"] == "channel") {
+      members = widget.data["members"].map((e) => e["id"]).toList();
+    } else {
+      receiveId = widget.data["receiverId"];
+    }
+    if (messageController.text.isNotEmpty) {
+      if (widget.data["type"] == "channel") {
+        SocketConfig.emit(SocketMessage.sendThread, {
+          "messages": {
+            "message": messageController.text,
+          },
+          "channelId": widget.data["id"],
+          "members": members,
+        });
+      } else {
+        SocketConfig.emit(SocketMessage.sendThread, {
+          "messages": {
+            "message": messageController.text,
+          },
+          "chatId": widget.data["id"],
+          "receiveId": receiveId,
+        });
+      }
+      messageController.clear();
+    }
   }
 }
 
-// 
+//
 
 

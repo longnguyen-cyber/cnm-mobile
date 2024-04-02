@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 class Person extends StatefulWidget {
   const Person({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _PersonState extends State<Person> {
   User? userExisting = User();
   late bool isShow = false;
   late bool isEdit = false;
+  final api = API();
 
   FilePickerResult? result;
 
@@ -72,6 +74,17 @@ class _PersonState extends State<Person> {
       setState(() {
         isEdit = !isEdit;
       });
+    }
+  }
+
+  void logout() async {
+    final response = await api.post("users/logout", {});
+
+    if (response != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.remove("token");
+      // ignore: use_build_context_synchronously
+      GoRouter.of(context).pushNamed(MyAppRouteConstants.welcomeRouteName);
     }
   }
 
@@ -188,10 +201,19 @@ class _PersonState extends State<Person> {
                     ),
                     padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
                   ),
-                  child: CircleAvatar(
-                    backgroundImage: NetworkImage("${userExisting?.avatar}"),
-                    radius: 60,
-                  ),
+                  child: userExisting!.avatar != null
+                      ? CircleAvatar(
+                          backgroundImage:
+                              NetworkImage("${userExisting?.avatar}"),
+                          radius: 60,
+                        )
+                      : CircleAvatar(
+                          radius: 60,
+                          child: Text(
+                            userExisting!.name?[0] ?? '',
+                            style: const TextStyle(fontSize: 40.0),
+                          ),
+                        ),
                 ),
                 const SizedBox(
                   height: 30,
@@ -438,12 +460,8 @@ class _PersonState extends State<Person> {
                 else
                   Container(),
                 ElevatedButton(
-                  onPressed: () async {
-                    SharedPreferences prefs =
-                        await SharedPreferences.getInstance();
-                    prefs.remove("token");
-                    GoRouter.of(context)
-                        .pushNamed(MyAppRouteConstants.welcomeRouteName);
+                  onPressed: () {
+                    logout();
                   },
                   child: const Text("Log out"),
                 ),

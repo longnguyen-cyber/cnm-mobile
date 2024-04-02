@@ -11,15 +11,21 @@ class UserCubit extends Cubit<UserState> {
 
   UserCubit({required this.userRepo}) : super(UserInitial());
 
-  Future<void> login(String email, String password) async {
+  Future<bool> login(String email, String password) async {
     try {
       var user = await userRepo.login(email, password);
-      emit(LoginLoaded(user: user!));
+      if (user != null) {
+        emit(LoginLoaded(user: user));
+        return true;
+      } else {
+        return false;
+      }
     } catch (e) {
       if (kDebugMode) {
         print(e.toString());
       }
     }
+    return false;
   }
 
   Future<void> register(

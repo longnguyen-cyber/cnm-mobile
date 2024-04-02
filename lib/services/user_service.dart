@@ -17,10 +17,20 @@ class UserService {
 
   Future<Response?> login(String email, String password) async {
     String url = "$baseUrl/users/login";
+
     final response = await _dio.post(url, data: {
       "email": email,
       "password": password,
+    }).onError((error, stackTrace) {
+      if (kDebugMode) {
+        print("Error :$error");
+      }
+      return Future.value(Response(
+        requestOptions: RequestOptions(path: url),
+        statusCode: 500,
+      ));
     });
+
     try {
       return response;
     } catch (e) {

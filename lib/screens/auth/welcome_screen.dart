@@ -90,7 +90,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         'Hoặc',
                         style: TextStyle(
                           color: Colors.grey,
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                       ),
                       Row(

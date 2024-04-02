@@ -2,33 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
-import 'package:zalo_app/screens/chat/components/voice_messenge.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
 class MessageBubble extends StatefulWidget {
   const MessageBubble(
       {super.key,
+      required this.threadId,
       required this.user,
+      required this.type,
       this.content,
       required this.timeSent,
       this.imageUrl,
       this.videoUrl,
       this.reaction,
-      this.isReverse,
+      this.isRecall,
       this.isReply,
       this.replyContent,
       this.replyUser,
-      required this.onFuctionReply});
-
+      required this.onFuctionReply,
+      this.receiveId});
+  final String? receiveId;
+  final String threadId;
   final User user;
+  final String type;
   final String? content;
   final DateTime timeSent;
   final String? imageUrl;
   final String? videoUrl;
   final Reaction? reaction;
-  final bool? isReverse;
+  final bool? isRecall;
   final bool? isReply;
   final String? replyContent;
   final String? replyUser;
@@ -86,18 +92,22 @@ class _MessageBubbleState extends State<MessageBubble> {
           alignment: alignment,
           child: GestureDetector(
             onLongPress: () {
-              showPopover(
-                context: context,
-                bodyBuilder: (context) => ListItems(
-                    onReactionSelected: handleReaction,
-                    onFunctionSelected: handleFunction),
-                onPop: () => print('Popover was popped!'),
-                direction: PopoverDirection.bottom,
-                width: size.width * 0.8,
-                height: 200,
-                arrowHeight: 0,
-                arrowWidth: 0,
-              );
+              if (!widget.isRecall!) {
+                showPopover(
+                  context: context,
+                  bodyBuilder: (context) => ListItems(
+                      senderId: widget.user.id!,
+                      userId: userExisting!.id!,
+                      onReactionSelected: handleReaction,
+                      onFunctionSelected: handleFunction),
+                  onPop: () => print('Popover was popped!'),
+                  direction: PopoverDirection.bottom,
+                  width: size.width * 0.8,
+                  height: 200,
+                  arrowHeight: 0,
+                  arrowWidth: 0,
+                );
+              }
             },
             child: Container(
               constraints: BoxConstraints(maxWidth: size.width * 0.66),
@@ -119,15 +129,14 @@ class _MessageBubbleState extends State<MessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  widget.isReverse == true
-                      ? const VoiceMessenge()
-                      // Text(
-                      //     'Tin nhắn đã được thu hồi',
-                      //     style:
-                      //         Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      //               color: Colors.black,
-                      //             ),
-                      //   )
+                  widget.isRecall == true
+                      ? Text(
+                          'Tin nhắn đã được thu hồi',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: Colors.black,
+                                  ),
+                        )
                       : (widget.isReply == null || widget.isReply == false)
                           ? Text(
                               widget.content ?? '',
@@ -281,12 +290,33 @@ class _MessageBubbleState extends State<MessageBubble> {
     }
   }
 
+  void revertFnc() {
+    var data = {
+      "threadId": widget.threadId,
+      "receiveId": widget.receiveId,
+      "type": widget.type
+    };
+    SocketConfig.emit(SocketMessage.recallSendThread, data);
+  }
+
+  void deleteFnc() {
+    var data = {
+      "threadId": widget.threadId,
+      "receiveId": widget.receiveId,
+      "type": widget.type
+    };
+    SocketConfig.emit(SocketMessage.deleteThread, data);
+  }
+
   void handleFunction(FunctionChat function) {
     switch (function) {
       case FunctionChat.delete:
         // delete fuc
+        deleteFnc();
         break;
       case FunctionChat.revert:
+        revertFnc();
+        break;
       // revert fuc
       case FunctionChat.reply:
         String? sender = widget.user.name;
@@ -306,10 +336,14 @@ class ListItems extends StatefulWidget {
     super.key,
     required this.onReactionSelected,
     required this.onFunctionSelected,
+    required this.senderId,
+    required this.userId,
   });
 
   final Function(Reaction) onReactionSelected;
   final Function(FunctionChat) onFunctionSelected;
+  final String senderId;
+  final String userId;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -409,23 +443,25 @@ class _ListItemsState extends State<ListItems> {
                     widget.onFunctionSelected(FunctionChat.share);
                   },
                 ),
-                MenuItemChat(
-                  title: 'Thu hồi',
-                  icon: FontAwesomeIcons.rotateLeft,
-                  color: Colors.red,
-                  func: FunctionChat.revert,
-                  onClick: () {
-                    widget.onFunctionSelected(FunctionChat.revert);
-                  },
-                ),
-                MenuItemChat(
-                    title: 'Xoá',
-                    icon: FontAwesomeIcons.trash,
-                    color: Colors.redAccent,
-                    func: FunctionChat.delete,
+                if (widget.senderId == widget.userId)
+                  MenuItemChat(
+                    title: 'Thu hồi',
+                    icon: FontAwesomeIcons.rotateLeft,
+                    color: Colors.red,
+                    func: FunctionChat.revert,
                     onClick: () {
-                      widget.onFunctionSelected(FunctionChat.delete);
-                    })
+                      widget.onFunctionSelected(FunctionChat.revert);
+                    },
+                  ),
+                if (widget.senderId == widget.userId)
+                  MenuItemChat(
+                      title: 'Xoá',
+                      icon: FontAwesomeIcons.trash,
+                      color: Colors.redAccent,
+                      func: FunctionChat.delete,
+                      onClick: () {
+                        widget.onFunctionSelected(FunctionChat.delete);
+                      })
               ],
             ),
           ),

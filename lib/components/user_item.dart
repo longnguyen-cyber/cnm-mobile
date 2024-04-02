@@ -8,9 +8,11 @@ class UserItem extends StatefulWidget {
   const UserItem({
     super.key,
     required this.obj,
+    this.chatId,
   });
 
   final User obj;
+  final String? chatId;
 
   @override
   State<UserItem> createState() => UserItemState();
@@ -20,16 +22,17 @@ class UserItemState extends State<UserItem> {
   @override
   Widget build(BuildContext context) {
     var user = widget.obj;
+    var chatId = widget.chatId;
 
     Size size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => {
-        GoRouter.of(context)
-            .pushNamed(MyAppRouteConstants.profileRouteName, extra: user)
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.profileRouteName,
+            extra: {"user": user, "chatId": chatId})
       },
       onLongPress: () => {
-        GoRouter.of(context)
-            .pushNamed(MyAppRouteConstants.profileRouteName, extra: user)
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.profileRouteName,
+            extra: {"user": user, "chatId": chatId})
       },
       child: Container(
         width: size.width,

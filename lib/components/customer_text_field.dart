@@ -10,13 +10,6 @@ class CustomTextField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: 10,
       ),
-      // decoration: BoxDecoration(
-      //   borderRadius: BorderRadius.circular(20),
-      //   border: Border.all(
-      //     width: 2.5,
-      //     color: kTextColor,
-      //   ),
-      // ),
       child: textField,
     );
   }

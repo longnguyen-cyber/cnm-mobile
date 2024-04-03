@@ -131,9 +131,8 @@ class _BottomNavigatorsState extends State<BottomNavigator>
         icons: buildIcons,
         badges: [
           const MotionBadgeWidget(
-            text: '10+',
+            text: '',
             textColor: Colors.white,
-            color: Colors.red,
             size: 18,
           ),
 
@@ -226,7 +225,6 @@ class _MainScreenState extends State<MainScreen> {
   void fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
-    print(token);
     setState(() {
       _token = token;
     });

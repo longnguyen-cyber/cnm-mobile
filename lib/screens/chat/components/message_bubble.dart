@@ -11,7 +11,7 @@ import 'package:zalo_app/screens/chat/enums/reaction.dart';
 class MessageBubble extends StatefulWidget {
   const MessageBubble(
       {super.key,
-      required this.threadId,
+      required this.stoneId,
       required this.user,
       required this.type,
       this.content,
@@ -26,7 +26,7 @@ class MessageBubble extends StatefulWidget {
       required this.onFuctionReply,
       this.receiveId});
   final String? receiveId;
-  final String threadId;
+  final String stoneId;
   final User user;
   final String type;
   final String? content;
@@ -292,7 +292,7 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   void revertFnc() {
     var data = {
-      "threadId": widget.threadId,
+      "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
       "type": widget.type
     };
@@ -301,7 +301,7 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   void deleteFnc() {
     var data = {
-      "threadId": widget.threadId,
+      "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
       "type": widget.type
     };

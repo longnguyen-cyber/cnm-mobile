@@ -25,12 +25,25 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: SearchScreen());
+          // return MaterialPage(child: AddFriendScreen());
           dynamic data = {
-            "id": "660c03a119960d6275a12051",
+            "id": "660cb4e08b473eedbea3d0a4",
             "name": "nesdw",
             "type": "chat",
             "receiverId": "65dd4ae4cbeffa04dbbc5b16",
+          };
+          dynamic dataChannel = {
+            "id": "65e480261644570261cadca4",
+            "name": "lam dep",
+            "type": "channel",
+            "members": [
+              "65a4aa4dc2f43ffc23ef4c16",
+              "65a4abaac2f43ffc23ef4c18",
+              "65a4ac2ccd6716d6b33286c5",
+              "65ae380b966692ca03c0bc3e",
+              "65bceb94ceda5567efc0b629",
+              "65dd4ae4cbeffa04dbbc5b16"
+            ]
           };
           // return MaterialPage(
           //     child: DetailChatScreen(
@@ -153,19 +166,14 @@ class MyAppRouter {
               "id": params["id"],
               "type": "channel",
               "name": params["name"],
-              "members": (params["users"] as List<dynamic>).map((e) {
-                return {
-                  "id": e["id"],
-                  "avatar": e["avatar"],
-                };
-              }).toList(),
+              "members":
+                  (params["users"] as List<dynamic>).map((e) => e).toList(),
             };
           } else {
             data = {
               "id": params["id"],
               "type": "chat",
               "name": params["user"]["name"],
-              "avatar": params["user"]["avatar"],
               "receiverId": params["user"]["id"],
             };
           }

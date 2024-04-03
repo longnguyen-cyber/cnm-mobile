@@ -102,8 +102,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             response["typeMsg"] == "delete") {
           setState(() {
             if (response["type"] == "chat") {
-              var indexOfThread = threadsChat
-                  .indexWhere((element) => element.id == response['threadId']);
+              var indexOfThread = threadsChat.indexWhere(
+                  (element) => element.stoneId == response['stoneId']);
               if (indexOfThread != -1) {
                 if (response["typeMsg"] == "delete") {
                   threadsChat.removeAt(indexOfThread);
@@ -114,8 +114,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 }
               }
             } else {
-              var indexOfThread = threadsChannel
-                  .indexWhere((element) => element.id == response['threadId']);
+              var indexOfThread = threadsChannel.indexWhere(
+                  (element) => element.stoneId == response['stoneId']);
               if (indexOfThread != -1) {
                 if (response["typeMsg"] == "delete") {
                   threadsChannel.removeAt(indexOfThread);
@@ -130,7 +130,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         } else {
           //send new message
           var data = {
-            "id": "234234234",
+            "stoneId": response['stoneId'],
             "messages": {"message": response['messages']['message']},
             "user": response['user'],
             "isReply": response['isReply'],
@@ -138,7 +138,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             "createdAt": response['timeThread'] as String,
             "receiveId": response['receiveId']
           };
+
           Thread thread = Thread.fromMap(data);
+          print(thread);
           if (members.contains(userExisting!.id)) {
             setState(() {
               threadsChannel.add(thread);
@@ -203,7 +205,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               color: Colors.white,
             ),
             onPressed: () {
-              Navigator.pop(context);
+              GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
             },
           ),
         ),
@@ -279,7 +281,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     if (thread.user!.id == userExisting!.id) {
                       children.add(
                         MessageBubble(
-                          threadId: thread.id!,
+                          stoneId: thread.stoneId!,
                           user: userExisting!,
                           receiveId:
                               thread.receiveId != null ? thread.receiveId! : "",
@@ -300,7 +302,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     } else {
                       children.add(
                         Message(
-                          threadId: thread.id!,
+                          stoneId: thread.stoneId!,
                           sender: thread.user!,
                           type: type,
                           content: thread.messages!.message,

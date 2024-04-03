@@ -7,7 +7,7 @@ import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 class Message extends StatefulWidget {
   const Message({
     super.key,
-    required this.threadId,
+    required this.stoneId,
     required this.sender,
     required this.type,
     required this.content,
@@ -21,7 +21,7 @@ class Message extends StatefulWidget {
   final bool isRecall;
   final User sender;
   final String type;
-  final String threadId;
+  final String stoneId;
   final String content;
   final MessageType messageType;
   final DateTime timeSent;
@@ -51,7 +51,7 @@ class _MessageState extends State<Message> {
         Column(
           children: <Widget>[
             MessageBubble(
-              threadId: widget.threadId,
+              stoneId: widget.stoneId,
               user: widget.sender,
               type: widget.type,
               content: widget.content,

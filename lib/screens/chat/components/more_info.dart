@@ -5,10 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/file.model.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 class MoreInfo extends StatefulWidget {
   const MoreInfo({
@@ -23,9 +26,46 @@ class MoreInfo extends StatefulWidget {
 
 class _MoreInfoState extends State<MoreInfo> {
   late Channel? channel = null;
+  late Chat? chat = null;
   final Dio _dio = Dio();
   List<FileModel> files = [];
   var baseUrl = dotenv.env['API_URL'];
+  final api = API();
+
+  void getData() async {
+    String type = widget.data["type"];
+    String id = widget.data["data"].id;
+    if (mounted) {
+      if (type == "chat") {
+        final response = await api.get("chats/$id", {});
+        if (response != null) {
+          Chat chat = Chat.fromMap(response["data"]);
+          setState(() {
+            chat = Chat.fromMap(response["data"]);
+            for (var thread in chat.threads!) {
+              for (var file in thread.files!) {
+                files.add(file);
+              }
+            }
+          });
+        }
+      } else {
+        final response = await api.get("channels/$id", {});
+        if (response != null) {
+          Channel channel = Channel.fromMap(response["data"]);
+          setState(() {
+            channel = Channel.fromMap(response["data"]);
+            for (var thread in channel.threads!) {
+              for (var file in thread.files!) {
+                files.add(file);
+              }
+            }
+          });
+        }
+      }
+    }
+  }
+
   Future<void> getChannel() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -55,43 +95,26 @@ class _MoreInfoState extends State<MoreInfo> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    getChannel();
-    files = List.generate(
-      5,
-      (index) => FileModel(
-        id: 'id_$index', // Generate unique IDs
-        filename: 'file_${index + 1}.txt', // Generate filenames
-        path: 'https://picsum.photos/200/300', // Generate random URLs
-        size: Random().nextInt(1024 * 1024), // Random size between 0 and 1MB
-      ),
-    );
-    print(files);
+    if (widget.data["type"] == "channel") {
+      channel = widget.data["data"];
+      for (var thread in channel!.threads!) {
+        for (var file in thread.files!) {
+          files.add(file);
+        }
+      }
+    } else {
+      chat = widget.data["data"];
+      for (var thread in chat!.threads!) {
+        for (var file in thread.files!) {
+          files.add(file);
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // final String id = widget.data["id"];
-    // final String name = widget.data["name"];
-    // final String type = widget.data["type"];
-    // late List<dynamic> members = [];
-    // if (widget.data["type"] == "channel") {
-    //   members = widget.data["users"];
-    // }
-
-    // ignore: avoid_init_to_null
-    // late Channel? channel = null;
-    // ignore: avoid_init_to_null
-    late Chat? chat = null;
-    if (widget.data["type"] == "channel") {
-      channel = widget.data["data"];
-    } else {
-      chat = widget.data["data"];
-    }
-    // print("channel: $channel");
-    channel!.threads!.map((e) => {print(e)});
-    // print(channel!.threads);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Tùy chọn"),
@@ -112,9 +135,17 @@ class _MoreInfoState extends State<MoreInfo> {
                     height: 80,
                     width: 80,
                     child: Center(
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(chat.user!.avatar ?? ""),
+                      child: InkWell(
+                        onTap: () {
+                          GoRouter.of(context).pushNamed(
+                              MyAppRouteConstants.profileRouteName,
+                              extra: {"user": chat!.user, "chatId": chat!.id});
+                        },
+                        child: CircleAvatar(
+                          radius: 25,
+                          backgroundImage:
+                              NetworkImage(chat!.user!.avatar ?? ""),
+                        ),
                       ),
                     ),
                   )
@@ -152,28 +183,31 @@ class _MoreInfoState extends State<MoreInfo> {
                   ]),
             Center(
               child: Text(
-                chat != null ? chat.user!.name.toString() : channel!.name,
+                chat != null ? chat!.user!.name.toString() : channel!.name,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            //create lagre divider
-            const Divider(
-              height: 20,
-              thickness: 4,
-            ),
-            InkWell(
-              child: Container(
-                  alignment: Alignment.center,
-                  width: double.infinity,
-                  child: const Text("add new member")),
-              //dont border rad
-              onTap: () {
-                print("add new member");
-              },
-            ),
+            chat == null
+                ? const Divider(
+                    height: 20,
+                    thickness: 4,
+                  )
+                : Container(),
+            chat == null
+                ? InkWell(
+                    child: Container(
+                        alignment: Alignment.center,
+                        width: double.infinity,
+                        child: const Text("add new member")),
+                    //dont border rad
+                    onTap: () {
+                      print("add new member");
+                    },
+                  )
+                : Container(),
             const Divider(
               height: 20,
               thickness: 4,
@@ -199,8 +233,8 @@ class _MoreInfoState extends State<MoreInfo> {
                   //4 image and one more
                   if (i > 3)
                     Container(
-                      width: 70,
-                      height: 70,
+                      width: 60,
+                      height: 60,
                       color: Colors.blue,
                       child: Center(
                         child: Text(
@@ -215,8 +249,8 @@ class _MoreInfoState extends State<MoreInfo> {
                   else
                     Container(
                       margin: const EdgeInsets.only(right: 10),
-                      width: 70,
-                      height: 70,
+                      width: 60,
+                      height: 60,
                       child: Image.network(
                         files[i].path ?? "",
                         fit: BoxFit.cover,
@@ -294,23 +328,25 @@ class _MoreInfoState extends State<MoreInfo> {
               height: 20,
               thickness: 2,
             ),
-            GestureDetector(
-              onTap: () {
-                print("Rời nhóm");
-              },
-              child: const Row(
-                children: [
-                  SizedBox(
-                    width: 10,
+            chat != null
+                ? Container()
+                : GestureDetector(
+                    onTap: () {
+                      print("Rời nhóm");
+                    },
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Icon(Icons.logout, color: Colors.red),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text("Rời nhóm", style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
                   ),
-                  Icon(Icons.logout, color: Colors.red),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text("Rời nhóm", style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
           ],
         ),
       ),

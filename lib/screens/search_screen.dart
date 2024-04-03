@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/components/user_item.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/api_service.dart';

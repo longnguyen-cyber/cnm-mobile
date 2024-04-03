@@ -27,10 +27,11 @@ class _ChatScreenState extends State<ChatScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
     var userOfToken = prefs.getString(token) ?? "";
+
     if (userOfToken != "") {
-      userId = User.fromJson(userOfToken).id!;
+      String id = User.fromJson(userOfToken).id!;
       setState(() {
-        userId = userId;
+        userId = id;
       });
     }
   }
@@ -49,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     getAll();
     getUser();
+
     SocketConfig.listen(SocketEvent.channelWS, (response) {
       var status = response['status'];
       var data = response['data'];
@@ -124,6 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
           "lastedThread": {
             "messages": {"message": response["messages"]["message"]},
           },
+          "stoneId": response["stoneId"],
           "isReply": response["isReply"],
           "isRecall": response["isRecall"],
           "user": response["user"],
@@ -135,10 +138,16 @@ class _ChatScreenState extends State<ChatScreen> {
         };
 
         if (mounted) {
-          if (userId == receiveId || members.contains(userId)) {
+          if (userId == receiveId ||
+              userId == data["user"]["id"] ||
+              members.contains(userId)) {
             var index =
                 all.indexWhere((element) => element["id"] == data["id"]);
             setState(() {
+              if (userId == data["user"]["id"]) {
+                dynamic prevUser = all[index]["user"];
+                data["user"] = prevUser;
+              }
               all[index] = data;
               all.sort((a, b) {
                 return DateTime.parse(b["timeThread"])

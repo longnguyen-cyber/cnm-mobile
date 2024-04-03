@@ -14,6 +14,7 @@ class Thread {
   bool? isRecall;
   final String? receiveId;
   final String? senderId;
+  final String? stoneId;
   final String? chatId;
   final String? channelId;
   final String? threadId;
@@ -25,6 +26,7 @@ class Thread {
   Thread({
     required this.id,
     required this.createdAt,
+    this.stoneId,
     this.isEdited,
     this.isReply,
     this.isRecall,
@@ -49,6 +51,7 @@ class Thread {
     bool? isRecall,
     String? receiveId,
     String? senderId,
+    String? stoneId,
     String? chatId,
     String? channelId,
     String? threadId,
@@ -66,6 +69,7 @@ class Thread {
       isRecall: isRecall ?? this.isRecall,
       receiveId: receiveId ?? this.receiveId,
       senderId: senderId ?? this.senderId,
+      stoneId: stoneId ?? this.stoneId,
       chatId: chatId ?? this.chatId,
       channelId: channelId ?? this.channelId,
       threadId: threadId ?? this.threadId,
@@ -86,6 +90,7 @@ class Thread {
       'isRecall': isRecall,
       'receiveId': receiveId,
       'senderId': senderId,
+      'stoneId': stoneId,
       'chatId': chatId,
       'channelId': channelId,
       'threadId': threadId,
@@ -108,6 +113,7 @@ class Thread {
       isRecall: map['isRecall'] != null ? map['isRecall'] as bool : null,
       receiveId: map['receiveId'] != null ? map['receiveId'] as String : null,
       senderId: map['senderId'] != null ? map['senderId'] as String : null,
+      stoneId: map['stoneId'] != null ? map['stoneId'] as String : null,
       chatId: map['chatId'] != null ? map['chatId'] as String : null,
       channelId: map['channelId'] != null ? map['channelId'] as String : null,
       threadId: map['threadId'] != null ? map['threadId'] as String : null,
@@ -143,7 +149,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
+    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
   }
 
   @override
@@ -157,6 +163,7 @@ class Thread {
         other.isRecall == isRecall &&
         other.receiveId == receiveId &&
         other.senderId == senderId &&
+        other.stoneId == stoneId &&
         other.chatId == chatId &&
         other.channelId == channelId &&
         other.threadId == threadId &&
@@ -176,6 +183,7 @@ class Thread {
         isRecall.hashCode ^
         receiveId.hashCode ^
         senderId.hashCode ^
+        stoneId.hashCode ^
         chatId.hashCode ^
         channelId.hashCode ^
         threadId.hashCode ^

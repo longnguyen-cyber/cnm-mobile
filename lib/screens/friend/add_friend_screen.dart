@@ -5,6 +5,7 @@ import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/components/user_item.dart';
 import 'package:zalo_app/constants.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 class AddFriendScreen extends StatefulWidget {
   const AddFriendScreen({super.key});
@@ -15,7 +16,9 @@ class AddFriendScreen extends StatefulWidget {
 
 class _AddFriendScreenState extends State<AddFriendScreen> {
   late String name = "";
-  late List<User> users = [];
+  final api = API();
+  late List<dynamic> users = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,20 +60,20 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
               CustomButton(
                 buttonText: "Tìm kiếm",
                 onPressed: () async {
-                  List<User> users =
-                      await context.read<UserCubit>().searchUser(name: name);
-                  if (users.isNotEmpty) {
+                  if (name.isEmpty) {
                     setState(() {
-                      this.users = users;
+                      users = [];
                     });
-                  } else {
-                    SnackBar snackBar = const SnackBar(
-                        content: Text('Không tìm thấy người dùng'));
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    setState(() {
-                      this.users = [];
-                    });
+                    return;
+                  }
+                  final response = await api.get("users/search/$name", {});
+                  if (response != null) {
+                    var data = response['data'];
+                    if (data != null) {
+                      setState(() {
+                        users = data;
+                      });
+                    }
                   }
                 },
               ),
@@ -79,7 +82,8 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 children: [
                   for (int i = 0; i < users.length; i++)
                     UserItem(
-                      obj: users[i],
+                      obj: User.fromMap(users[i]["user"]),
+                      chatId: users[i]["chatId"],
                     )
                 ],
               )

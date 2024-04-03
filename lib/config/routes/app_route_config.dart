@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/screens/auth/forgot_pass_screen.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
-import 'package:zalo_app/screens/auth/splash_screen.dart';
+import 'package:zalo_app/screens/auth/verify_noti_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/call/call_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
@@ -14,6 +15,7 @@ import 'package:zalo_app/screens/friend/add_friend_screen.dart';
 import 'package:zalo_app/screens/friend/create_channel_screen.dart';
 import 'package:zalo_app/screens/home/main_screen.dart';
 import 'package:zalo_app/screens/profile.dart';
+import 'package:zalo_app/screens/search_screen.dart';
 
 import 'app_route_constants.dart';
 
@@ -24,7 +26,31 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          return const MaterialPage(
+          // return MaterialPage(child: AddFriendScreen());
+          dynamic data = {
+            "id": "660cb4e08b473eedbea3d0a4",
+            "name": "nesdw",
+            "type": "chat",
+            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
+          };
+          dynamic dataChannel = {
+            "id": "65e480261644570261cadca4",
+            "name": "lam dep",
+            "type": "channel",
+            "members": [
+              "65a4aa4dc2f43ffc23ef4c16",
+              "65a4abaac2f43ffc23ef4c18",
+              "65a4ac2ccd6716d6b33286c5",
+              "65ae380b966692ca03c0bc3e",
+              "65bceb94ceda5567efc0b629",
+              "65dd4ae4cbeffa04dbbc5b16"
+            ]
+          };
+          // return MaterialPage(
+          //     child: DetailChatScreen(
+          //   data: data,
+          // ));
+          return MaterialPage(
               child:
                   // LoginScreen());
                   CallPage(callID: "L6KZla12", userID: "Dat", userName: "Đạt"));
@@ -49,6 +75,13 @@ class MyAppRouter {
         },
       ),
       GoRoute(
+        name: MyAppRouteConstants.forgotRouteName,
+        path: '/forgot',
+        pageBuilder: (context, state) {
+          return const MaterialPage(child: ForgotPasswordScreen());
+        },
+      ),
+      GoRoute(
           name: MyAppRouteConstants.friendRouteName,
           path: '/friend',
           pageBuilder: (context, state) {
@@ -62,7 +95,7 @@ class MyAppRouter {
         name: MyAppRouteConstants.splashRouteName,
         path: '/splash',
         pageBuilder: (context, state) {
-          return const MaterialPage(child: SplashScreen());
+          return const MaterialPage(child: VerifyNotiScreen());
         },
       ),
       GoRoute(
@@ -101,13 +134,23 @@ class MyAppRouter {
         },
       ),
       GoRoute(
+        name: MyAppRouteConstants.searchRouteName,
+        path: '/search',
+        pageBuilder: (context, state) {
+          return const MaterialPage(child: SearchScreen());
+        },
+      ),
+      GoRoute(
         name: MyAppRouteConstants.profileRouteName,
         path: '/profile',
         pageBuilder: (context, state) {
-          User user = state.extra as User;
+          dynamic params = state.extra as dynamic;
+          User user = params["user"] as User;
+          String chatId = params["chatId"] ?? "";
           return MaterialPage(
               child: Profile(
             user: user,
+            id: chatId,
           ));
         },
       ),
@@ -122,13 +165,15 @@ class MyAppRouter {
               "id": params["id"],
               "type": "channel",
               "name": params["name"],
-              "members": (params["users"] as List<dynamic>).length
+              "members":
+                  (params["users"] as List<dynamic>).map((e) => e).toList(),
             };
           } else {
             data = {
               "id": params["id"],
               "type": "chat",
               "name": params["user"]["name"],
+              "receiverId": params["user"]["id"],
             };
           }
 

@@ -13,7 +13,7 @@ import 'dart:convert';
 
 class Message {
   final String? id;
-  final String message;
+  String message;
 
   Message({
     required this.id,
@@ -42,7 +42,7 @@ class Message {
 
   factory Message.fromMap(Map<String, dynamic> map) {
     return Message(
-      id: map['id'] as String,
+      id: map['id'] != null ? map['id'] as String : null,
       message: map['message'] as String,
     );
   }

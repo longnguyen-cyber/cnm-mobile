@@ -26,7 +26,7 @@ class CustomButton extends StatelessWidget {
         elevation: 4,
         child: Container(
           width: width,
-          padding: const EdgeInsets.all(13),
+          padding: const EdgeInsets.symmetric(vertical: 5),
           decoration: BoxDecoration(
             color: isOutlined ? Colors.white : kTextColor,
             border: Border.all(color: kTextColor, width: 2.5),
@@ -37,7 +37,7 @@ class CustomButton extends StatelessWidget {
               buttonText,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: 16,
                 color: isOutlined ? kTextColor : Colors.white,
               ),
             ),

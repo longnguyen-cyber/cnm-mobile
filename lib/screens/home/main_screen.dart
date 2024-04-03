@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motion_tab_bar/MotionBadgeWidget.dart';
 import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/model/chat.model.dart';
@@ -102,9 +104,8 @@ class _BottomNavigatorsState extends State<BottomNavigator>
             hintStyle: TextStyle(color: Colors.white54),
             border: InputBorder.none,
           ),
-
-          onChanged: (value) {
-            // Perform search functionality here
+          onTap: () {
+            GoRouter.of(context).pushNamed(MyAppRouteConstants.searchRouteName);
           },
         ),
         actions: <Widget>[
@@ -130,9 +131,8 @@ class _BottomNavigatorsState extends State<BottomNavigator>
         icons: buildIcons,
         badges: [
           const MotionBadgeWidget(
-            text: '10+',
+            text: '',
             textColor: Colors.white,
-            color: Colors.red,
             size: 18,
           ),
 

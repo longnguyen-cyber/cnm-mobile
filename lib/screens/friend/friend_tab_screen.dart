@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,7 @@ import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 import 'components/index.dart';
 
@@ -26,10 +28,10 @@ class _FriendTabScreenState extends State<FriendTabScreen>
   // ignore: avoid_init_to_null
   late dynamic newEvent = null;
   late String userId = "";
+  final api = API();
 
   List<Chat> whiteList = [];
   List<Chat> waitList = [];
-
   void getAll() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -41,26 +43,36 @@ class _FriendTabScreenState extends State<FriendTabScreen>
         userId = userId;
       });
     }
-    String url = "$baseUrl/chats/friend/waitlistFriendAccept";
-    final response = await _dio.get(
-      url,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
+    String urlWaitList = "chats/friend/waitlistFriendAccept";
+    String urlWhiteList = "chats/friend/whitelistFriendAccept";
+    // final response = await _dio.get(
+    //   url,
+    //   options: Options(
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Accept': 'application/json',
+    //       'Authorization': 'Bearer $token',
+    //     },
+    //   ),
+    // );
+
+    final responseWaitList = await api.get(urlWaitList, {});
+    final responseWhiteList = await api.get(urlWhiteList, {});
 
     if (mounted) {
       setState(() {
-        waitList = (response.data["data"] as List)
+        waitList = (responseWaitList["data"] as List)
+            .map((e) => Chat.fromMap(e))
+            .toList();
+
+        whiteList = (responseWhiteList["data"] as List)
             .map((e) => Chat.fromMap(e))
             .toList();
       });
     }
   }
+
+  void whitelistFriendAccept() {}
 
   @override
   void initState() {
@@ -73,17 +85,25 @@ class _FriendTabScreenState extends State<FriendTabScreen>
       if (status == 200) {
         if (mounted) {
           setState(() {
-            if (data["type"] == "unReqAddFriend") {
-              waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            } else if (data["type"] == "acceptAddFriend") {
-              whiteList.add(Chat.fromMap(data["chat"]));
-              waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            } else if (data["type"] == "rejectAddFriend") {
-              waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            } else if (data["type"] == "unfriend") {
-              whiteList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-            } else if (data['receiveId'] == userId) {
-              waitList.add(Chat.fromMap(data["chat"]));
+            if (data["receiveId"] == userId || data["senderId"] == userId) {
+              print("data: $data");
+              if (data["type"] == "unReqAddFriend") {
+                waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+              } else if (data["type"] == "acceptAddFriend") {
+                whiteList.add(Chat.fromMap(data["chat"]));
+                waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+              } else if (data["type"] == "rejectAddFriend") {
+                waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+              } else if (data["type"] == "unfriend") {
+                whiteList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+              } else if (data['receiveId'] == userId) {
+                waitList.add(Chat.fromMap(data["chat"]));
+              } else if (data["type"] == "reqAddFriend" ||
+                  data["type"] == "reqAddFriendHaveChat") {
+                if (data["receiveId"] == userId) {
+                  waitList.add(Chat.fromMap(data["chat"]));
+                }
+              }
             }
           });
         }
@@ -108,25 +128,14 @@ class _FriendTabScreenState extends State<FriendTabScreen>
         const Divider(
           color: Colors.grey,
         ),
-        BlocBuilder<FriendCubit, FriendState>(builder: (context, state) {
-          if (state is FriendInitial) {
-            context.read<FriendCubit>().whitelistFriendAccept();
-            return const CircularProgressIndicator();
-          }
-          if (state is WhitelistFriendAcceptLoaded) {
-            whiteList = state.chats;
-            return Expanded(
-              child: ListView(children: [
-                for (int i = 0; i < whiteList.length; i++)
-                  FriendItem(
-                    chat: whiteList[i],
-                  )
-              ]),
-            );
-          } else {
-            return const Text('Error');
-          }
-        }),
+        Expanded(
+          child: ListView(children: [
+            for (int i = 0; i < whiteList.length; i++)
+              FriendItem(
+                chat: whiteList[i],
+              )
+          ]),
+        ),
       ],
     );
   }

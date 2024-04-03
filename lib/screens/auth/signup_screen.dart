@@ -6,6 +6,7 @@ import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/constants.dart';
+import 'package:zalo_app/utils/valid.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -22,6 +23,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // late String _
   final bool _saving = false;
   final _formKey = GlobalKey<FormState>();
+  final valid = Valid();
+  late bool _obscureTextPass = true;
+  late bool _obscureTextCf = true;
 
   @override
   Widget build(BuildContext context) {
@@ -58,32 +62,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Form(
                           key: _formKey,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const ScreenTitle(title: 'ĐĂNG KÍ'),
+                              const SizedBox(
+                                height: 20,
+                              ),
                               CustomTextField(
                                 textField: TextFormField(
                                   onChanged: (value) {
                                     _email = value;
                                   },
                                   style: const TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 14,
                                   ),
                                   decoration: kTextInputDecoration.copyWith(
                                     hintText: 'Email',
-                                    prefixIcon: const Icon(Icons.email),
+                                    prefixIcon:
+                                        const Icon(Icons.email_outlined),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Email không được để trống';
                                     }
-                                    if (!value.contains('@')) {
+                                    if (!valid.validateEmail(value)) {
                                       return 'Email không đúng định dạng';
                                     }
                                     return null;
                                   },
                                 ),
+                              ),
+                              const SizedBox(
+                                height: 15,
                               ),
                               CustomTextField(
                                 textField: TextFormField(
@@ -91,11 +101,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     _userName = value;
                                   },
                                   style: const TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 14,
                                   ),
                                   decoration: kTextInputDecoration.copyWith(
                                     hintText: 'Tên người dùng',
-                                    prefixIcon: const Icon(Icons.person),
+                                    prefixIcon:
+                                        const Icon(Icons.person_outline),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -105,18 +116,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   },
                                 ),
                               ),
+                              const SizedBox(
+                                height: 15,
+                              ),
                               CustomTextField(
                                 textField: TextFormField(
-                                  obscureText: true,
+                                  obscureText: _obscureTextPass,
                                   onChanged: (value) {
                                     _password = value;
                                   },
                                   style: const TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 14,
                                   ),
                                   decoration: kTextInputDecoration.copyWith(
                                     hintText: 'Mật khẩu',
-                                    prefixIcon: const Icon(Icons.lock),
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureTextPass
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscureTextPass = !_obscureTextPass;
+                                        });
+                                      },
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -125,21 +151,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     if (value.length < 6) {
                                       return 'Mật khẩu ít nhất là 6 kí tự';
                                     }
+                                    if (!valid.validatePassword(value)) {
+                                      return 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ số và 1 kí tự đặc biệt';
+                                    }
 
                                     return null;
                                   },
                                 ),
                               ),
+                              const SizedBox(
+                                height: 15,
+                              ),
                               CustomTextField(
                                 textField: TextFormField(
-                                  obscureText: true,
+                                  obscureText: _obscureTextCf,
                                   onChanged: (value) {},
                                   style: const TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 14,
                                   ),
                                   decoration: kTextInputDecoration.copyWith(
                                     hintText: 'Nhập lại mật khẩu',
-                                    prefixIcon: const Icon(Icons.lock),
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureTextCf
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscureTextCf = !_obscureTextCf;
+                                        });
+                                      },
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (_password.isEmpty) {
@@ -151,6 +195,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     return null;
                                   },
                                 ),
+                              ),
+                              const SizedBox(
+                                height: 20,
                               ),
                               CustomBottomScreen(
                                 textButton: 'Đăng kí',

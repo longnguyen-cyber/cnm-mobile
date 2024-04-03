@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/constants.dart';
+import 'package:zalo_app/utils/valid.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
   late String email = "";
   late String password = "";
   final _formKey = GlobalKey<FormState>();
-
+  Valid valid = Valid();
+  late bool _obscureText = true;
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<UserCubit, UserState>(
@@ -52,45 +56,59 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const ScreenTitle(title: 'ĐĂNG NHẬP'),
+                            const SizedBox(height: 20),
                             CustomTextField(
                               textField: TextFormField(
                                 onChanged: (value) {
                                   email = value;
                                 },
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 14,
                                 ),
                                 decoration: kTextInputDecoration.copyWith(
                                     // contentPadding: const EdgeInsets.all(10),
                                     hintText: 'Nhập email',
-                                    prefixIcon: const Icon(Icons.email)),
+                                    prefixIcon:
+                                        const Icon(Icons.email_outlined)),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Vui lý nhập email';
                                   }
-                                  if (!value.contains('@')) {
+                                  if (!valid.validateEmail(email)) {
                                     return 'Email không hợp lệ';
                                   }
                                   return null;
                                 },
                               ),
                             ),
+                            const SizedBox(height: 20),
                             CustomTextField(
                               textField: TextFormField(
-                                obscureText: true,
+                                obscureText: _obscureText,
                                 onChanged: (value) {
                                   password = value;
                                 },
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 14,
                                 ),
                                 decoration: kTextInputDecoration.copyWith(
                                   hintText: 'Nhập mật khẩu',
-                                  prefixIcon: const Icon(Icons.lock),
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureText
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureText = !_obscureText;
+                                      });
+                                    },
+                                  ),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -99,84 +117,56 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (value.length < 6) {
                                     return 'Mật khẩu ít nhất là 6 kí tự';
                                   }
+                                  // if (!valid.validatePassword(value)) {
+                                  //   return 'Mật khẩu phải chứa ít nhất 1 kí tự hoa, 1 kí tự số và 1 kí tự đặc biệt';
+                                  // }
 
                                   return null;
                                 },
                               ),
                             ),
+                            const SizedBox(height: 20),
                             CustomBottomScreen(
                               textButton: 'Đăng nhập',
                               heroTag: 'login_btn',
                               question: 'Quên mật khẩu',
-                              buttonPressed: () {
+                              buttonPressed: () async {
                                 // Validate returns true if the form is valid, or false otherwise.
                                 if (_formKey.currentState!.validate()) {
                                   // If the form is valid, display a snackbar. In the real world,
                                   // you'd often call a server or save the information in a database.
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                      'Đang đăng nhập',
-                                      style: TextStyle(
-                                          fontSize: 20, color: Colors.blue),
-                                    )),
-                                  );
+                                  // ScaffoldMessenger.of(context).showSnackBar(
+                                  //   const SnackBar(
+                                  //       content: Text(
+                                  //     'Đang đăng nhập',
+                                  //     style: TextStyle(
+                                  //         fontSize: 20, color: Colors.blue),
+                                  //   )),
+                                  // );
 
-                                  GoRouter.of(context).pushNamed(
-                                      MyAppRouteConstants.splashRouteName);
-                                  context
+                                  Future<bool> result = context
                                       .read<UserCubit>()
                                       .login(email, password);
+
+                                  bool isLogin = await result;
+                                  if (isLogin) {
+                                    GoRouter.of(context).pushNamed(
+                                        MyAppRouteConstants.mainRouteName);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                        'Email hoặc mật khẩu không đúng',
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.red),
+                                      )),
+                                    );
+                                  }
                                 }
                               },
-
-                              // buttonPressed: () async {
-                              //   if (!_formKey.currentState!.validate()) {
-
-                              //   }
-                              //   FocusManager.instance.primaryFocus?.unfocus();
-                              //   setState(() {
-                              //     _saving = true;
-                              //   });
-                              //   try {
-                              //     // await _auth.signInWithEmailAndPassword(
-                              //     //     email: email, password: password);
-
-                              //     if (context.mounted) {
-                              //       setState(() {
-                              //         _saving = false;
-
-                              //       });
-
-                              //     }
-                              //   } catch (e) {
-                              //     signUpAlert(
-                              //       context: context,
-                              //       onPressed: () {
-                              //         setState(() {
-                              //           _saving = false;
-                              //         });
-
-                              //       },
-                              //       title: 'WRONG PASSWORD OR EMAIL',
-                              //       desc:
-                              //           'Confirm your email and password and try again',
-                              //       btnText: 'Try Now',
-                              //     ).show();
-                              //   }
-                              // },
                               questionPressed: () {
-                                signUpAlert(
-                                  onPressed: () async {
-                                    // await FirebaseAuth.instance
-                                    //     .sendPasswordResetEmail(email: email);
-                                  },
-                                  title: 'RESET YOUR PASSWORD',
-                                  desc:
-                                      'Click on the button to reset your password',
-                                  btnText: 'Reset Now',
-                                  context: context,
-                                ).show();
+                                GoRouter.of(context).pushNamed(
+                                    MyAppRouteConstants.forgotRouteName);
                               },
                             ),
                           ],

@@ -182,7 +182,7 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
                           child: const Text(
                             'Tạo nhóm ',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                                fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         );
                       },

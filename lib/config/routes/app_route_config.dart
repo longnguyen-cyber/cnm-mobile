@@ -6,6 +6,7 @@ import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/splash_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
+import 'package:zalo_app/screens/call/call_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
@@ -23,12 +24,10 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          return MaterialPage(
+          return const MaterialPage(
               child:
                   // LoginScreen());
-                  MainScreen(
-            index: 0,
-          ));
+                  CallPage(callID: "L6KZla12", userID: "Dat", userName: "Đạt"));
           // return const MaterialPage(
           //     child: DetailChatScreen(
           //   id: "65e480261644570261cadca4",

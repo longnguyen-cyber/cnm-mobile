@@ -38,6 +38,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getAll() async {
     final response = await api.get("all", {});
+    print(response);
+
     if (mounted) {
       setState(() {
         all = response;

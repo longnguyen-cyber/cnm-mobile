@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zalo_app/model/chat.model.dart';
+
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/forgot_pass_screen.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
 import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/verify_noti_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
-import 'package:zalo_app/screens/call/call_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
@@ -28,8 +27,8 @@ class MyAppRouter {
         pageBuilder: (context, state) {
           // return MaterialPage(child: AddFriendScreen());
           dynamic data = {
-            "id": "660cb4e08b473eedbea3d0a4",
-            "name": "nesdw",
+            "id": "660e4c3c1a11861bf622c42b",
+            "name": "Hehe",
             "type": "chat",
             "receiverId": "65dd4ae4cbeffa04dbbc5b16",
           };
@@ -47,24 +46,28 @@ class MyAppRouter {
             ]
           };
           // return MaterialPage(
+          //     child:
+          //         // LoginScreen());
+          //         MainScreen(
+          //   index: 0,
+          // ));
+          // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,
           // ));
-          return MaterialPage(
-              child:
-                  // LoginScreen());
-                  CallPage(callID: "L6KZla12", userID: "Dat", userName: "Đạt"));
+          // return MaterialPage(child: LoginScreen());
+          // CallPage(callID: "L6KZla12", userID: "Dat", userName: "Đạt"));
+          // MainScreen());
           // return const MaterialPage(
           //     child: DetailChatScreen(
           //   id: "65e480261644570261cadca4",
           //   type: "channel",
           //   name: "lam dep",
           // ));
-          // return const MaterialPage(
-          //     child: DetailChatScreen(
-          //   id: "65ea7527798ba90473c6a2da",
-          //   type: "chat",
-          // ));
+          return MaterialPage(
+              child: DetailChatScreen(
+            data: data,
+          ));
         },
       ),
       GoRoute(

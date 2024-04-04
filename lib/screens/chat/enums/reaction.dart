@@ -1,1 +1,1 @@
-enum Reaction { like, dislike, love, laugh, wow, sad, angry, none }
+enum Reaction { like, love, laugh, sad, angry, none }

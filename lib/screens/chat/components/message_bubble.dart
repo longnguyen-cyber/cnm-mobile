@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/screens/chat/components/constants/constants.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
@@ -16,7 +17,7 @@ class MessageBubble extends StatefulWidget {
       required this.type,
       this.content,
       required this.timeSent,
-      this.imageUrl,
+      this.images,
       this.videoUrl,
       this.reaction,
       this.isRecall,
@@ -31,7 +32,7 @@ class MessageBubble extends StatefulWidget {
   final String type;
   final String? content;
   final DateTime timeSent;
-  final String? imageUrl;
+  final List<String>? images;
   final String? videoUrl;
   final Reaction? reaction;
   final bool? isRecall;
@@ -46,10 +47,7 @@ class MessageBubble extends StatefulWidget {
 
 class _MessageBubbleState extends State<MessageBubble> {
   bool isReactionSelected = false;
-  Icon reactionIcon = const Icon(
-    FontAwesomeIcons.heart,
-  );
-
+  var reactionIcon = heartEmoji;
   User? userExisting = User();
 
   void getUser() async {
@@ -129,68 +127,67 @@ class _MessageBubbleState extends State<MessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  widget.isRecall == true
+                  (widget.isReply == null || widget.isReply == false)
                       ? Text(
-                          'Tin nhắn đã được thu hồi',
+                          widget.content ?? '',
                           style:
                               Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: Colors.black,
                                   ),
                         )
-                      : (widget.isReply == null || widget.isReply == false)
-                          ? Text(
-                              widget.content ?? '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    color: Colors.black,
-                                  ),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width:
-                                            3, // Độ rộng của đường kẻ thẳng đứng
-                                        height:
-                                            20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
-                                        color: Colors
-                                            .blue, // Màu sắc của đường kẻ thẳng
+                                Container(
+                                  width: 3, // Độ rộng của đường kẻ thẳng đứng
+                                  height:
+                                      20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                  color:
+                                      Colors.blue, // Màu sắc của đường kẻ thẳng
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                RichText(
+                                  textAlign: TextAlign.left,
+                                  text: TextSpan(
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                        text: '  ${widget.replyUser}\n',
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 12),
                                       ),
-                                      const SizedBox(
-                                        width: 10,
+                                      TextSpan(
+                                        text: '${widget.replyContent}\n',
+                                        style: const TextStyle(
+                                            color: Colors.grey, fontSize: 10),
                                       ),
-                                      RichText(
-                                        textAlign: TextAlign.left,
-                                        text: TextSpan(
-                                          children: <TextSpan>[
-                                            TextSpan(
-                                              text: '  ${widget.replyUser}\n',
-                                              style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 12),
-                                            ),
-                                            TextSpan(
-                                              text: '${widget.replyContent}\n',
-                                              style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 10),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Spacer(),
                                     ],
                                   ),
-                                  Text(
-                                    widget.content ?? '',
-                                  )
-                                ]),
-                  if (widget.imageUrl != null)
-                    Image.network(widget.imageUrl!, width: size.width * 0.5)
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Text(
+                              widget.content ?? '',
+                            )
+                          ],
+                        ),
+                  if (widget.images != null)
+                    // Image.network(widget.imageUrl!, width: size.width * 0.5)
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: widget.images!.length,
+                      itemBuilder: (context, index) {
+                        return Image.network(
+                          widget.images![index],
+                          width: size.width * 0.5,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
                   else
                     const SizedBox.shrink(),
                   if (widget.videoUrl != null)
@@ -203,13 +200,6 @@ class _MessageBubbleState extends State<MessageBubble> {
                   // Container()
                   Text(parseTime(widget.timeSent),
                       style: Theme.of(context).textTheme.bodySmall),
-
-                  // if (widget.reaction != null)
-                  // Icon(
-                  //   FontAwesomeIcons.heart,
-                  //   color: Colors.red,
-                  //   size: 15,
-                  // ),
                 ],
               ),
             ),
@@ -250,43 +240,45 @@ class _MessageBubbleState extends State<MessageBubble> {
       case Reaction.like:
         setState(() {
           isReactionSelected = true;
-          reactionIcon =
-              const Icon(Icons.thumb_up_off_alt_rounded, color: Colors.blue);
+          reactionIcon = likeEmoji;
         });
+        Navigator.pop(context);
+
         break;
-      case Reaction.dislike:
+      case Reaction.sad:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(FontAwesomeIcons.solidThumbsDown,
-              color: Colors.yellow);
+          reactionIcon = sadEmoji;
+          Navigator.pop(context);
         });
         break;
       case Reaction.love:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(Icons.favorite, color: Colors.red);
+          reactionIcon = heartEmoji;
         });
+        Navigator.pop(context);
         break;
       case Reaction.laugh:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
-              color: Colors.deepPurple);
+          reactionIcon = laughingEmoji;
         });
+        Navigator.pop(context);
         break;
       case Reaction.angry:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(
-            FontAwesomeIcons.solidFaceAngry,
-            color: Colors.redAccent,
-          );
+          reactionIcon = angryEmoji;
         });
+        Navigator.pop(context);
         break;
       default:
         setState(() {
           isReactionSelected = false;
         });
+        Navigator.pop(context);
+        break;
     }
   }
 
@@ -365,46 +357,32 @@ class _ListItemsState extends State<ListItems> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.like);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.thumb_up_off_alt_rounded,
-                            color: Colors.blue))),
+                  onTap: () {
+                    widget.onReactionSelected(Reaction.like);
+                  },
+                  child: likeEmoji,
+                ),
                 InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.dislike);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(FontAwesomeIcons.solidThumbsDown,
-                            color: Colors.yellow))),
+                  onTap: () {
+                    widget.onReactionSelected(Reaction.sad);
+                  },
+                  child: sadEmoji,
+                ),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.love);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.favorite, color: Colors.red))),
+                    child: heartEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.laugh);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(FontAwesomeIcons.solidFaceLaughSquint,
-                            color: Colors.deepPurple))),
+                    child: laughingEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.angry);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: FaIcon(
-                          FontAwesomeIcons.solidFaceAngry,
-                          color: Colors.redAccent,
-                        ))),
+                    child: angryEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.none);
@@ -414,6 +392,7 @@ class _ListItemsState extends State<ListItems> {
                         icon: FaIcon(
                           FontAwesomeIcons.x,
                           color: Colors.black,
+                          size: 24,
                         ))),
               ],
             ),

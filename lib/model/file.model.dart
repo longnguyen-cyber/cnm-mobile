@@ -53,13 +53,19 @@ class FileModel {
 
   factory FileModel.fromMap(Map<String, dynamic> map) {
     return FileModel(
-      id: map['id'] as String,
+      id: map['id'] != null ? map['id'] as String : null,
       filename: map['filename'] as String,
       path: map['path'] as String,
       size: map['size'] as int,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
-      deletedAt: DateTime.fromMillisecondsSinceEpoch(map['deletedAt'] as int),
+      createdAt: map['createdAt'] is String
+          ? DateTime.parse(map['createdAt'] as String)
+          : null,
+      updatedAt: map['updatedAt'] is String
+          ? DateTime.parse(map['updatedAt'] as String)
+          : null,
+      deletedAt: map['deletedAt'] is String
+          ? DateTime.parse(map['deletedAt'] as String)
+          : null,
     );
   }
 

@@ -286,8 +286,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           receiveId:
                               thread.receiveId != null ? thread.receiveId! : "",
                           type: type,
-                          content: thread.messages!.message,
+                          content: thread.messages != null
+                              ? thread.messages!.message
+                              : "",
                           timeSent: (thread.createdAt!),
+                          images: thread.files!.map((e) => e.path!).toList(),
                           isReply: thread.isReply,
                           isRecall: thread.isRecall,
                           onFuctionReply: (sender, content) {

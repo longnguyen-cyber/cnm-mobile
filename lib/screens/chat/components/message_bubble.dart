@@ -181,10 +181,21 @@ class _MessageBubbleState extends State<MessageBubble> {
                       shrinkWrap: true,
                       itemCount: widget.images!.length,
                       itemBuilder: (context, index) {
-                        return Image.network(
-                          widget.images![index],
-                          width: size.width * 0.5,
-                          fit: BoxFit.cover,
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FullScreenImage(
+                                    image: widget.images![index],
+                                  ),
+                                ));
+                          },
+                          child: Image.network(
+                            widget.images![index],
+                            width: size.width * 0.5,
+                            fit: BoxFit.cover,
+                          ),
                         );
                       },
                     )
@@ -209,7 +220,11 @@ class _MessageBubbleState extends State<MessageBubble> {
         Positioned(
           bottom: 0,
           right: 0,
-          child: isReactionSelected ? reactionIcon : const SizedBox.shrink(),
+          child: Container(
+            width: 18,
+            height: 18,
+            child: isReactionSelected ? reactionIcon : const SizedBox.shrink(),
+          ),
         ),
       ],
     );
@@ -320,6 +335,31 @@ class _MessageBubbleState extends State<MessageBubble> {
         break;
       default:
     }
+  }
+}
+
+class FullScreenImage extends StatelessWidget {
+  final String image;
+  const FullScreenImage({
+    super.key,
+    required this.image,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: GestureDetector(
+        onTap: () {
+          Navigator.pop(context);
+        },
+        child: Center(
+          child: Hero(
+            tag: 'imageHero',
+            child: Image.network(image),
+          ),
+        ),
+      ),
+    );
   }
 }
 

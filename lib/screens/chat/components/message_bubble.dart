@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/components/voice.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
+import 'package:zalo_app/screens/chat/components/constants/constants.dart';
+import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
@@ -197,12 +202,40 @@ class _MessageBubbleState extends State<MessageBubble> {
                       itemCount: widget.files!.length,
                       itemBuilder: (context, index) {
                         String fileType = widget.files![index].split('.').last;
+                        // print()
                         if (fileType == 'jpg' ||
                             fileType == 'jpeg' ||
                             fileType == 'png' ||
                             fileType == 'gif' ||
                             fileType == "webp") {
-                          return imageFile(index, size);
+                          if (widget.files![index].contains("http")) {
+                            return GestureDetector(
+                              onTap: () {
+                                GoRouter.of(context).pushNamed(
+                                    MyAppRouteConstants.fullRouteName,
+                                    extra: widget.files![index]);
+                              },
+                              child: Image.network(
+                                widget.files![index],
+                                width: size.width * 0.5,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          } else {
+                            return GestureDetector(
+                              onTap: () {
+                                GoRouter.of(context).pushNamed(
+                                    MyAppRouteConstants.fullRouteName,
+                                    extra: widget.files![index]);
+                              },
+                              child: Image.file(
+                                File(widget.files![index]),
+                                width: size.width * 0.5,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          }
+                          // return imageFile(index, size);
                         } else if (fileType == 'mp3') {
                           AudioPlayer player = audioPlayers![index];
                           player.setReleaseMode(ReleaseMode.stop);
@@ -276,41 +309,70 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   void handleReaction(Reaction reaction) {
     switch (reaction) {
-      case Reaction.like:
+      case Reaction.love:
+        addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
           reactionIcon =
               const Icon(Icons.thumb_up_off_alt_rounded, color: Colors.blue);
+          Navigator.pop(context);
         });
         break;
 
-      case Reaction.love:
+      case Reaction.like:
+        addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
           reactionIcon = const Icon(Icons.favorite, color: Colors.red);
+          Navigator.pop(context);
         });
         break;
-      case Reaction.laugh:
+      case Reaction.smile:
+        addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
           reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
               color: Colors.deepPurple);
+          Navigator.pop(context);
+        });
+        break;
+      case Reaction.sad:
+        addEmoji(Reaction.like.name);
+        setState(() {
+          isReactionSelected = true;
+          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
+              color: Colors.deepPurple);
+          Navigator.pop(context);
         });
         break;
       case Reaction.angry:
+        addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
           reactionIcon = const Icon(
             FontAwesomeIcons.solidFaceAngry,
             color: Colors.redAccent,
           );
+          Navigator.pop(context);
         });
         break;
       default:
         setState(() {
           isReactionSelected = false;
+          Navigator.pop(context);
         });
+        break;
     }
+  }
+
+  void addEmoji(String emoji) {
+    var data = {
+      "emoji": emoji,
+      "stoneId": widget.stoneId,
+      "receiveId": widget.receiveId,
+      "typeEmoji": "add"
+    };
+    SocketConfig.emit(SocketMessage.emoji, data);
   }
 
   void revertFnc() {
@@ -390,47 +452,34 @@ class _ListItemsState extends State<ListItems> {
               children: <Widget>[
                 InkWell(
                     onTap: () {
-                      widget.onReactionSelected(Reaction.like);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.thumb_up_off_alt_rounded,
-                            color: Colors.blue))),
-                InkWell(
-                    onTap: () {
                       widget.onReactionSelected(Reaction.love);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.favorite, color: Colors.red))),
+                    child: loveEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.like);
+                    },
+                    child: likeEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.laugh);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(FontAwesomeIcons.solidFaceLaughSquint,
-                            color: Colors.deepPurple))),
+                    child: laughingEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.smile);
+                    },
+                    child: smileEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.sad);
+                    },
+                    child: sadEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.angry);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: FaIcon(
-                          FontAwesomeIcons.solidFaceAngry,
-                          color: Colors.redAccent,
-                        ))),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.none);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: FaIcon(
-                          FontAwesomeIcons.x,
-                          color: Colors.black,
-                        ))),
+                    child: angryEmoji),
               ],
             ),
           ),

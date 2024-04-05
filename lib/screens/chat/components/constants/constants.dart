@@ -31,7 +31,7 @@ var laughingEmoji = const Image(
   height: 32,
 );
 
-var heartEmoji = const Image(
+var loveEmoji = const Image(
   image: AssetImage('assets/icons/thumbs-up-32.png'),
   width: 32,
   height: 32,

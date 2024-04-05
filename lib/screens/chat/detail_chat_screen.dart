@@ -13,6 +13,7 @@ import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
+import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/message.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
@@ -162,7 +163,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           // ignore: prefer_typing_uninitialized_variables
           var data;
           if (response['messages'] != null &&
-              response['messages']['message'] != null) {
+              response['messages']['message'] != null &&
+              response['fileCreateDto'] == null) {
             data = {
               "stoneId": response['stoneId'],
               "messages": {"message": response['messages']['message']},
@@ -192,7 +194,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           } else if (response["receiveId"] == userExisting!.id ||
               response["user"]["id"] == userExisting!.id) {
             setState(() {
-              threadsChat.add(thread);
+              if (thread.files!.isNotEmpty) {
+                //get latest thread and update file path
+                var index = threadsChat.length - 1;
+                for (var i = 0; i < thread.files!.length; i++) {
+                  var path = thread.files![i].path;
+                  threadsChat[index].files![i].path = path;
+                }
+              } else {
+                threadsChat.add(thread);
+              }
             });
           }
         }
@@ -285,8 +296,31 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
       List<PlatformFile> files = result!.files;
       if (files.isNotEmpty) {
+        // add to thread show in UI
+        setState(() {});
+        List<FileModel> fileList = [];
+        for (var file in files) {
+          FileModel fileModel = FileModel(path: file.path!);
+          fileList.add(fileModel);
+        }
+        setState(() {
+          threads.add(Thread(
+              files: fileList,
+              createdAt: DateTime.now(),
+              user: userExisting,
+              stoneId: "11111111"));
+        });
+
+        print(threads);
         final response = await api.uploadFiles(files);
         setState(() {
+          // path: C:\Users\KUGA\Downloads\meme.jpg
+          //reponse will return array filename and path find file name from path and replace it with file name from response use currentLengthThread to find the index of file in thread
+
+          for (var i = 0; i < threads[threads.length - 1].files!.length; i++) {
+            var path = response[i]["path"];
+            threads[threads.length - 1].files![i].path = path;
+          }
           fileData = response;
         });
 
@@ -313,6 +347,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 itemBuilder: (BuildContext context, int index) {
                   Thread thread = threads[index];
                   List<Widget> children = [];
+
                   if (thread.user == null) {
                     children.add(
                       Text(

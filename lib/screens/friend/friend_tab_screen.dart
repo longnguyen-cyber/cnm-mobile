@@ -86,7 +86,6 @@ class _FriendTabScreenState extends State<FriendTabScreen>
         if (mounted) {
           setState(() {
             if (data["receiveId"] == userId || data["senderId"] == userId) {
-              print("data: $data");
               if (data["type"] == "unReqAddFriend") {
                 waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
               } else if (data["type"] == "acceptAddFriend") {

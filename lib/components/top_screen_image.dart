@@ -10,7 +10,6 @@ class TopScreenImage extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            fit: BoxFit.contain,
             image: AssetImage('assets/images/$screenImageName'),
           ),
         ),

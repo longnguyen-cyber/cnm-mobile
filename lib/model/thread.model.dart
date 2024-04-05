@@ -18,9 +18,9 @@ class Thread {
   final String? chatId;
   final String? channelId;
   final String? threadId;
-  final Message? messages;
+  late MessageModel? messages;
   final List<Reaction>? reactions;
-  final List<FileModel>? files;
+  late List<FileModel>? files;
   final User? user;
   final List<Thread>? replys;
   Thread({
@@ -55,7 +55,7 @@ class Thread {
     String? chatId,
     String? channelId,
     String? threadId,
-    Message? messages,
+    MessageModel? messages,
     List<Reaction>? reactions,
     List<FileModel>? files,
     User? user,
@@ -118,7 +118,7 @@ class Thread {
       channelId: map['channelId'] != null ? map['channelId'] as String : null,
       threadId: map['threadId'] != null ? map['threadId'] as String : null,
       messages: map['messages'] != null
-          ? Message.fromMap(map['messages'] as Map<String, dynamic>)
+          ? MessageModel.fromMap(map['messages'] as Map<String, dynamic>)
           : null,
       reactions: map['reactions'] != null
           ? (map['reactions'] as List<dynamic>)

@@ -1,7 +1,9 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/components/voice.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
@@ -17,7 +19,7 @@ class MessageBubble extends StatefulWidget {
       required this.type,
       this.content,
       required this.timeSent,
-      this.images,
+      this.files,
       this.videoUrl,
       this.reaction,
       this.isRecall,
@@ -25,23 +27,27 @@ class MessageBubble extends StatefulWidget {
       this.replyContent,
       this.replyUser,
       required this.onFuctionReply,
-      this.receiveId});
+      this.receiveId,
+      this.typeRecall});
   final String? receiveId;
   final String stoneId;
   final User user;
   final String type;
   final String? content;
   final DateTime timeSent;
-  final List<String>? images;
+  final List<String>? files;
   final String? videoUrl;
   final Reaction? reaction;
   final bool? isRecall;
   final bool? isReply;
   final String? replyContent;
   final String? replyUser;
+  final String? typeRecall;
+
   final Function(String, String) onFuctionReply; // người rep và content
 
   @override
+  // ignore: library_private_types_in_public_api
   _MessageBubbleState createState() => _MessageBubbleState();
 }
 
@@ -49,6 +55,7 @@ class _MessageBubbleState extends State<MessageBubble> {
   bool isReactionSelected = false;
   var reactionIcon = heartEmoji;
   User? userExisting = User();
+  late List<AudioPlayer?> audioPlayers = [];
 
   void getUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -70,6 +77,21 @@ class _MessageBubbleState extends State<MessageBubble> {
   void initState() {
     super.initState();
     getUser();
+    // bool isMp3 = widget.files!.any((element) => element.contains('.mp3'));
+    // print("isMp3: $isMp3");
+    // if (isMp3) {
+    if (widget.files!.isNotEmpty) {
+      audioPlayers = widget.files!.map((file) {
+        String fileType = file.split('.').last;
+        if (fileType == 'mp3') {
+          return AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+        } else {
+          return null;
+        }
+      }).toList();
+    }
+
+    // }
   }
 
   @override
@@ -175,28 +197,36 @@ class _MessageBubbleState extends State<MessageBubble> {
                             )
                           ],
                         ),
-                  if (widget.images != null)
+                  if (widget.files != null)
                     // Image.network(widget.imageUrl!, width: size.width * 0.5)
                     ListView.builder(
                       shrinkWrap: true,
-                      itemCount: widget.images!.length,
+                      itemCount: widget.files!.length,
                       itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FullScreenImage(
-                                    image: widget.images![index],
-                                  ),
-                                ));
-                          },
-                          child: Image.network(
-                            widget.images![index],
-                            width: size.width * 0.5,
-                            fit: BoxFit.cover,
-                          ),
-                        );
+                        String fileType = widget.files![index].split('.').last;
+                        print(fileType);
+                        if (fileType == 'jpg' ||
+                            fileType == 'jpeg' ||
+                            fileType == 'png' ||
+                            fileType == 'gif' ||
+                            fileType == "webp") {
+                          return imageFile(index, size);
+                        } else if (fileType == 'mp3') {
+                          AudioPlayer? player = audioPlayers[index];
+                          if (player != null) {
+                            WidgetsBinding.instance
+                                .addPostFrameCallback((_) async {
+                              await player.setSourceUrl(widget.files![index]);
+                            });
+
+                            return PlayerWidget(
+                              player: player,
+                            );
+                          }
+                          return Container();
+                        }
+                        return null;
+                        // return imageFile(index, size);
                       },
                     )
                   else
@@ -227,6 +257,14 @@ class _MessageBubbleState extends State<MessageBubble> {
           ),
         ),
       ],
+    );
+  }
+
+  Image imageFile(int index, Size size) {
+    return Image.network(
+      widget.files![index],
+      width: size.width * 0.5,
+      fit: BoxFit.cover,
     );
   }
 
@@ -301,7 +339,8 @@ class _MessageBubbleState extends State<MessageBubble> {
     var data = {
       "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
-      "type": widget.type
+      "type": widget.type,
+      "typeRecall": widget.typeRecall
     };
     SocketConfig.emit(SocketMessage.recallSendThread, data);
   }

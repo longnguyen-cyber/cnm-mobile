@@ -1,8 +1,11 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
@@ -10,10 +13,10 @@ import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
+import 'package:zalo_app/model/message.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
-import 'package:zalo_app/screens/chat/controllers/voice_controller.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 import 'package:zalo_app/services/api_service.dart';
 
@@ -42,8 +45,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   List<Thread> threadsChannel = [];
   List<Thread> threadsChat = [];
   late dynamic data;
-
+  late dynamic fileData = [];
+  late AudioRecorder audioRecord;
+  late AudioPlayer audioPlayer;
+  bool isRecording = false;
+  String path = "";
   final api = API();
+  void setPath() async {
+    final dir = await getApplicationDocumentsDirectory();
+    path = '${dir.path}/my_audio_file.wav';
+  }
 
   void getData() async {
     String type = widget.data["type"];
@@ -87,11 +98,21 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    audioPlayer.dispose();
+    audioRecord.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
+    audioRecord = AudioRecorder();
+    audioPlayer = AudioPlayer();
     getUser();
     getData();
-
+    setPath();
     SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
       var members = response['members'] != null
           ? (response['members'] as List<dynamic>).map((e) => e).toList()
@@ -109,8 +130,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat.removeAt(indexOfThread);
                 } else {
                   threadsChat[indexOfThread].isRecall = true;
-                  threadsChat[indexOfThread].messages!.message =
-                      "Tin nhắn đã bị thu hồi";
+                  if (response["typeRecall"] == "image") {
+                    //create new message in thread[index]
+                    MessageModel message =
+                        MessageModel(message: "Tin nhắn đã bị thu hồi");
+                    threadsChat[indexOfThread].messages = message;
+                    threadsChat[indexOfThread].files = [];
+                  } else {
+                    threadsChat[indexOfThread].messages!.message =
+                        "Tin nhắn đã bị thu hồi";
+                  }
                 }
               }
             } else {
@@ -121,6 +150,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChannel.removeAt(indexOfThread);
                 } else {
                   threadsChannel[indexOfThread].isRecall = true;
+
                   threadsChannel[indexOfThread].messages!.message =
                       "Tin nhắn đã bị thu hồi";
                 }
@@ -129,18 +159,32 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           });
         } else {
           //send new message
-          var data = {
-            "stoneId": response['stoneId'],
-            "messages": {"message": response['messages']['message']},
-            "user": response['user'],
-            "isReply": response['isReply'],
-            "isRecall": response['isRecall'],
-            "createdAt": response['timeThread'] as String,
-            "receiveId": response['receiveId']
-          };
+          // ignore: prefer_typing_uninitialized_variables
+          var data;
+          if (response['messages'] != null &&
+              response['messages']['message'] != null) {
+            data = {
+              "stoneId": response['stoneId'],
+              "messages": {"message": response['messages']['message']},
+              "user": response['user'],
+              "isReply": response['isReply'],
+              "isRecall": response['isRecall'],
+              "createdAt": response['timeThread'] as String,
+              "receiveId": response['receiveId']
+            };
+          } else {
+            data = {
+              "stoneId": response['stoneId'],
+              "user": response['user'],
+              "isReply": response['isReply'],
+              "isRecall": response['isRecall'],
+              "createdAt": response['timeThread'] as String,
+              "receiveId": response['receiveId'],
+              "files": response['fileCreateDto']
+            };
+          }
 
           Thread thread = Thread.fromMap(data);
-          print(thread);
           if (members.contains(userExisting!.id)) {
             setState(() {
               threadsChannel.add(thread);
@@ -236,11 +280,17 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     }
 
     handleFilePicked() async {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
-      if (result != null) {
-        // gửi file
-      } else {
-        // Xu ly khi khong chon file
+      FilePickerResult? result = await FilePicker.platform
+          .pickFiles(withReadStream: true, allowMultiple: true);
+
+      List<PlatformFile> files = result!.files;
+      if (files.isNotEmpty) {
+        final response = await api.uploadFiles(files);
+        setState(() {
+          fileData = response;
+        });
+
+        _sendMessage();
       }
     }
 
@@ -286,11 +336,13 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           receiveId:
                               thread.receiveId != null ? thread.receiveId! : "",
                           type: type,
+                          typeRecall:
+                              thread.messages != null ? "text" : "image",
                           content: thread.messages != null
                               ? thread.messages!.message
                               : "",
                           timeSent: (thread.createdAt!),
-                          images: thread.files!.map((e) => e.path!).toList(),
+                          files: thread.files!.map((e) => e.path!).toList(),
                           isReply: thread.isReply,
                           isRecall: thread.isRecall,
                           onFuctionReply: (sender, content) {
@@ -429,6 +481,27 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   final ImagePicker picker = ImagePicker();
                   final XFile? image =
                       await picker.pickImage(source: ImageSource.camera);
+                  if (image != null) {
+                    // Read the image file into a Uint8List
+                    final bytes = await image.readAsBytes();
+
+                    // Get the file extension
+                    final extension = image.path.split(".").last;
+                    final size = bytes.length;
+
+                    var data = {
+                      "filename": image.name,
+                      "extension": extension,
+                      "size": size,
+                      "bytes": bytes,
+                    };
+                    final response = await api.uploadFile(data);
+                    setState(() {
+                      fileData = [response];
+                    });
+
+                    _sendMessage();
+                  }
                 },
                 icon: const Icon(Icons.camera_alt),
               ),
@@ -469,24 +542,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                 showModalBottomSheet(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      VoiceController voiceController =
-                                          VoiceController();
-                                      voiceController.record();
+                                      _startRecord();
                                       return OnRecordMessage(
-                                          voiceController: voiceController);
+                                        audioRecord: audioRecord,
+                                        path: path,
+                                      );
                                     });
                               },
                               icon: const Icon(Icons.mic),
                             ),
-                            IconButton(
-                              onPressed: () async {
-                                final ImagePicker picker = ImagePicker();
-                                // Pick an image
-                                final List<XFile> medias =
-                                    await picker.pickMultipleMedia();
-                              },
-                              icon: const Icon(Icons.image),
-                            ),
+
                             // Thêm các IconButton khác nếu cần
                           ],
                         ),
@@ -498,6 +563,15 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     ));
   }
 
+  Future<void> _startRecord() async {
+    if (await audioRecord.hasPermission()) {
+      await audioRecord.start(const RecordConfig(), path: path);
+      setState(() {
+        isRecording = true;
+      });
+    }
+  }
+
   bool checkTimeSentWithCurrentTime(DateTime time) {
     var timeSent = time.toLocal().toString().split(" ")[0];
     var now = DateTime.now().toString().split(" ")[0];
@@ -505,7 +579,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     return timeSent == now;
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     late String receiveId;
     late dynamic members;
     if (widget.data["type"] == "channel") {
@@ -513,6 +587,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     } else {
       receiveId = widget.data["receiverId"];
     }
+
     if (messageController.text.isNotEmpty) {
       if (widget.data["type"] == "channel") {
         SocketConfig.emit(SocketMessage.sendThread, {
@@ -532,6 +607,20 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         });
       }
       messageController.clear();
+    } else if (fileData.length > 0) {
+      if (widget.data["type"] == "channel") {
+        SocketConfig.emit(SocketMessage.sendThread, {
+          "channelId": widget.data["id"],
+          "members": members,
+          "fileCreateDto": fileData
+        });
+      } else {
+        SocketConfig.emit(SocketMessage.sendThread, {
+          "chatId": widget.data["id"],
+          "receiveId": receiveId,
+          "fileCreateDto": fileData
+        });
+      }
     }
   }
 }

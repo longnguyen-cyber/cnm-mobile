@@ -11,23 +11,23 @@ import 'dart:convert';
 //   thread    threads?  @relation(fields: [threadId], references: [id])
 // }
 
-class Message {
+class MessageModel {
   final String? id;
   String message;
 
-  Message({
-    required this.id,
+  MessageModel({
+    this.id,
     required this.message,
   });
 
-  Message copyWith({
+  MessageModel copyWith({
     String? id,
     String? message,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) {
-    return Message(
+    return MessageModel(
       id: id ?? this.id,
       message: message ?? this.message,
     );
@@ -40,8 +40,8 @@ class Message {
     };
   }
 
-  factory Message.fromMap(Map<String, dynamic> map) {
-    return Message(
+  factory MessageModel.fromMap(Map<String, dynamic> map) {
+    return MessageModel(
       id: map['id'] != null ? map['id'] as String : null,
       message: map['message'] as String,
     );
@@ -49,8 +49,8 @@ class Message {
 
   String toJson() => json.encode(toMap());
 
-  factory Message.fromJson(String source) =>
-      Message.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory MessageModel.fromJson(String source) =>
+      MessageModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -58,7 +58,7 @@ class Message {
   }
 
   @override
-  bool operator ==(covariant Message other) {
+  bool operator ==(covariant MessageModel other) {
     if (identical(this, other)) return true;
 
     return other.id == id && other.message == message;

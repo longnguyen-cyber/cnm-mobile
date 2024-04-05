@@ -128,7 +128,6 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    print("chatId ${chatId}");
     User userDefine = widget.user!;
 
     return Scaffold(
@@ -283,7 +282,6 @@ class _ProfileState extends State<Profile> {
                           if (chatId != "") {
                             reqAddFriendHaveChat(userDefine.id!, chatId);
                           } else {
-                            print("userDefine.id ${userDefine.id}");
                             reqAddFriend(userDefine.id!);
                           }
                         }

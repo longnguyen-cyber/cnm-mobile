@@ -27,8 +27,8 @@ class MyAppRouter {
         pageBuilder: (context, state) {
           // return MaterialPage(child: AddFriendScreen());
           dynamic data = {
-            "id": "660e4c3c1a11861bf622c42b",
-            "name": "Hehe",
+            "id": "660f59114b2dac3541033e9f",
+            "name": "nesdw",
             "type": "chat",
             "receiverId": "65dd4ae4cbeffa04dbbc5b16",
           };

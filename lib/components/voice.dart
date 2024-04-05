@@ -3,58 +3,10 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-class SimpleExampleApp extends StatefulWidget {
-  const SimpleExampleApp({super.key, required this.source});
-  final String source;
-
-  @override
-  SimpleExampleAppState createState() => SimpleExampleAppState();
-}
-
-class SimpleExampleAppState extends State<SimpleExampleApp> {
-  late AudioPlayer player = AudioPlayer();
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Create the audio player.
-    player = AudioPlayer();
-
-    // Set the release mode to keep the source after playback has completed.
-    player.setReleaseMode(ReleaseMode.stop);
-
-    // Start the player as soon as the app is displayed.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await player.setSourceUrl(widget.source);
-      await player.resume();
-    });
-  }
-
-  @override
-  void dispose() {
-    // Release all sources and dispose the player.
-    player.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Simple Player'),
-      ),
-      body: PlayerWidget(player: player),
-    );
-  }
-}
-
-// The PlayerWidget is a copy of "/lib/components/player_widget.dart".
 //#region PlayerWidget
 
 class PlayerWidget extends StatefulWidget {
-  final AudioPlayer? player;
+  final AudioPlayer player;
 
   const PlayerWidget({
     required this.player,
@@ -79,23 +31,19 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   bool get _isPlaying => _playerState == PlayerState.playing;
 
-  String get _durationText => _duration?.toString().split('.').first ?? '';
-
-  String get _positionText => _position?.toString().split('.').first ?? '';
-
-  AudioPlayer? get player => widget.player;
+  AudioPlayer get player => widget.player;
 
   @override
   void initState() {
     super.initState();
     // Use initial values from player
-    _playerState = player?.state;
-    player?.getDuration().then(
+    _playerState = player.state;
+    player.getDuration().then(
           (value) => setState(() {
             _duration = value;
           }),
         );
-    player?.getCurrentPosition().then(
+    player.getCurrentPosition().then(
           (value) => setState(() {
             _position = value;
           }),
@@ -151,7 +99,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                   return;
                 }
                 final position = value * duration.inMilliseconds;
-                player?.seek(Duration(milliseconds: position.round()));
+                player.seek(Duration(milliseconds: position.round()));
               },
               value: (_position != null &&
                       _duration != null &&
@@ -183,15 +131,15 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   void _initStreams() {
-    _durationSubscription = player?.onDurationChanged.listen((duration) {
+    _durationSubscription = player.onDurationChanged.listen((duration) {
       setState(() => _duration = duration);
     });
 
-    _positionSubscription = player?.onPositionChanged.listen(
+    _positionSubscription = player.onPositionChanged.listen(
       (p) => setState(() => _position = p),
     );
 
-    _playerCompleteSubscription = player?.onPlayerComplete.listen((event) {
+    _playerCompleteSubscription = player.onPlayerComplete.listen((event) {
       setState(() {
         _playerState = PlayerState.stopped;
         _position = Duration.zero;
@@ -199,7 +147,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     });
 
     _playerStateChangeSubscription =
-        player?.onPlayerStateChanged.listen((state) {
+        player.onPlayerStateChanged.listen((state) {
       setState(() {
         _playerState = state;
       });
@@ -207,12 +155,12 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   Future<void> _play() async {
-    await player?.resume();
+    await player.resume();
     setState(() => _playerState = PlayerState.playing);
   }
 
   Future<void> _pause() async {
-    await player?.pause();
+    await player.pause();
     setState(() => _playerState = PlayerState.paused);
   }
 }

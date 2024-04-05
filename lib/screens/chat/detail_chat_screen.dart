@@ -360,7 +360,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           stoneId: thread.stoneId!,
                           sender: thread.user!,
                           type: type,
-                          content: thread.messages!.message,
+                          content: thread.messages != null
+                              ? thread.messages!.message
+                              : "",
                           messageType: MessageType.text,
                           timeSent: thread.createdAt!,
                           onFuctionReply: (sender, content) {

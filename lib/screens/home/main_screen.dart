@@ -7,8 +7,6 @@ import 'package:motion_tab_bar/MotionTabBar.dart';
 import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
-import 'package:zalo_app/config/socket/socket.dart';
-import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/friend/friend_screen.dart';

@@ -6,7 +6,6 @@ class SocketConfig {
 
   //connect to the socket server
   static void connect(String token) {
-    print(token);
     socket = IO.io(
         dotenv.env["BASE_URL"]!,
         IO.OptionBuilder()

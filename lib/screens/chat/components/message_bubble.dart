@@ -7,7 +7,6 @@ import 'package:zalo_app/components/voice.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
-import 'package:zalo_app/screens/chat/components/constants/constants.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
@@ -43,7 +42,6 @@ class MessageBubble extends StatefulWidget {
   final String? replyContent;
   final String? replyUser;
   final String? typeRecall;
-
   final Function(String, String) onFuctionReply; // người rep và content
 
   @override
@@ -53,9 +51,12 @@ class MessageBubble extends StatefulWidget {
 
 class _MessageBubbleState extends State<MessageBubble> {
   bool isReactionSelected = false;
-  var reactionIcon = heartEmoji;
+  Icon reactionIcon = const Icon(
+    FontAwesomeIcons.heart,
+  );
+
   User? userExisting = User();
-  late List<AudioPlayer?> audioPlayers = [];
+  late List<AudioPlayer>? audioPlayers;
 
   void getUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,25 +74,17 @@ class _MessageBubbleState extends State<MessageBubble> {
     }
   }
 
+  initAudioPlayers() {
+    if (widget.files == null) return;
+    audioPlayers =
+        List.generate(widget.files!.length, (index) => AudioPlayer());
+  }
+
   @override
   void initState() {
     super.initState();
     getUser();
-    // bool isMp3 = widget.files!.any((element) => element.contains('.mp3'));
-    // print("isMp3: $isMp3");
-    // if (isMp3) {
-    if (widget.files!.isNotEmpty) {
-      audioPlayers = widget.files!.map((file) {
-        String fileType = file.split('.').last;
-        if (fileType == 'mp3') {
-          return AudioPlayer()..setReleaseMode(ReleaseMode.stop);
-        } else {
-          return null;
-        }
-      }).toList();
-    }
-
-    // }
+    initAudioPlayers();
   }
 
   @override
@@ -204,7 +197,6 @@ class _MessageBubbleState extends State<MessageBubble> {
                       itemCount: widget.files!.length,
                       itemBuilder: (context, index) {
                         String fileType = widget.files![index].split('.').last;
-                        print(fileType);
                         if (fileType == 'jpg' ||
                             fileType == 'jpeg' ||
                             fileType == 'png' ||
@@ -212,21 +204,19 @@ class _MessageBubbleState extends State<MessageBubble> {
                             fileType == "webp") {
                           return imageFile(index, size);
                         } else if (fileType == 'mp3') {
-                          AudioPlayer? player = audioPlayers[index];
-                          if (player != null) {
-                            WidgetsBinding.instance
-                                .addPostFrameCallback((_) async {
-                              await player.setSourceUrl(widget.files![index]);
-                            });
+                          AudioPlayer player = audioPlayers![index];
+                          player.setReleaseMode(ReleaseMode.stop);
 
-                            return PlayerWidget(
-                              player: player,
-                            );
-                          }
-                          return Container();
+                          WidgetsBinding.instance
+                              .addPostFrameCallback((_) async {
+                            await player.setSourceUrl(widget.files![index]);
+                          });
+
+                          return PlayerWidget(
+                            player: player,
+                          );
                         }
                         return null;
-                        // return imageFile(index, size);
                       },
                     )
                   else
@@ -250,11 +240,7 @@ class _MessageBubbleState extends State<MessageBubble> {
         Positioned(
           bottom: 0,
           right: 0,
-          child: Container(
-            width: 18,
-            height: 18,
-            child: isReactionSelected ? reactionIcon : const SizedBox.shrink(),
-          ),
+          child: isReactionSelected ? reactionIcon : const SizedBox.shrink(),
         ),
       ],
     );
@@ -293,45 +279,37 @@ class _MessageBubbleState extends State<MessageBubble> {
       case Reaction.like:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = likeEmoji;
+          reactionIcon =
+              const Icon(Icons.thumb_up_off_alt_rounded, color: Colors.blue);
         });
-        Navigator.pop(context);
+        break;
 
-        break;
-      case Reaction.sad:
-        setState(() {
-          isReactionSelected = true;
-          reactionIcon = sadEmoji;
-          Navigator.pop(context);
-        });
-        break;
       case Reaction.love:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = heartEmoji;
+          reactionIcon = const Icon(Icons.favorite, color: Colors.red);
         });
-        Navigator.pop(context);
         break;
       case Reaction.laugh:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = laughingEmoji;
+          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
+              color: Colors.deepPurple);
         });
-        Navigator.pop(context);
         break;
       case Reaction.angry:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = angryEmoji;
+          reactionIcon = const Icon(
+            FontAwesomeIcons.solidFaceAngry,
+            color: Colors.redAccent,
+          );
         });
-        Navigator.pop(context);
         break;
       default:
         setState(() {
           isReactionSelected = false;
         });
-        Navigator.pop(context);
-        break;
     }
   }
 
@@ -377,31 +355,6 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 }
 
-class FullScreenImage extends StatelessWidget {
-  final String image;
-  const FullScreenImage({
-    super.key,
-    required this.image,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          Navigator.pop(context);
-        },
-        child: Center(
-          child: Hero(
-            tag: 'imageHero',
-            child: Image.network(image),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class ListItems extends StatefulWidget {
   const ListItems({
     super.key,
@@ -436,32 +389,38 @@ class _ListItemsState extends State<ListItems> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 InkWell(
-                  onTap: () {
-                    widget.onReactionSelected(Reaction.like);
-                  },
-                  child: likeEmoji,
-                ),
-                InkWell(
-                  onTap: () {
-                    widget.onReactionSelected(Reaction.sad);
-                  },
-                  child: sadEmoji,
-                ),
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.like);
+                    },
+                    child: const IconButton(
+                        onPressed: null,
+                        icon: Icon(Icons.thumb_up_off_alt_rounded,
+                            color: Colors.blue))),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.love);
                     },
-                    child: heartEmoji),
+                    child: const IconButton(
+                        onPressed: null,
+                        icon: Icon(Icons.favorite, color: Colors.red))),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.laugh);
                     },
-                    child: laughingEmoji),
+                    child: const IconButton(
+                        onPressed: null,
+                        icon: Icon(FontAwesomeIcons.solidFaceLaughSquint,
+                            color: Colors.deepPurple))),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.angry);
                     },
-                    child: angryEmoji),
+                    child: const IconButton(
+                        onPressed: null,
+                        icon: FaIcon(
+                          FontAwesomeIcons.solidFaceAngry,
+                          color: Colors.redAccent,
+                        ))),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.none);
@@ -471,7 +430,6 @@ class _ListItemsState extends State<ListItems> {
                         icon: FaIcon(
                           FontAwesomeIcons.x,
                           color: Colors.black,
-                          size: 24,
                         ))),
               ],
             ),

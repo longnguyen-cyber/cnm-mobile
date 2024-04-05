@@ -13,4 +13,6 @@ class MyAppRouteConstants {
   static const String moreRouteName = 'more';
   static const String forgotRouteName = 'forgot';
   static const String searchRouteName = 'search';
+  static const String allFileRouteName = 'allFile';
+  static const String fullRouteName = 'full';
 }

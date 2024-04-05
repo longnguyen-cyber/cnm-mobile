@@ -4,16 +4,16 @@ import 'dart:convert';
 class FileModel {
   final String? id;
   final String? filename;
-  final String? path;
-  final int? size;
+  late String? path;
+  final dynamic size;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
   FileModel({
-    required this.id,
-    required this.filename,
+    this.id,
+    this.filename,
     required this.path,
-    required this.size,
+    this.size,
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
@@ -56,7 +56,7 @@ class FileModel {
       id: map['id'] != null ? map['id'] as String : null,
       filename: map['filename'] as String,
       path: map['path'] as String,
-      size: map['size'] as int,
+      size: map['size'] as dynamic,
       createdAt: map['createdAt'] is String
           ? DateTime.parse(map['createdAt'] as String)
           : null,

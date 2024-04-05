@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/forgot_pass_screen.dart';
 import 'package:zalo_app/screens/auth/login_screen.dart';
@@ -8,6 +8,8 @@ import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/verify_noti_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
+import 'package:zalo_app/screens/chat/components/all_file.dart';
+import 'package:zalo_app/screens/chat/components/full_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 import 'package:zalo_app/screens/friend/add_friend_screen.dart';
@@ -25,7 +27,7 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: AddFriendScreen());
+          // return MaterialPage(child: AllFileScreen());
           dynamic data = {
             "id": "660f59114b2dac3541033e9f",
             "name": "nesdw",
@@ -202,6 +204,27 @@ class MyAppRouter {
               data: params,
             ),
           );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.allFileRouteName,
+        path: '/allFile',
+        pageBuilder: (context, state) {
+          List<FileModel> files = state.extra as List<FileModel>;
+
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: AllFileScreen(files: files),
+          );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.fullRouteName,
+        path: '/full',
+        pageBuilder: (context, state) {
+          return MaterialPage(
+              child: FullScreenImage(image: state.extra as String));
         },
       ),
     ],

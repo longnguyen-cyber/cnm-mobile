@@ -4,7 +4,7 @@ class SocketMessage {
   static const String replyThread = 'replyThread';
   static const String deleteThread = 'deleteThread';
   static const String recallSendThread = 'recallSendThread';
-  static const String addReact = 'addReact';
+  static const String emoji = 'emoji';
   static const String createChannel = 'createChannel';
   static const String updateChannel = 'updateChannel';
   static const String deleteChannel = 'deleteChannel';

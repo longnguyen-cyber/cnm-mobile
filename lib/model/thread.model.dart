@@ -24,7 +24,7 @@ class Thread {
   final User? user;
   final List<Thread>? replys;
   Thread({
-    required this.id,
+    this.id,
     required this.createdAt,
     this.stoneId,
     this.isEdited,

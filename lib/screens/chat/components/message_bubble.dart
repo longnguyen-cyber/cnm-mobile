@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/components/voice.dart';
+import 'package:widget_zoom/widget_zoom.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
+import 'package:zalo_app/screens/chat/components/constants/constants.dart';
+import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
@@ -51,9 +57,7 @@ class MessageBubble extends StatefulWidget {
 
 class _MessageBubbleState extends State<MessageBubble> {
   bool isReactionSelected = false;
-  Icon reactionIcon = const Icon(
-    FontAwesomeIcons.heart,
-  );
+  late List<Image> reactionIcon = [];
 
   User? userExisting = User();
   late List<AudioPlayer>? audioPlayers;
@@ -116,7 +120,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onPop: () => print('Popover was popped!'),
                   direction: PopoverDirection.bottom,
                   width: size.width * 0.8,
-                  height: 200,
+                  height: 170,
                   arrowHeight: 0,
                   arrowWidth: 0,
                 );
@@ -197,12 +201,39 @@ class _MessageBubbleState extends State<MessageBubble> {
                       itemCount: widget.files!.length,
                       itemBuilder: (context, index) {
                         String fileType = widget.files![index].split('.').last;
+                        // print()
                         if (fileType == 'jpg' ||
                             fileType == 'jpeg' ||
                             fileType == 'png' ||
                             fileType == 'gif' ||
                             fileType == "webp") {
-                          return imageFile(index, size);
+                          if (widget.files![index].contains("http")) {
+                            return GestureDetector(
+                              onTap: () {},
+                              child: WidgetZoom(
+                                heroAnimationTag: "tag",
+                                zoomWidget: Image.network(
+                                  widget.files![index],
+                                  width: size.width * 0.5,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return GestureDetector(
+                              onTap: () {
+                                GoRouter.of(context).pushNamed(
+                                    MyAppRouteConstants.fullRouteName,
+                                    extra: widget.files![index]);
+                              },
+                              child: Image.file(
+                                File(widget.files![index]),
+                                width: size.width * 0.5,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          }
+                          // return imageFile(index, size);
                         } else if (fileType == 'mp3') {
                           AudioPlayer player = audioPlayers![index];
                           player.setReleaseMode(ReleaseMode.stop);
@@ -238,10 +269,15 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
         // if (widget.reaction != null)
         Positioned(
-          bottom: 0,
-          right: 0,
-          child: isReactionSelected ? reactionIcon : const SizedBox.shrink(),
-        ),
+            bottom: 0,
+            right: 0,
+            child: reactionIcon.isEmpty
+                ? const SizedBox.shrink()
+                : Row(
+                    children: [
+                      for (var item in reactionIcon) item,
+                    ],
+                  )),
       ],
     );
   }
@@ -276,41 +312,106 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   void handleReaction(Reaction reaction) {
     switch (reaction) {
-      case Reaction.like:
+      case Reaction.love:
+        // addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
-          reactionIcon =
-              const Icon(Icons.thumb_up_off_alt_rounded, color: Colors.blue);
+          //checkt the reaction have existed or not
+          bool isExist = false;
+          for (var item in reactionIcon) {
+            if (item == loveEmoji) {
+              isExist = true;
+              break;
+            }
+          }
+          if (!isExist) {
+            reactionIcon.add(loveEmoji);
+          }
+          Navigator.pop(context);
         });
         break;
 
-      case Reaction.love:
+      case Reaction.like:
+        // addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(Icons.favorite, color: Colors.red);
+          bool isExist = false;
+          for (var item in reactionIcon) {
+            if (item == likeEmoji) {
+              isExist = true;
+              break;
+            }
+          }
+          if (!isExist) {
+            reactionIcon.add(likeEmoji);
+          }
+          Navigator.pop(context);
         });
         break;
-      case Reaction.laugh:
+      case Reaction.smile:
+        // addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
-              color: Colors.deepPurple);
+          bool isExist = false;
+          for (var item in reactionIcon) {
+            if (item == smileEmoji) {
+              isExist = true;
+              break;
+            }
+          }
+          Navigator.pop(context);
+        });
+        break;
+      case Reaction.sad:
+        // addEmoji(Reaction.like.name);
+        setState(() {
+          isReactionSelected = true;
+          bool isExist = false;
+          for (var item in reactionIcon) {
+            if (item == sadEmoji) {
+              isExist = true;
+              break;
+            }
+          }
+          reactionIcon.add(sadEmoji);
+
+          Navigator.pop(context);
         });
         break;
       case Reaction.angry:
+        // addEmoji(Reaction.like.name);
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(
-            FontAwesomeIcons.solidFaceAngry,
-            color: Colors.redAccent,
-          );
+          bool isExist = false;
+          for (var item in reactionIcon) {
+            if (item == angryEmoji) {
+              isExist = true;
+              break;
+            }
+          }
+          if (!isExist) {
+            reactionIcon.add(angryEmoji);
+          }
+          Navigator.pop(context);
         });
         break;
       default:
         setState(() {
           isReactionSelected = false;
+          Navigator.pop(context);
         });
+        break;
     }
+  }
+
+  void addEmoji(String emoji) {
+    var data = {
+      "emoji": emoji,
+      "stoneId": widget.stoneId,
+      "receiveId": widget.receiveId,
+      "typeEmoji": "add"
+    };
+    SocketConfig.emit(SocketMessage.emoji, data);
   }
 
   void revertFnc() {
@@ -385,101 +486,84 @@ class _ListItemsState extends State<ListItems> {
             height: 50,
             padding: const EdgeInsets.all(8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 InkWell(
                     onTap: () {
-                      widget.onReactionSelected(Reaction.like);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.thumb_up_off_alt_rounded,
-                            color: Colors.blue))),
-                InkWell(
-                    onTap: () {
                       widget.onReactionSelected(Reaction.love);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.favorite, color: Colors.red))),
+                    child: loveEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.like);
+                    },
+                    child: likeEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.laugh);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: Icon(FontAwesomeIcons.solidFaceLaughSquint,
-                            color: Colors.deepPurple))),
+                    child: laughingEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.smile);
+                    },
+                    child: smileEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.sad);
+                    },
+                    child: sadEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.angry);
                     },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: FaIcon(
-                          FontAwesomeIcons.solidFaceAngry,
-                          color: Colors.redAccent,
-                        ))),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.none);
-                    },
-                    child: const IconButton(
-                        onPressed: null,
-                        icon: FaIcon(
-                          FontAwesomeIcons.x,
-                          color: Colors.black,
-                        ))),
+                    child: angryEmoji),
               ],
             ),
           ),
           const Divider(),
-          SizedBox(
-            height: 300,
-            width: double.infinity,
-            child: GridView.count(
-              crossAxisCount: 4,
-              children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              MenuItemChat(
+                title: 'Trả lời',
+                icon: FontAwesomeIcons.reply,
+                color: Colors.purple,
+                func: FunctionChat.reply,
+                onClick: () {
+                  widget.onFunctionSelected(FunctionChat.reply);
+                },
+              ),
+              MenuItemChat(
+                title: 'Chuyển tiếp',
+                icon: FontAwesomeIcons.share,
+                color: Colors.blue,
+                func: FunctionChat.share,
+                onClick: () {
+                  widget.onFunctionSelected(FunctionChat.share);
+                },
+              ),
+              if (widget.senderId == widget.userId)
                 MenuItemChat(
-                  title: 'Trả lời',
-                  icon: FontAwesomeIcons.reply,
-                  color: Colors.purple,
-                  func: FunctionChat.reply,
+                  title: 'Thu hồi',
+                  icon: FontAwesomeIcons.rotateLeft,
+                  color: Colors.red,
+                  func: FunctionChat.revert,
                   onClick: () {
-                    widget.onFunctionSelected(FunctionChat.reply);
+                    widget.onFunctionSelected(FunctionChat.revert);
                   },
                 ),
+              if (widget.senderId == widget.userId)
                 MenuItemChat(
-                  title: 'Chuyển tiếp',
-                  icon: FontAwesomeIcons.share,
-                  color: Colors.blue,
-                  func: FunctionChat.share,
-                  onClick: () {
-                    widget.onFunctionSelected(FunctionChat.share);
-                  },
-                ),
-                if (widget.senderId == widget.userId)
-                  MenuItemChat(
-                    title: 'Thu hồi',
-                    icon: FontAwesomeIcons.rotateLeft,
-                    color: Colors.red,
-                    func: FunctionChat.revert,
+                    title: 'Xoá',
+                    icon: FontAwesomeIcons.trash,
+                    color: Colors.redAccent,
+                    func: FunctionChat.delete,
                     onClick: () {
-                      widget.onFunctionSelected(FunctionChat.revert);
-                    },
-                  ),
-                if (widget.senderId == widget.userId)
-                  MenuItemChat(
-                      title: 'Xoá',
-                      icon: FontAwesomeIcons.trash,
-                      color: Colors.redAccent,
-                      func: FunctionChat.delete,
-                      onClick: () {
-                        widget.onFunctionSelected(FunctionChat.delete);
-                      })
-              ],
-            ),
+                      widget.onFunctionSelected(FunctionChat.delete);
+                    })
+            ],
           ),
         ],
       ),
@@ -507,20 +591,21 @@ class MenuItemChat extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox.fromSize(
       size: const Size(56, 56),
-      child: Material(
-        child: InkWell(
-          onTap: onClick,
-          splashColor: Colors.grey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              const Spacer(),
-              FaIcon(icon, color: color),
-              const Spacer(),
-              Text(title),
-              const Spacer(),
-            ],
-          ),
+      child: InkWell(
+        onTap: onClick,
+        splashColor: Colors.grey,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            const Spacer(),
+            FaIcon(icon, color: color),
+            const Spacer(),
+            Text(
+              title,
+              style: TextStyle(fontSize: 9),
+            ),
+            const Spacer(),
+          ],
         ),
       ),
     );

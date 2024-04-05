@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -32,66 +29,66 @@ class _MoreInfoState extends State<MoreInfo> {
   var baseUrl = dotenv.env['API_URL'];
   final api = API();
 
-  void getData() async {
-    String type = widget.data["type"];
-    String id = widget.data["data"].id;
-    if (mounted) {
-      if (type == "chat") {
-        final response = await api.get("chats/$id", {});
-        if (response != null) {
-          Chat chat = Chat.fromMap(response["data"]);
-          setState(() {
-            chat = Chat.fromMap(response["data"]);
-            for (var thread in chat.threads!) {
-              for (var file in thread.files!) {
-                files.add(file);
-              }
-            }
-          });
-        }
-      } else {
-        final response = await api.get("channels/$id", {});
-        if (response != null) {
-          Channel channel = Channel.fromMap(response["data"]);
-          setState(() {
-            channel = Channel.fromMap(response["data"]);
-            for (var thread in channel.threads!) {
-              for (var file in thread.files!) {
-                files.add(file);
-              }
-            }
-          });
-        }
-      }
-    }
-  }
+  // void getData() async {
+  //   String type = widget.data["type"];
+  //   String id = widget.data["data"].id;
+  //   if (mounted) {
+  //     if (type == "chat") {
+  //       final response = await api.get("chats/$id", {});
+  //       if (response != null) {
+  //         Chat chat = Chat.fromMap(response["data"]);
+  //         setState(() {
+  //           chat = Chat.fromMap(response["data"]);
+  //           for (var thread in chat.threads!) {
+  //             for (var file in thread.files!) {
+  //               files.add(file);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     } else {
+  //       final response = await api.get("channels/$id", {});
+  //       if (response != null) {
+  //         Channel channel = Channel.fromMap(response["data"]);
+  //         setState(() {
+  //           channel = Channel.fromMap(response["data"]);
+  //           for (var thread in channel.threads!) {
+  //             for (var file in thread.files!) {
+  //               files.add(file);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     }
+  //   }
+  // }
 
-  Future<void> getChannel() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  // Future<void> getChannel() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    var token = prefs.getString("token") ?? "";
+  //   var token = prefs.getString("token") ?? "";
 
-    String url = "$baseUrl/channels/65e480261644570261cadca4";
-    final response = await _dio.get(
-      url,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
+  //   String url = "$baseUrl/channels/65e480261644570261cadca4";
+  //   final response = await _dio.get(
+  //     url,
+  //     options: Options(
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json',
+  //         'Authorization': 'Bearer $token',
+  //       },
+  //     ),
+  //   );
 
-    setState(() {
-      channel = Channel.fromMap(response.data["data"]);
-      for (var thread in channel!.threads!) {
-        for (var file in thread.files!) {
-          files.add(file);
-        }
-      }
-    });
-  }
+  //   setState(() {
+  //     channel = Channel.fromMap(response.data["data"]);
+  //     for (var thread in channel!.threads!) {
+  //       for (var file in thread.files!) {
+  //         files.add(file);
+  //       }
+  //     }
+  //   });
+  // }
 
   @override
   void initState() {
@@ -221,42 +218,21 @@ class _MoreInfoState extends State<MoreInfo> {
                 SizedBox(
                   width: 10,
                 ),
-                Text("Ảnh, file, link đã gửi"),
+                Text("Ảnh, file đã gửi"),
               ],
             ),
-            Row(
-              children: [
-                const SizedBox(
-                  width: 35,
+            Container(
+              margin: const EdgeInsets.only(top: 8, left: 40),
+              child: GestureDetector(
+                onTap: () {
+                  GoRouter.of(context).pushNamed(
+                      MyAppRouteConstants.allFileRouteName,
+                      extra: files);
+                },
+                child: Row(
+                  children: _buildChildren(files),
                 ),
-                for (int i = 0; i < files.length; i++)
-                  //4 image and one more
-                  if (i > 3)
-                    Container(
-                      width: 60,
-                      height: 60,
-                      color: Colors.blue,
-                      child: Center(
-                        child: Text(
-                          "+${files.length - 4}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 60,
-                      height: 60,
-                      child: Image.network(
-                        files[i].path ?? "",
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-              ],
+              ),
             ),
             chat == null
                 ? Column(
@@ -351,5 +327,43 @@ class _MoreInfoState extends State<MoreInfo> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildChildren(List<FileModel> files) {
+    List<Widget> widgets = [];
+    for (int i = 0; i < files.length; i++) {
+      if (i > 3) {
+        widgets.add(
+          Container(
+            width: 80,
+            height: 80,
+            color: Colors.blue,
+            child: Center(
+              child: Text(
+                "+${files.length - 4}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ),
+        );
+        break;
+      } else {
+        widgets.add(
+          Container(
+            margin: const EdgeInsets.only(right: 10),
+            width: 80,
+            height: 80,
+            child: Image.network(
+              files[i].path ?? "",
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+      }
+    }
+    return widgets;
   }
 }

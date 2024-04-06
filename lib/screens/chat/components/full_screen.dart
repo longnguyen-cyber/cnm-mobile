@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:widget_zoom/widget_zoom.dart';
 
 class FullScreenImage extends StatefulWidget {
   final String image;
@@ -41,11 +42,9 @@ class _FullScreenImageState extends State<FullScreenImage> {
           ),
         ],
       ),
-      body: Center(
-        child: Hero(
-          tag: 'imageHero',
-          child: Image.network(widget.image),
-        ),
+      body: WidgetZoom(
+        heroAnimationTag: "image",
+        zoomWidget: Image.network(widget.image),
       ),
     );
   }

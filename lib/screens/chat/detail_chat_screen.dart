@@ -1,12 +1,18 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
@@ -18,11 +24,11 @@ import 'package:zalo_app/model/message.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
+import 'package:zalo_app/screens/chat/components/record_widget_start.dart';
 import 'package:zalo_app/screens/chat/enums/messenger_type.dart';
 import 'package:zalo_app/services/api_service.dart';
 
 import 'components/index.dart';
-import 'components/on_record_voice_message.dart';
 
 class DetailChatScreen extends StatefulWidget {
   const DetailChatScreen({super.key, required this.data});
@@ -221,6 +227,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     if (widget.data["type"] == "channel") {
       members = widget.data["members"];
     }
+    print("path: $path");
 
     return Scaffold(
         appBar: AppBar(
@@ -306,17 +313,13 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         setState(() {
           threads.add(Thread(
               files: fileList,
-              createdAt: DateTime.now(),
+              createdAt: DateTime.now().subtract(const Duration(hours: 7)),
               user: userExisting,
               stoneId: "11111111"));
         });
 
-        print(threads);
         final response = await api.uploadFiles(files);
         setState(() {
-          // path: C:\Users\KUGA\Downloads\meme.jpg
-          //reponse will return array filename and path find file name from path and replace it with file name from response use currentLengthThread to find the index of file in thread
-
           for (var i = 0; i < threads[threads.length - 1].files!.length; i++) {
             var path = response[i]["path"];
             threads[threads.length - 1].files![i].path = path;
@@ -326,6 +329,52 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
         _sendMessage();
       }
+    }
+
+    Future<void> sendRecord() async {
+      var path = await audioRecord.stop();
+      var uuid = const Uuid();
+      String randomFileName = uuid.v4();
+
+      // Create an instance of FlutterSoundHelper
+      final FlutterSoundHelper audioHelper = FlutterSoundHelper();
+
+      // Convert the audio file to mp3
+      final String mp3Path = path!.replaceFirst('.wav', '.mp3');
+      await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
+      // Now you have an mp3 file at the path mp3Path
+      path = mp3Path;
+      // Read the mp3 file as bytes
+      final mp3File = File(mp3Path);
+      FileModel fileModel = FileModel(path: mp3Path);
+      setState(() {
+        threads.add(Thread(
+            files: [fileModel],
+            createdAt: DateTime.now().subtract(const Duration(hours: 7)),
+            user: userExisting,
+            stoneId: "11111111"));
+      });
+      final bytes = await mp3File.readAsBytes();
+
+      // Get the file extension and size
+      final extension = mp3Path.split(".").last;
+      final size = bytes.length;
+
+      // Create the data object
+      var data = {
+        "filename": randomFileName + p.basename(mp3File.path),
+        "extension": extension,
+        "size": size,
+        "bytes": bytes,
+      };
+
+      final response = await api.uploadFile(data);
+      setState(() {
+        fileData = [response];
+      });
+      _sendMessage();
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
     }
 
     return SafeArea(
@@ -422,7 +471,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     if (currentMessageDate.year == now.year &&
                         currentMessageDate.month == now.month &&
                         currentMessageDate.day == now.day - 1) {
-                      formattedDate = 'Hôm qua';
+                      formattedDate = 'Hôm nay';
                     } else {
                       formattedDate =
                           DateFormat('dd/MM/yyyy').format(currentMessageDate);
@@ -520,6 +569,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                       await picker.pickImage(source: ImageSource.camera);
                   if (image != null) {
                     // Read the image file into a Uint8List
+                    FileModel fileModel = FileModel(path: image.path);
+                    setState(() {
+                      threads.add(Thread(
+                          files: [fileModel],
+                          createdAt:
+                              DateTime.now().subtract(const Duration(hours: 7)),
+                          user: userExisting,
+                          stoneId: "11111111"));
+                    });
+
                     final bytes = await image.readAsBytes();
 
                     // Get the file extension
@@ -580,9 +639,57 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       _startRecord();
-                                      return OnRecordMessage(
-                                        audioRecord: audioRecord,
-                                        path: path,
+                                      return Container(
+                                        height: size.height * 0.4,
+                                        width: size.width,
+                                        // color: Colors.white,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                        ),
+                                        child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Container(
+                                                width: size.width * 0.8,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            18.0)),
+                                                child: const Center(
+                                                    child: Text(
+                                                  'Đang ghi âm...',
+                                                )),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              const CircularProgressIndicator(),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: <Widget>[
+                                                  RecordFunction(
+                                                    icon:
+                                                        FontAwesomeIcons.trash,
+                                                    title: 'Huỷ',
+                                                    onPressed: () async {
+                                                      await audioRecord.stop();
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                  RecordFunction(
+                                                    icon: Icons.send,
+                                                    title: 'Gửi',
+                                                    onPressed: sendRecord,
+                                                  ),
+                                                ],
+                                              )
+                                            ]),
                                       );
                                     });
                               },

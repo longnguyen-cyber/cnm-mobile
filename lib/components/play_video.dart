@@ -60,4 +60,4 @@ class _ChewieListItemState extends State<ChewieListItem> {
     widget.videoPlayerController.dispose();
     _chewieController.dispose();
   }
-  }
+}

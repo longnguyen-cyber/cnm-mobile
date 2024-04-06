@@ -107,22 +107,23 @@ class _MessageBubbleState extends State<MessageBubble> {
           alignment: alignment,
           child: GestureDetector(
             onLongPress: () {
-              if (!widget.isRecall!) {
-                showPopover(
-                  context: context,
-                  bodyBuilder: (context) => ListItems(
-                      senderId: widget.user.id!,
-                      userId: userExisting!.id!,
-                      onReactionSelected: handleReaction,
-                      onFunctionSelected: handleFunction),
-                  onPop: () => print('Popover was popped!'),
-                  direction: PopoverDirection.bottom,
-                  width: size.width * 0.8,
-                  height: 170,
-                  arrowHeight: 0,
-                  arrowWidth: 0,
-                );
-              }
+              // if (!widget.isRecall!) {
+              showPopover(
+                context: context,
+                bodyBuilder: (context) => ListItems(
+                    isRecall: widget.isRecall!,
+                    senderId: widget.user.id!,
+                    userId: userExisting!.id!,
+                    onReactionSelected: handleReaction,
+                    onFunctionSelected: handleFunction),
+                onPop: () => print('Popover was popped!'),
+                direction: PopoverDirection.bottom,
+                width: size.width * 0.8,
+                height: null,
+                arrowHeight: 0,
+                arrowWidth: 0,
+              );
+              // }
             },
             child: Container(
               constraints: BoxConstraints(maxWidth: size.width * 0.66),
@@ -294,23 +295,23 @@ class _MessageBubbleState extends State<MessageBubble> {
       case Reaction.love:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(Icons.favorite, color: Colors.red);
+          // reactionIcon = const Icon(Icons.favorite, color: Colors.red);
         });
         break;
       case Reaction.laugh:
         setState(() {
           isReactionSelected = true;
-          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
-              color: Colors.deepPurple);
+          // reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
+          //     color: Colors.deepPurple);
         });
         break;
       case Reaction.angry:
         setState(() {
-          isReactionSelected = true;
-          reactionIcon = const Icon(
-            FontAwesomeIcons.solidFaceAngry,
-            color: Colors.redAccent,
-          );
+          // isReactionSelected = true;
+          // reactionIcon = const Icon(
+          //   FontAwesomeIcons.solidFaceAngry,
+          //   color: Colors.redAccent,
+          // );
         });
         break;
       default:
@@ -381,12 +382,14 @@ class ListItems extends StatefulWidget {
     required this.onFunctionSelected,
     required this.senderId,
     required this.userId,
+    required this.isRecall,
   });
 
   final Function(Reaction) onReactionSelected;
   final Function(FunctionChat) onFunctionSelected;
   final String senderId;
   final String userId;
+  final bool isRecall;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -397,72 +400,76 @@ class _ListItemsState extends State<ListItems> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView(
-        padding: const EdgeInsets.all(8),
+      child: Wrap(
+        // padding: const EdgeInsets.all(8),
         children: [
-          Container(
-            height: 50,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.love);
-                    },
-                    child: loveEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.like);
-                    },
-                    child: likeEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.laugh);
-                    },
-                    child: laughingEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.smile);
-                    },
-                    child: smileEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.sad);
-                    },
-                    child: sadEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.angry);
-                    },
-                    child: angryEmoji),
-              ],
-            ),
-          ),
-          const Divider(),
+          widget.isRecall == true
+              ? const SizedBox.shrink()
+              : Container(
+                  height: 50,
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.love);
+                          },
+                          child: loveEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.like);
+                          },
+                          child: likeEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.laugh);
+                          },
+                          child: laughingEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.smile);
+                          },
+                          child: smileEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.sad);
+                          },
+                          child: sadEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.angry);
+                          },
+                          child: angryEmoji),
+                    ],
+                  ),
+                ),
+          widget.isRecall == true ? const SizedBox.shrink() : const Divider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              MenuItemChat(
-                title: 'Trả lời',
-                icon: FontAwesomeIcons.reply,
-                color: Colors.purple,
-                func: FunctionChat.reply,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.reply);
-                },
-              ),
-              MenuItemChat(
-                title: 'Chuyển tiếp',
-                icon: FontAwesomeIcons.share,
-                color: Colors.blue,
-                func: FunctionChat.share,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.share);
-                },
-              ),
-              if (widget.senderId == widget.userId)
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Trả lời',
+                  icon: FontAwesomeIcons.reply,
+                  color: Colors.purple,
+                  func: FunctionChat.reply,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.reply);
+                  },
+                ),
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Chuyển tiếp',
+                  icon: FontAwesomeIcons.share,
+                  color: Colors.blue,
+                  func: FunctionChat.share,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.share);
+                  },
+                ),
+              if (widget.senderId == widget.userId && widget.isRecall == false)
                 MenuItemChat(
                   title: 'Thu hồi',
                   icon: FontAwesomeIcons.rotateLeft,

@@ -29,7 +29,7 @@ class MyAppRouter {
         pageBuilder: (context, state) {
           // return MaterialPage(child: AllFileScreen());
           dynamic data = {
-            "id": "660f59114b2dac3541033e9f",
+            "id": "6610f9a628d401f71e8e4d65",
             "name": "nesdw",
             "type": "chat",
             "receiverId": "65dd4ae4cbeffa04dbbc5b16",

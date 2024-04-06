@@ -4,10 +4,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/components/voice.dart';
+
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
@@ -286,8 +287,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       case Reaction.like:
         setState(() {
           isReactionSelected = true;
-          reactionIcon =
-              const Icon(Icons.thumb_up_off_alt_rounded, color: Colors.blue);
+          reactionIcon.add(likeEmoji);
         });
         break;
 

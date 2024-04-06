@@ -13,6 +13,7 @@ import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
 import 'constants/constants.dart';
+import 'utils/caculate_text.dart';
 
 class MessageBubble extends StatefulWidget {
   const MessageBubble(
@@ -127,6 +128,8 @@ class _MessageBubbleState extends State<MessageBubble> {
             },
             child: Container(
               constraints: BoxConstraints(maxWidth: size.width * 0.66),
+              width: caulateWidth(widget.content ?? '', size.width * 0.66),
+              // width: 100,
               padding: const EdgeInsets.only(
                 top: 8.0,
                 bottom: 15.0,
@@ -144,6 +147,7 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   (widget.isReply == null || widget.isReply == false)
                       ? Text(
@@ -429,7 +433,7 @@ class _ListItemsState extends State<ListItems> {
                           child: laughingEmoji),
                       InkWell(
                           onTap: () {
-                            widget.onReactionSelected(Reaction.smile);
+                            widget.onReactionSelected(Reaction.laugh);
                           },
                           child: smileEmoji),
                       InkWell(

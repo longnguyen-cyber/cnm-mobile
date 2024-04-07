@@ -15,12 +15,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: !isPlaying
-            ? Container()
-            : CustomVideoPlayer(
-                customVideoPlayerController: _customVideoPlayerController,
-              ));
+    return !isPlaying
+        ? Container()
+        : CustomVideoPlayer(
+            customVideoPlayerController: _customVideoPlayerController,
+          );
   }
 
   @override

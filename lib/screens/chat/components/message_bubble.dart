@@ -15,6 +15,7 @@ import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
+import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
@@ -182,6 +183,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onReactionSelected: handleReaction,
                   onFunctionSelected: handleFunction,
                   isRecall: widget.isRecall ?? false,
+                  isFile: widget.files != null,
                 ),
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
@@ -297,6 +299,14 @@ class _MessageBubbleState extends State<MessageBubble> {
 
                                 return PlayerWidget(
                                   player: player,
+                                );
+                              } else if (fileType == 'mp4') {
+                                return Row(
+                                  children: [
+                                    VideoPlayerPage(
+                                        url: Uri.parse(
+                                            widget.files![index].path!)),
+                                  ],
                                 );
                               } else if (fileDoc.contains(fileType)) {
                                 return Row(
@@ -537,6 +547,7 @@ class ListItems extends StatefulWidget {
     required this.senderId,
     required this.userId,
     required this.isRecall,
+    required this.isFile,
   });
 
   final Function(Reaction) onReactionSelected;
@@ -544,6 +555,7 @@ class ListItems extends StatefulWidget {
   final String senderId;
   final String userId;
   final bool isRecall;
+  final bool isFile;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -641,7 +653,15 @@ class _ListItemsState extends State<ListItems> {
                     func: FunctionChat.delete,
                     onClick: () {
                       widget.onFunctionSelected(FunctionChat.delete);
-                    })
+                    }),
+              MenuItemChat(
+                  title: 'Xoá',
+                  icon: FontAwesomeIcons.trash,
+                  color: Colors.redAccent,
+                  func: FunctionChat.delete,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.delete);
+                  })
             ],
           ),
         ],

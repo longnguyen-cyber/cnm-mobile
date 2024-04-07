@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/forgot_pass_screen.dart';
@@ -11,6 +12,7 @@ import 'package:zalo_app/screens/chat/chat_screen.dart';
 import 'package:zalo_app/screens/chat/components/all_file.dart';
 import 'package:zalo_app/screens/chat/components/full_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
+import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 import 'package:zalo_app/screens/friend/add_friend_screen.dart';
 import 'package:zalo_app/screens/friend/create_channel_screen.dart';
@@ -66,6 +68,11 @@ class MyAppRouter {
           //   type: "channel",
           //   name: "lam dep",
           // ));
+          return MaterialPage(
+              child: VideoPlayerPage(
+            url: Uri.parse(
+                "https://workchatprod.s3.ap-southeast-1.amazonaws.com/2024-04-05+19-07-31.mp4"),
+          ));
           return MaterialPage(
               child: DetailChatScreen(
             data: data,

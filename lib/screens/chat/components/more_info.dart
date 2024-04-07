@@ -26,69 +26,9 @@ class _MoreInfoState extends State<MoreInfo> {
   late Chat? chat = null;
   final Dio _dio = Dio();
   List<FileModel> files = [];
+  List<FileModel> filesUI = [];
   var baseUrl = dotenv.env['API_URL'];
   final api = API();
-
-  // void getData() async {
-  //   String type = widget.data["type"];
-  //   String id = widget.data["data"].id;
-  //   if (mounted) {
-  //     if (type == "chat") {
-  //       final response = await api.get("chats/$id", {});
-  //       if (response != null) {
-  //         Chat chat = Chat.fromMap(response["data"]);
-  //         setState(() {
-  //           chat = Chat.fromMap(response["data"]);
-  //           for (var thread in chat.threads!) {
-  //             for (var file in thread.files!) {
-  //               files.add(file);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     } else {
-  //       final response = await api.get("channels/$id", {});
-  //       if (response != null) {
-  //         Channel channel = Channel.fromMap(response["data"]);
-  //         setState(() {
-  //           channel = Channel.fromMap(response["data"]);
-  //           for (var thread in channel.threads!) {
-  //             for (var file in thread.files!) {
-  //               files.add(file);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     }
-  //   }
-  // }
-
-  // Future<void> getChannel() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-
-  //   var token = prefs.getString("token") ?? "";
-
-  //   String url = "$baseUrl/channels/65e480261644570261cadca4";
-  //   final response = await _dio.get(
-  //     url,
-  //     options: Options(
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //         'Authorization': 'Bearer $token',
-  //       },
-  //     ),
-  //   );
-
-  //   setState(() {
-  //     channel = Channel.fromMap(response.data["data"]);
-  //     for (var thread in channel!.threads!) {
-  //       for (var file in thread.files!) {
-  //         files.add(file);
-  //       }
-  //     }
-  //   });
-  // }
 
   @override
   void initState() {
@@ -106,6 +46,13 @@ class _MoreInfoState extends State<MoreInfo> {
         for (var file in thread.files!) {
           files.add(file);
         }
+      }
+    }
+
+    var fileImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    for (var file in files) {
+      if (fileImage.contains(file.path!.split('.').last)) {
+        filesUI.add(file);
       }
     }
   }
@@ -230,7 +177,7 @@ class _MoreInfoState extends State<MoreInfo> {
                       extra: files);
                 },
                 child: Row(
-                  children: _buildChildren(files),
+                  children: _buildChildren(filesUI),
                 ),
               ),
             ),
@@ -332,36 +279,44 @@ class _MoreInfoState extends State<MoreInfo> {
   List<Widget> _buildChildren(List<FileModel> files) {
     List<Widget> widgets = [];
     for (int i = 0; i < files.length; i++) {
-      if (i > 3) {
-        widgets.add(
-          Container(
-            width: 80,
-            height: 80,
-            color: Colors.blue,
-            child: Center(
-              child: Text(
-                "+${files.length - 4}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
+      //just keep image file
+      String fileType = files[i].path!.split('.').last;
+      if (fileType == 'jpg' ||
+          fileType == 'jpeg' ||
+          fileType == 'png' ||
+          fileType == 'gif' ||
+          fileType == "webp") {
+        if (i > 3) {
+          widgets.add(
+            Container(
+              width: 80,
+              height: 80,
+              color: Colors.blue,
+              child: Center(
+                child: Text(
+                  "+${files.length - 4}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-        break;
-      } else {
-        widgets.add(
-          Container(
-            margin: const EdgeInsets.only(right: 10),
-            width: 80,
-            height: 80,
-            child: Image.network(
-              files[i].path ?? "",
-              fit: BoxFit.cover,
+          );
+          break;
+        } else {
+          widgets.add(
+            Container(
+              margin: const EdgeInsets.only(right: 10),
+              width: 80,
+              height: 80,
+              child: Image.network(
+                files[i].path ?? "",
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
     return widgets;

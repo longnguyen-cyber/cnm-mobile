@@ -296,6 +296,20 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           currentMessageDate.year != nextMessageDate.year;
     }
 
+    String convertToSize(int bytes) {
+      double kb = bytes / 1024;
+      if (kb > 1024) {
+        double mb = kb / 1024;
+        if (mb > 1024) {
+          double gb = mb / 1024;
+          return '${gb.toStringAsFixed(2)} GB';
+        }
+        return '${mb.toStringAsFixed(2)} MB';
+      } else {
+        return '${kb.toStringAsFixed(2)} KB';
+      }
+    }
+
     handleFilePicked() async {
       FilePickerResult? result = await FilePicker.platform
           .pickFiles(withReadStream: true, allowMultiple: true);
@@ -306,7 +320,10 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         setState(() {});
         List<FileModel> fileList = [];
         for (var file in files) {
-          FileModel fileModel = FileModel(path: file.path!);
+          FileModel fileModel = FileModel(
+              path: file.path!,
+              filename: file.name,
+              size: convertToSize(file.size));
           fileList.add(fileModel);
         }
         setState(() {
@@ -425,8 +442,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                               ? thread.messages!.message
                               : "",
                           timeSent: (thread.createdAt!),
-                          emojis: thread.emojis!,
-                          files: thread.files!.map((e) => e.path!).toList(),
+                          emojis: thread.emojis != null ? thread.emojis! : [],
+                          files: thread.files!,
                           isReply: thread.isReply,
                           isRecall: thread.isRecall,
                           onFuctionReply: (sender, content) {
@@ -459,6 +476,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           exist: !nameExisted,
                           isRecall: thread.isRecall!,
                           emojis: thread.emojis!,
+                          files: thread.files!,
                         ),
                       );
                     }
@@ -500,7 +518,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     );
                   }
 
-                  return Column(children: children);
+                  return Wrap(children: children);
                 },
               ),
             ),

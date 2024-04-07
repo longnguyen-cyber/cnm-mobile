@@ -42,9 +42,11 @@ class _FullScreenImageState extends State<FullScreenImage> {
           ),
         ],
       ),
-      body: WidgetZoom(
-        heroAnimationTag: "image",
-        zoomWidget: Image.network(widget.image),
+      body: Center(
+        child: WidgetZoom(
+          heroAnimationTag: "image",
+          zoomWidget: Image.network(widget.image),
+        ),
       ),
     );
   }

@@ -73,6 +73,20 @@ class API {
     }
   }
 
+  String convertToSize(int bytes) {
+    double kb = bytes / 1024;
+    if (kb > 1024) {
+      double mb = kb / 1024;
+      if (mb > 1024) {
+        double gb = mb / 1024;
+        return '${gb.toStringAsFixed(2)} GB';
+      }
+      return '${mb.toStringAsFixed(2)} MB';
+    } else {
+      return '${kb.toStringAsFixed(2)} KB';
+    }
+  }
+
   uploadFiles(List<PlatformFile> files) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
@@ -89,6 +103,7 @@ class API {
           "size": file.size,
           "path": "",
         });
+        print(file.size);
         formData.files.add(
           MapEntry(
             "files",
@@ -118,6 +133,7 @@ class API {
         for (var element in filesData) {
           if (element["filename"] == file["filename"]) {
             element["path"] = file["path"];
+            element["size"] = file["size"];
           }
         }
       }
@@ -155,7 +171,7 @@ class API {
     return {
       "filename": response.data["data"]["filename"],
       "path": response.data["data"]["path"],
-      "size": data["size"],
+      "size": response.data["data"]["size"],
     };
   }
 }

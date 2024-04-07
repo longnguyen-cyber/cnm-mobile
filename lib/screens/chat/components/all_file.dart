@@ -113,24 +113,7 @@ class AllFileScreenState extends State<AllFileScreen>
 
                         return Row(
                           children: [
-                            if (fileType == 'pdf')
-                              const Icon(Icons.picture_as_pdf)
-                            else if (fileType == 'docx')
-                              const Icon(Icons.description)
-                            else if (fileType == 'xlsx')
-                              const Icon(Icons.table_chart)
-                            else if (fileType == 'pptx')
-                              const Icon(Icons.slideshow)
-                            else if (fileType == 'txt')
-                              const Icon(Icons.text_fields)
-                            else if (fileType == 'zip')
-                              const Icon(Icons.archive)
-                            else if (fileType == 'rar')
-                              const Icon(Icons.archive)
-                            else if (fileType == 'mp4')
-                              const Icon(Icons.video_library)
-                            else
-                              const Icon(Icons.insert_drive_file),
+                            getIconForFileType(fileType),
                             Expanded(
                               child: ListTile(
                                 title: Text(filesAnother![index].filename!),
@@ -155,5 +138,27 @@ class AllFileScreenState extends State<AllFileScreen>
         ),
       ),
     );
+  }
+
+  Icon getIconForFileType(String fileType) {
+    switch (fileType) {
+      case 'pdf':
+        return const Icon(Icons.picture_as_pdf, color: Colors.red);
+      case 'docx':
+        return const Icon(Icons.description, color: Colors.blue);
+      case 'xlsx':
+        return const Icon(Icons.table_chart, color: Colors.green);
+      case 'pptx':
+        return const Icon(Icons.slideshow, color: Colors.orange);
+      case 'txt':
+        return const Icon(Icons.text_fields, color: Colors.black);
+      case 'zip':
+      case 'rar':
+        return const Icon(Icons.archive, color: Colors.yellow);
+      case 'mp4':
+        return const Icon(Icons.video_library, color: Colors.purple);
+      default:
+        return const Icon(Icons.insert_drive_file);
+    }
   }
 }

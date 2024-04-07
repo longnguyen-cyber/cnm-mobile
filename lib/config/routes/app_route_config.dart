@@ -27,7 +27,7 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: AllFileScreen());
+          // return MaterialPage(child: LoginScreen());
           dynamic data = {
             "id": "6610f9a628d401f71e8e4d65",
             "name": "nesdw",

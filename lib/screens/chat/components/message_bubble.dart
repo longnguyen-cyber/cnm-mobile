@@ -3,19 +3,21 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/emoji.model.dart';
+import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
 import 'constants/constants.dart';
-import 'utils/caculate_text.dart';
 
 class MessageBubble extends StatefulWidget {
   const MessageBubble(
@@ -41,7 +43,7 @@ class MessageBubble extends StatefulWidget {
   final String type;
   final String? content;
   final DateTime timeSent;
-  final List<String>? files;
+  final List<FileModel>? files;
   final String? videoUrl;
   final List<EmojiModel> emojis;
   final bool? isRecall;
@@ -156,7 +158,6 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-
     final alignment = (widget.user.name == userExisting!.name)
         ? Alignment.centerRight
         : Alignment.centerLeft;
@@ -174,7 +175,6 @@ class _MessageBubbleState extends State<MessageBubble> {
               showPopover(
                 context: context,
                 bodyBuilder: (context) => ListItems(
-                    isRecall: widget.isRecall!,
                     senderId: widget.user.id!,
                     userId: userExisting!.id!,
                     onReactionSelected: handleReaction,
@@ -182,16 +182,13 @@ class _MessageBubbleState extends State<MessageBubble> {
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
-                height: null,
+                height: 170,
                 arrowHeight: 0,
                 arrowWidth: 0,
               );
               // }
             },
             child: Container(
-              constraints: BoxConstraints(maxWidth: size.width * 0.66),
-              width: caulateWidth(widget.content ?? '', size.width * 0.66),
-              // width: 100,
               padding: const EdgeInsets.only(
                 top: 8.0,
                 bottom: 15.0,
@@ -209,96 +206,115 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  (widget.isReply == null || widget.isReply == false)
-                      ? Text(
-                          widget.content ?? '',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  widget.content != ""
+                      ? (widget.isReply == null || widget.isReply == false)
+                          ? Text(
+                              widget.content ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
                                     color: Colors.black,
                                   ),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 3, // Độ rộng của đường kẻ thẳng đứng
-                                  height:
-                                      20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
-                                  color:
-                                      Colors.blue, // Màu sắc của đường kẻ thẳng
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                RichText(
-                                  textAlign: TextAlign.left,
-                                  text: TextSpan(
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: '  ${widget.replyUser}\n',
-                                        style: const TextStyle(
-                                            color: Colors.black, fontSize: 12),
-                                      ),
-                                      TextSpan(
-                                        text: '${widget.replyContent}\n',
-                                        style: const TextStyle(
-                                            color: Colors.grey, fontSize: 10),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            Text(
-                              widget.content ?? '',
                             )
-                          ],
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width:
+                                          3, // Độ rộng của đường kẻ thẳng đứng
+                                      height:
+                                          20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                      color: Colors
+                                          .blue, // Màu sắc của đường kẻ thẳng
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    RichText(
+                                      textAlign: TextAlign.left,
+                                      text: TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: '  ${widget.replyUser}\n',
+                                            style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 12),
+                                          ),
+                                          TextSpan(
+                                            text: '${widget.replyContent}\n',
+                                            style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 10),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                                Text(
+                                  widget.content ?? '',
+                                )
+                              ],
+                            )
+                      :
+                      // Image.network(widget.imageUrl!, width: size.width * 0.5)
+                      SizedBox(
+                          width: size.width * 0.6,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: widget.files!.length,
+                            itemBuilder: (context, index) {
+                              String fileType =
+                                  widget.files![index].path!.split('.').last;
+                              if (fileImage.contains(fileType)) {
+                                return GestureDetector(
+                                    onTap: () {
+                                      //download image
+                                      GoRouter.of(context).pushNamed(
+                                          MyAppRouteConstants.fullRouteName,
+                                          extra: widget.files![index].path!);
+                                    },
+                                    child: imageFile(
+                                        widget.files![index].path!, size));
+                              } else if (fileType == 'mp3') {
+                                AudioPlayer player = audioPlayers![index];
+                                player.setReleaseMode(ReleaseMode.stop);
+
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) async {
+                                  await player
+                                      .setSourceUrl(widget.files![index].path!);
+                                });
+
+                                return PlayerWidget(
+                                  player: player,
+                                );
+                              } else if (fileDoc.contains(fileType)) {
+                                return Row(
+                                  children: [
+                                    getIconForFileType(fileType),
+                                    Expanded(
+                                      child: ListTile(
+                                        title: Text(
+                                            widget.files![index].filename!),
+                                        subtitle:
+                                            Text((widget.files![index].size!)),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                              return null;
+                            },
+                          ),
                         ),
-                  if (widget.files != null)
-                    // Image.network(widget.imageUrl!, width: size.width * 0.5)
-                    ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: widget.files!.length,
-                      itemBuilder: (context, index) {
-                        String fileType = widget.files![index].split('.').last;
-                        if (fileType == 'jpg' ||
-                            fileType == 'jpeg' ||
-                            fileType == 'png' ||
-                            fileType == 'gif' ||
-                            fileType == "webp") {
-                          return imageFile(index, size);
-                        } else if (fileType == 'mp3') {
-                          AudioPlayer player = audioPlayers![index];
-                          player.setReleaseMode(ReleaseMode.stop);
-
-                          WidgetsBinding.instance
-                              .addPostFrameCallback((_) async {
-                            await player.setSourceUrl(widget.files![index]);
-                          });
-
-                          return PlayerWidget(
-                            player: player,
-                          );
-                        }
-                        return null;
-                      },
-                    )
-                  else
-                    const SizedBox.shrink(),
-                  if (widget.videoUrl != null)
-                    SizedBox(
-                      width: size.width * 0.5,
-                      child: const Text('Video show'),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                  // Container()
                   Text(parseTime(widget.timeSent),
+                      textAlign: TextAlign.left,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -327,9 +343,50 @@ class _MessageBubbleState extends State<MessageBubble> {
     );
   }
 
-  Image imageFile(int index, Size size) {
+  Icon getIconForFileType(String fileType) {
+    switch (fileType) {
+      case 'pdf':
+        return const Icon(Icons.picture_as_pdf, color: Colors.red);
+      case 'docx':
+      case 'doc':
+        return const Icon(Icons.description, color: Colors.blue);
+      case 'xlsx':
+        return const Icon(Icons.table_chart, color: Colors.green);
+      case 'pptx':
+        return const Icon(Icons.slideshow, color: Colors.orange);
+      case 'txt':
+        return const Icon(Icons.text_fields, color: Colors.black);
+      case 'zip':
+      case 'rar':
+        return const Icon(Icons.archive, color: Colors.yellow);
+      case 'mp4':
+        return const Icon(Icons.video_library, color: Colors.purple);
+      default:
+        return const Icon(Icons.insert_drive_file);
+    }
+  }
+
+  var fileDoc = [
+    'pdf',
+    'docx',
+    'doc',
+    'xlsx',
+    'pptx',
+    'txt',
+    'zip',
+    'rar',
+    'mp4',
+    "html",
+    "css",
+    "js",
+    'exe',
+  ];
+
+  var fileImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+  Image imageFile(String path, Size size) {
     return Image.network(
-      widget.files![index],
+      path,
       width: size.width * 0.5,
       fit: BoxFit.cover,
     );
@@ -368,6 +425,9 @@ class _MessageBubbleState extends State<MessageBubble> {
           break;
         case Reaction.laugh:
           emoji = laughingEmoji;
+          break;
+        case Reaction.wow:
+          emoji = wowEmoji;
           break;
         case Reaction.sad:
           emoji = sadEmoji;
@@ -472,14 +532,12 @@ class ListItems extends StatefulWidget {
     required this.onFunctionSelected,
     required this.senderId,
     required this.userId,
-    required this.isRecall,
   });
 
   final Function(Reaction) onReactionSelected;
   final Function(FunctionChat) onFunctionSelected;
   final String senderId;
   final String userId;
-  final bool isRecall;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -490,8 +548,8 @@ class _ListItemsState extends State<ListItems> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Wrap(
-        // padding: const EdgeInsets.all(8),
+      child: ListView(
+        padding: const EdgeInsets.all(8),
         children: [
           Container(
             height: 50,
@@ -515,11 +573,11 @@ class _ListItemsState extends State<ListItems> {
                       widget.onReactionSelected(Reaction.laugh);
                     },
                     child: laughingEmoji),
-                // InkWell(
-                //     onTap: () {
-                //       widget.onReactionSelected(Reaction.smile);
-                //     },
-                //     child: smileEmoji),
+                InkWell(
+                    onTap: () {
+                      widget.onReactionSelected(Reaction.wow);
+                    },
+                    child: wowEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.sad);
@@ -537,27 +595,25 @@ class _ListItemsState extends State<ListItems> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              if (widget.isRecall == false)
-                MenuItemChat(
-                  title: 'Trả lời',
-                  icon: FontAwesomeIcons.reply,
-                  color: Colors.purple,
-                  func: FunctionChat.reply,
-                  onClick: () {
-                    widget.onFunctionSelected(FunctionChat.reply);
-                  },
-                ),
-              if (widget.isRecall == false)
-                MenuItemChat(
-                  title: 'Chuyển tiếp',
-                  icon: FontAwesomeIcons.share,
-                  color: Colors.blue,
-                  func: FunctionChat.share,
-                  onClick: () {
-                    widget.onFunctionSelected(FunctionChat.share);
-                  },
-                ),
-              if (widget.senderId == widget.userId && widget.isRecall == false)
+              MenuItemChat(
+                title: 'Trả lời',
+                icon: FontAwesomeIcons.reply,
+                color: Colors.purple,
+                func: FunctionChat.reply,
+                onClick: () {
+                  widget.onFunctionSelected(FunctionChat.reply);
+                },
+              ),
+              MenuItemChat(
+                title: 'Chuyển tiếp',
+                icon: FontAwesomeIcons.share,
+                color: Colors.blue,
+                func: FunctionChat.share,
+                onClick: () {
+                  widget.onFunctionSelected(FunctionChat.share);
+                },
+              ),
+              if (widget.senderId == widget.userId)
                 MenuItemChat(
                   title: 'Thu hồi',
                   icon: FontAwesomeIcons.rotateLeft,

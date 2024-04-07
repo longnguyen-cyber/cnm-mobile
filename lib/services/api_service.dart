@@ -103,7 +103,6 @@ class API {
           "size": file.size,
           "path": "",
         });
-        print(file.size);
         formData.files.add(
           MapEntry(
             "files",
@@ -128,6 +127,9 @@ class API {
         },
       ),
     );
+    if (response.data["status"] == 400) {
+      return null;
+    }
     if (response.data != null) {
       for (var file in response.data["data"]) {
         for (var element in filesData) {

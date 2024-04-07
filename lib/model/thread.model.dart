@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/message.model.dart';
-import 'package:zalo_app/model/react.model.dart';
+import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 
 class Thread {
@@ -19,7 +19,7 @@ class Thread {
   final String? channelId;
   final String? threadId;
   late MessageModel? messages;
-  final List<Reaction>? reactions;
+  final List<EmojiModel>? emojis;
   late List<FileModel>? files;
   final User? user;
   final List<Thread>? replys;
@@ -36,7 +36,7 @@ class Thread {
     this.channelId,
     this.threadId,
     this.messages,
-    this.reactions,
+    this.emojis,
     this.files,
     this.user,
     this.replys,
@@ -56,7 +56,7 @@ class Thread {
     String? channelId,
     String? threadId,
     MessageModel? messages,
-    List<Reaction>? reactions,
+    List<EmojiModel>? emojis,
     List<FileModel>? files,
     User? user,
     List<Thread>? replys,
@@ -74,7 +74,7 @@ class Thread {
       channelId: channelId ?? this.channelId,
       threadId: threadId ?? this.threadId,
       messages: messages ?? messages,
-      reactions: reactions ?? this.reactions,
+      emojis: emojis ?? this.emojis,
       files: files ?? this.files,
       user: user ?? this.user,
       replys: replys ?? this.replys,
@@ -95,7 +95,7 @@ class Thread {
       'channelId': channelId,
       'threadId': threadId,
       'messages': messages?.toMap(),
-      'reactions': reactions?.map((x) => x.toMap()).toList(),
+      'emojis': emojis?.map((x) => x.toMap()).toList(),
       'files': files?.map((x) => x.toMap()).toList(),
       'user': user?.toMap(),
       'replys': replys?.map((x) => x.toMap()).toList(),
@@ -120,9 +120,10 @@ class Thread {
       messages: map['messages'] != null
           ? MessageModel.fromMap(map['messages'] as Map<String, dynamic>)
           : null,
-      reactions: map['reactions'] != null
-          ? (map['reactions'] as List<dynamic>)
-              .map<Reaction>((e) => Reaction.fromMap(e as Map<String, dynamic>))
+      emojis: map['emojis'] != null
+          ? (map['emojis'] as List<dynamic>)
+              .map<EmojiModel>(
+                  (e) => EmojiModel.fromMap(e as Map<String, dynamic>))
               .toList()
           : [],
       files: map['files'] != null
@@ -149,7 +150,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, reactions: $reactions, files: $files, user: $user, replys: $replys)';
+    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, emojis: $emojis, files: $files, user: $user, replys: $replys)';
   }
 
   @override
@@ -168,7 +169,7 @@ class Thread {
         other.channelId == channelId &&
         other.threadId == threadId &&
         other.messages == messages &&
-        listEquals(other.reactions, reactions) &&
+        listEquals(other.emojis, emojis) &&
         listEquals(other.files, files) &&
         other.user == user &&
         listEquals(other.replys, replys);
@@ -188,7 +189,7 @@ class Thread {
         channelId.hashCode ^
         threadId.hashCode ^
         messages.hashCode ^
-        reactions.hashCode ^
+        emojis.hashCode ^
         files.hashCode ^
         user.hashCode ^
         replys.hashCode;

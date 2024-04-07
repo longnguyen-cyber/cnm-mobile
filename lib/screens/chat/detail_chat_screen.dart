@@ -227,7 +227,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     if (widget.data["type"] == "channel") {
       members = widget.data["members"];
     }
-    print("path: $path");
 
     return Scaffold(
         appBar: AppBar(
@@ -426,6 +425,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                               ? thread.messages!.message
                               : "",
                           timeSent: (thread.createdAt!),
+                          emojis: thread.emojis!,
                           files: thread.files!.map((e) => e.path!).toList(),
                           isReply: thread.isReply,
                           isRecall: thread.isRecall,
@@ -458,6 +458,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           },
                           exist: !nameExisted,
                           isRecall: thread.isRecall!,
+                          emojis: thread.emojis!,
                         ),
                       );
                     }

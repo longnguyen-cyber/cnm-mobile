@@ -1,12 +1,14 @@
+// ignore_for_file: collection_methods_unrelated_type
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
+import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
@@ -24,7 +26,7 @@ class MessageBubble extends StatefulWidget {
       required this.timeSent,
       this.files,
       this.videoUrl,
-      this.reaction,
+      required this.emojis,
       this.isRecall,
       this.isReply,
       this.replyContent,
@@ -40,7 +42,7 @@ class MessageBubble extends StatefulWidget {
   final DateTime timeSent;
   final List<String>? files;
   final String? videoUrl;
-  final Reaction? reaction;
+  final List<EmojiModel> emojis;
   final bool? isRecall;
   final bool? isReply;
   final String? replyContent;
@@ -54,8 +56,15 @@ class MessageBubble extends StatefulWidget {
 }
 
 class _MessageBubbleState extends State<MessageBubble> {
+  var emojiMap = {
+    Reaction.like.name: likeEmoji,
+    Reaction.love.name: loveEmoji,
+    Reaction.laugh.name: laughingEmoji,
+    Reaction.sad.name: sadEmoji,
+    Reaction.angry.name: angryEmoji,
+  };
   bool isReactionSelected = false;
-  late List<Image> reactionIcon = [];
+  late List<Map<String, dynamic>> reactionIcon = [];
 
   User? userExisting = User();
   late List<AudioPlayer>? audioPlayers;
@@ -87,6 +96,60 @@ class _MessageBubbleState extends State<MessageBubble> {
     super.initState();
     getUser();
     initAudioPlayers();
+
+    for (var e in widget.emojis) {
+      var emoji = emojiMap[e.emoji];
+      if (emoji != null) {
+        if (mounted) {
+          setState(() {
+            reactionIcon
+                .add({'emoji': e.emoji, 'icon': emoji, 'quantity': e.quantity});
+          });
+        }
+      }
+    }
+// response:{
+//     "emoji": "love",
+//     "stoneId": "c376010a-fcd0-4aea-9094-77d162b56632",
+//     "receiveId": "65dd4ae4cbeffa04dbbc5b16",
+//     "typeEmoji": "add",
+//     "type": "chat"
+// }
+    SocketConfig.listen(SocketEvent.updatedEmojiThread, (response) {
+      String emoji = response['emoji'];
+      var index =
+          reactionIcon.indexWhere((element) => element['emoji'] == emoji);
+      String stoneId = response['stoneId'];
+      if (userExisting?.id == response['receiveId']) {
+        if (stoneId != widget.stoneId) return;
+        if (index != -1) {
+          if (mounted) {
+            setState(() {
+              if (response['typeEmoji'] == 'add') {
+                reactionIcon[index]['quantity']++;
+              } else {
+                reactionIcon[index]['quantity']--;
+                if (reactionIcon[index]['quantity'] == 0) {
+                  reactionIcon.removeAt(index);
+                }
+              }
+            });
+          }
+        } else {
+          if (response['typeEmoji'] == 'add') {
+            var emojiIcon = emojiMap[emoji];
+            if (emojiIcon != null) {
+              if (mounted) {
+                setState(() {
+                  reactionIcon
+                      .add({'emoji': emoji, 'icon': emojiIcon, 'quantity': 1});
+                });
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -100,7 +163,6 @@ class _MessageBubbleState extends State<MessageBubble> {
     var color = (widget.user.name == userExisting!.name)
         ? Colors.white
         : const Color.fromARGB(255, 126, 218, 241);
-    // print(checkTimeSentWithCurrentTime(widget.timeSent));
     return Stack(
       children: [
         Align(
@@ -199,7 +261,6 @@ class _MessageBubbleState extends State<MessageBubble> {
                       itemCount: widget.files!.length,
                       itemBuilder: (context, index) {
                         String fileType = widget.files![index].split('.').last;
-                        // print()
                         if (fileType == 'jpg' ||
                             fileType == 'jpeg' ||
                             fileType == 'png' ||
@@ -241,15 +302,22 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
         // if (widget.reaction != null)
         Positioned(
-            bottom: 0,
-            right: 0,
-            child: reactionIcon.isEmpty
-                ? const SizedBox.shrink()
-                : Row(
-                    children: [
-                      for (var item in reactionIcon) item,
-                    ],
-                  )),
+          bottom: 0,
+          right: 0,
+          child: reactionIcon.isEmpty
+              ? const SizedBox.shrink()
+              : Row(
+                  children: [
+                    for (var reaction in reactionIcon)
+                      // Text(reaction["quantity"].toString(),),
+                      SizedBox(
+                        width: 16, // Set the width
+                        height: 16, // Set the height
+                        child: reaction['icon'],
+                      )
+                  ],
+                ),
+        ),
       ],
     );
   }
@@ -283,43 +351,51 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   void handleReaction(Reaction reaction) {
-    switch (reaction) {
-      case Reaction.like:
-        setState(() {
-          isReactionSelected = true;
-          reactionIcon.add(likeEmoji);
-        });
-        break;
-
-      case Reaction.love:
-        setState(() {
-          isReactionSelected = true;
-          reactionIcon = const Icon(Icons.favorite, color: Colors.red);
-        });
-        break;
-      case Reaction.laugh:
-        setState(() {
-          isReactionSelected = true;
-          reactionIcon = const Icon(FontAwesomeIcons.solidFaceLaughSquint,
-              color: Colors.deepPurple);
-        });
-        break;
-      case Reaction.angry:
-        setState(() {
-          isReactionSelected = true;
-          reactionIcon = const Icon(
-            FontAwesomeIcons.solidFaceAngry,
-            color: Colors.redAccent,
-          );
-        });
-        break;
-      default:
-        setState(() {
+    setState(() {
+      isReactionSelected = true;
+      Image emoji;
+      switch (reaction) {
+        case Reaction.love:
+          emoji = loveEmoji;
+          break;
+        case Reaction.like:
+          emoji = likeEmoji;
+          break;
+        case Reaction.laugh:
+          emoji = laughingEmoji;
+          break;
+        case Reaction.sad:
+          emoji = sadEmoji;
+          break;
+        case Reaction.angry:
+          emoji = angryEmoji;
+          break;
+        default:
           isReactionSelected = false;
           Navigator.pop(context);
-        });
-        break;
+          return;
+      }
+      addEmojiIfNotExist(emoji, reaction.name);
+      Navigator.pop(context);
+    });
+  }
+
+  void addEmojiIfNotExist(Image emojiIcon, String emojiName) {
+    for (var reaction in reactionIcon) {
+      if (reaction['emoji'] == emojiName) {
+        if (reaction['quantity'] == 1) {
+          reactionIcon.remove(reaction);
+          removeEmoji(emojiName);
+          return;
+        } else {
+          reaction['quantity']++;
+          return;
+        }
+      }
     }
+    addEmoji(emojiName);
+
+    reactionIcon.add({'emoji': emojiName, 'icon': emojiIcon, 'quantity': 1});
   }
 
   void addEmoji(String emoji) {
@@ -328,6 +404,16 @@ class _MessageBubbleState extends State<MessageBubble> {
       "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
       "typeEmoji": "add"
+    };
+    SocketConfig.emit(SocketMessage.emoji, data);
+  }
+
+  void removeEmoji(String emoji) {
+    var data = {
+      "emoji": emoji,
+      "stoneId": widget.stoneId,
+      "receiveId": widget.receiveId,
+      "typeEmoji": "remove"
     };
     SocketConfig.emit(SocketMessage.emoji, data);
   }
@@ -422,11 +508,11 @@ class _ListItemsState extends State<ListItems> {
                       widget.onReactionSelected(Reaction.laugh);
                     },
                     child: laughingEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.smile);
-                    },
-                    child: smileEmoji),
+                // InkWell(
+                //     onTap: () {
+                //       widget.onReactionSelected(Reaction.smile);
+                //     },
+                //     child: smileEmoji),
                 InkWell(
                     onTap: () {
                       widget.onReactionSelected(Reaction.sad);

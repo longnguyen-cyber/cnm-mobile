@@ -183,7 +183,6 @@ class ChannelService {
         },
       ),
     );
-    print(response.data);
     try {
       return response;
     } catch (e) {

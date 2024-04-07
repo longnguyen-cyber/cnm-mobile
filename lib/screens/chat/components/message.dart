@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/avatar.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
@@ -16,7 +17,10 @@ class Message extends StatefulWidget {
     required this.onFuctionReply,
     required this.exist,
     required this.isRecall,
+    required this.emojis,
   });
+  final List<EmojiModel> emojis;
+
   final bool exist;
   final bool isRecall;
   final User sender;
@@ -54,6 +58,7 @@ class _MessageState extends State<Message> {
               stoneId: widget.stoneId,
               user: widget.sender,
               type: widget.type,
+              emojis: widget.emojis,
               content: widget.content,
               timeSent: widget.timeSent,
               onFuctionReply: widget.onFuctionReply,

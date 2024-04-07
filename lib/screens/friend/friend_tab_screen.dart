@@ -88,19 +88,44 @@ class _FriendTabScreenState extends State<FriendTabScreen>
             if (data["receiveId"] == userId || data["senderId"] == userId) {
               if (data["type"] == "unReqAddFriend") {
                 waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã hủy lời mời kết bạn"),
+                  ),
+                );
               } else if (data["type"] == "acceptAddFriend") {
                 whiteList.add(Chat.fromMap(data["chat"]));
                 waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã chấp nhận lời mời kết bạn"),
+                  ),
+                );
               } else if (data["type"] == "rejectAddFriend") {
                 waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã từ chối mời kết bạn"),
+                  ),
+                );
               } else if (data["type"] == "unfriend") {
                 whiteList.removeWhere((chat) => chat.id == data["chat"]["id"]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã hủy kết bạn"),
+                  ),
+                );
               } else if (data['receiveId'] == userId) {
                 waitList.add(Chat.fromMap(data["chat"]));
               } else if (data["type"] == "reqAddFriend" ||
                   data["type"] == "reqAddFriendHaveChat") {
                 if (data["receiveId"] == userId) {
                   waitList.add(Chat.fromMap(data["chat"]));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Có lời mời kết bạn mới"),
+                    ),
+                  );
                 }
               }
             }

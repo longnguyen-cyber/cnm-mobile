@@ -221,6 +221,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onFunctionSelected: handleFunction,
                   isRecall: widget.isRecall ?? false,
                   isFile: widget.files != null,
+                  content: widget.content != "" ? widget.content : null,
                 ),
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
@@ -617,9 +618,14 @@ class _MessageBubbleState extends State<MessageBubble> {
       case FunctionChat.delete:
         // delete fuc
         deleteFnc();
+        Navigator.pop(context);
+
         break;
       case FunctionChat.revert:
         revertFnc();
+        setState(() {
+          Navigator.pop(context);
+        });
         break;
       // revert fuc
       case FunctionChat.reply:
@@ -664,6 +670,7 @@ class ListItems extends StatefulWidget {
     required this.userId,
     required this.isRecall,
     required this.isFile,
+    this.content,
   });
 
   final Function(Reaction) onReactionSelected;
@@ -672,6 +679,7 @@ class ListItems extends StatefulWidget {
   final String userId;
   final bool isRecall;
   final bool isFile;
+  final String? content;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -748,7 +756,12 @@ class _ListItemsState extends State<ListItems> {
                   color: Colors.blue,
                   func: FunctionChat.share,
                   onClick: () {
-                    widget.onFunctionSelected(FunctionChat.share);
+                    // GoRouter.of(context).pushNamed(MyAppRouteConstants.forwardRouteName, extra: widget.senderId);
+                    if (widget.content != null) {
+                      GoRouter.of(context).pushNamed(
+                          MyAppRouteConstants.forwardRouteName,
+                          extra: widget.content);
+                    }
                   },
                 ),
               if (widget.senderId == widget.userId && widget.isRecall == false)

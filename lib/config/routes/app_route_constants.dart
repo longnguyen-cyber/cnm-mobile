@@ -15,4 +15,5 @@ class MyAppRouteConstants {
   static const String searchRouteName = 'search';
   static const String allFileRouteName = 'allFile';
   static const String fullRouteName = 'full';
+  static const String forwardRouteName = 'forward';
 }

@@ -20,9 +20,10 @@ class Message extends StatefulWidget {
     required this.isRecall,
     required this.emojis,
     this.files,
+    required this.receiveId,
   });
   final List<EmojiModel> emojis;
-
+  final String receiveId;
   final bool exist;
   final bool isRecall;
   final User sender;
@@ -67,7 +68,7 @@ class _MessageState extends State<Message> {
               timeSent: widget.timeSent,
               onFuctionReply: widget.onFuctionReply,
               isRecall: widget.isRecall,
-              receiveId: '',
+              receiveId: widget.receiveId,
               files: widget.files,
             ),
           ],

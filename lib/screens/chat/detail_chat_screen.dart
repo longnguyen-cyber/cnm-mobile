@@ -139,13 +139,12 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat[indexOfThread].isRecall = true;
                   if (response["typeRecall"] == "image") {
                     //create new message in thread[index]
-                    MessageModel message =
-                        MessageModel(message: "Tin nhắn đã bị thu hồi");
-                    threadsChat[indexOfThread].messages = message;
+
+                    threadsChat[indexOfThread].messages = response["messages"];
                     threadsChat[indexOfThread].files = [];
                   } else {
                     threadsChat[indexOfThread].messages!.message =
-                        "Tin nhắn đã bị thu hồi";
+                        response["messages"]["message"];
                   }
                 }
               }
@@ -168,9 +167,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           //send new message
           // ignore: prefer_typing_uninitialized_variables
           var data;
+          var members = response['fileCreateDto'] != null
+              ? (response['fileCreateDto'] as List<dynamic>)
+                  .map((e) => e)
+                  .toList()
+              : [];
+          print("members: $response");
           if (response['messages'] != null &&
               response['messages']['message'] != null &&
               response['fileCreateDto'] == null) {
+            print("case 1");
             data = {
               "stoneId": response['stoneId'],
               "messages": {"message": response['messages']['message']},
@@ -180,12 +186,27 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               "createdAt": response['timeThread'] as String,
               "receiveId": response['receiveId']
             };
-          } else {
+          } else if (response['messages'] == null &&
+              response['fileCreateDto'] != null) {
+            print("case 2");
+
             data = {
               "stoneId": response['stoneId'],
               "user": response['user'],
               "isReply": response['isReply'],
               "isRecall": response['isRecall'],
+              "createdAt": response['timeThread'] as String,
+              "receiveId": response['receiveId'],
+              "files": response['fileCreateDto']
+            };
+          } else {
+            print("case 3 ${response['messages']['message']}");
+            data = {
+              "stoneId": response['stoneId'],
+              "user": response['user'],
+              "isReply": response['isReply'],
+              "isRecall": response['isRecall'],
+              "messages": {"message": response['messages']['message']},
               "createdAt": response['timeThread'] as String,
               "receiveId": response['receiveId'],
               "files": response['fileCreateDto']
@@ -200,7 +221,10 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           } else if (response["receiveId"] == userExisting!.id ||
               response["user"]["id"] == userExisting!.id) {
             setState(() {
-              if (thread.files!.isNotEmpty) {
+              if (thread.files!.isNotEmpty &&
+                  thread.messages == null &&
+                  response["receiveId"] != userExisting!.id) {
+                print("thread.files!.isNotEmpty $thread");
                 //get latest thread and update file path
                 var index = threadsChat.length - 1;
                 for (var i = 0; i < thread.files!.length; i++) {
@@ -208,6 +232,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat[index].files![i].path = path;
                 }
               } else {
+                print("thread.files!.isEmpty ${thread}");
                 threadsChat.add(thread);
               }
             });
@@ -275,6 +300,20 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             : common(viewInsets, threadsChat, type));
   }
 
+  String convertToSize(int bytes) {
+    double kb = bytes / 1024;
+    if (kb > 1024) {
+      double mb = kb / 1024;
+      if (mb > 1024) {
+        double gb = mb / 1024;
+        return '${gb.toStringAsFixed(2)} GB';
+      }
+      return '${mb.toStringAsFixed(2)} MB';
+    } else {
+      return '${kb.toStringAsFixed(2)} KB';
+    }
+  }
+
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads, String type) {
     Size size = MediaQuery.of(context).size;
     ScrollController controller = ScrollController();
@@ -294,20 +333,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       return currentMessageDate.day != nextMessageDate.day ||
           currentMessageDate.month != nextMessageDate.month ||
           currentMessageDate.year != nextMessageDate.year;
-    }
-
-    String convertToSize(int bytes) {
-      double kb = bytes / 1024;
-      if (kb > 1024) {
-        double mb = kb / 1024;
-        if (mb > 1024) {
-          double gb = mb / 1024;
-          return '${gb.toStringAsFixed(2)} GB';
-        }
-        return '${mb.toStringAsFixed(2)} MB';
-      } else {
-        return '${kb.toStringAsFixed(2)} KB';
-      }
     }
 
     handleFilePicked() async {
@@ -474,6 +499,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           stoneId: thread.stoneId!,
                           sender: thread.user!,
                           type: type,
+                          receiveId:
+                              thread.senderId != null ? thread.senderId! : "",
                           content: thread.messages != null
                               ? thread.messages!.message
                               : "",

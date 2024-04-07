@@ -60,23 +60,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
   @override
   void initState() {
     super.initState();
-    // SocketConfig.listen(SocketEvent.chatWS, (response) {
-    //   var status = response['status'];
-    //   var data = response['data'];
-    //   if (status == 200) {
-    //     if (mounted) {
-    //       if (data["type"] == "unReqAddFriend" ||
-    //           data["type"] == "acceptAddFriend" ||
-    //           data["type"] == "rejectAddFriend") {
-    //         waitList.removeWhere((chat) => chat.id == data["chat"]["id"]);
-    //       }
-    //     }
-    //   }
-    //   setState(() {
-    //     waitList = waitList;
-    //   });
-    // });
-    // getAll();
+
     _motionTabBarController = MotionTabBarController(
       initialIndex: widget.index,
       length: 4,

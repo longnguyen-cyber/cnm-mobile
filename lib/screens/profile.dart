@@ -189,131 +189,72 @@ class _ProfileState extends State<Profile> {
               fontSize: 20,
             ),
           ),
-          BlocBuilder<FriendCubit, FriendState>(
-            builder: (context, state) {
-              if (state is FriendInitial) {
-                context
-                    .read<FriendCubit>()
-                    .getFriendChatWaittingAccept(userDefine.id!);
-              } else if (state is FriendChatWaittingAccept) {
-                Chat chat = state.chat;
-                if (chat.requestAdd) {
-                  isRequest = true;
-                }
-              }
-              return _isRequest(isRequest);
-            },
-          ),
+          _isRequest(isRequest),
           const SizedBox(
             height: 20,
           ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: BlocBuilder<FriendCubit, FriendState>(
-              builder: (context, state) {
-                if (state is FriendInitial) {
-                  context
-                      .read<FriendCubit>()
-                      .getFriendChatWaittingAccept(userDefine.id!);
-                } else if (state is FriendChatWaittingAccept) {
-                  Chat chat = state.chat;
-                  if (chat.requestAdd) {
-                    isRequest = true;
-                    chatId = chat.id!;
-                  } else if (chat.isFriend) {
-                    isFriend = true;
-                  }
-                }
-                return Row(
-                  children: [
-                    Expanded(
-                        child: CustomButton(
-                            buttonText: "Nhắn tin",
-                            onPressed: () {
-                              GoRouter.of(context).pushNamed(
-                                  MyAppRouteConstants.detailChatRouteName,
-                                  extra: {
-                                    "id": chatId,
-                                    "type": "chat",
-                                    "user": {
-                                      "id": userDefine.id,
-                                      "name": userDefine.name,
-                                    }
-                                  });
-                            })),
-                    const SizedBox(
-                      width: 20,
+            child: Row(
+              children: [
+                Expanded(
+                    child: CustomButton(
+                        buttonText: "Nhắn tin",
+                        onPressed: () {
+                          GoRouter.of(context).pushNamed(
+                              MyAppRouteConstants.detailChatRouteName,
+                              extra: {
+                                "id": chatId,
+                                "type": "chat",
+                                "user": {
+                                  "id": userDefine.id,
+                                  "name": userDefine.name,
+                                }
+                              });
+                        })),
+                const SizedBox(
+                  width: 20,
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (isRequest) {
+                      unReqAddFriend(chatId);
+                    } else if (isFriend) {
+                      unFriend(chatId);
+                    } else {
+                      if (chatId != "") {
+                        reqAddFriendHaveChat(userDefine.id!, chatId);
+                      } else {
+                        reqAddFriend(userDefine.id!);
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (isRequest) {
-                          // Future<bool> rs = context
-                          //     .read<FriendCubit>()
-                          //     .unReqAddFriend(chatId);
-                          // bool result = await rs;
-                          // if (result) {
-                          //   isRequest = false;
-                          //   // ignore: use_build_context_synchronously
-                          //   ScaffoldMessenger.of(context).showSnackBar(
-                          //     const SnackBar(
-                          //       content: Text("Đã hủy lời mời kết bạn"),
-                          //     ),
-                          //   );
-                          // }
-                          unReqAddFriend(chatId);
-                        } else if (isFriend) {
-                          unFriend(chatId);
-                        } else {
-                          // Future<bool> rs = context
-                          //     .read<FriendCubit>()
-                          //     .reqAddFriend(userDefine.id!);
-
-                          // bool result = await rs;
-                          // if (result) {
-                          //   isRequest = true;
-                          //   // ignore: use_build_context_synchronously
-                          //   ScaffoldMessenger.of(context).showSnackBar(
-                          //     const SnackBar(
-                          //       content: Text("Đã gửi lời mời kết bạn"),
-                          //     ),
-                          //   );
-                          // }
-
-                          if (chatId != "") {
-                            reqAddFriendHaveChat(userDefine.id!, chatId);
-                          } else {
-                            reqAddFriend(userDefine.id!);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.all(0),
-                      ),
-                      child: SizedBox(
-                        height: 60,
-                        width: 60,
-                        child: isRequest
+                    padding: const EdgeInsets.all(0),
+                  ),
+                  child: SizedBox(
+                    height: 60,
+                    width: 60,
+                    child: isRequest
+                        ? const Icon(
+                            Icons.person_remove_alt_1_sharp,
+                            size: 30,
+                          )
+                        : isFriend
                             ? const Icon(
-                                Icons.person_remove_alt_1_sharp,
-                                size: 30,
+                                Icons.person_off_outlined,
+                                size: 25,
                               )
-                            : isFriend
-                                ? const Icon(
-                                    Icons.person_off_outlined,
-                                    size: 25,
-                                  )
-                                : const Icon(
-                                    Icons.person_add_alt_1_sharp,
-                                    size: 30,
-                                  ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                            : const Icon(
+                                Icons.person_add_alt_1_sharp,
+                                size: 30,
+                              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

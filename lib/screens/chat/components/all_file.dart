@@ -2,9 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
-import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/file.model.dart';
-import 'package:zalo_app/services/api_service.dart';
 
 class AllFileScreen extends StatefulWidget {
   const AllFileScreen({super.key, this.files});

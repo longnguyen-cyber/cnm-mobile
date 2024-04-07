@@ -256,13 +256,8 @@ class _MessageBubbleState extends State<MessageBubble> {
                                   player: player,
                                 );
                               } else if (fileType == 'mp4') {
-                                return Row(
-                                  children: [
-                                    VideoPlayerPage(
-                                        url: Uri.parse(
-                                            widget.files![index].path!)),
-                                  ],
-                                );
+                                return VideoPlayerPage(
+                                    url: Uri.parse(widget.files![index].path!));
                               } else if (fileDoc.contains(fileType)) {
                                 return Row(
                                   children: [
@@ -370,6 +365,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                                   return PlayerWidget(
                                     player: player,
                                   );
+                                } else if (fileType == 'mp4') {
+                                  return VideoPlayerPage(
+                                      url: Uri.parse(
+                                          widget.files![index].path!));
                                 } else if (fileDoc.contains(fileType)) {
                                   return Row(
                                     children: [
@@ -435,8 +434,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       case 'zip':
       case 'rar':
         return const Icon(Icons.archive, color: Colors.yellow);
-      case 'mp4':
-        return const Icon(Icons.video_library, color: Colors.purple);
+
       default:
         return const Icon(Icons.insert_drive_file);
     }
@@ -451,7 +449,6 @@ class _MessageBubbleState extends State<MessageBubble> {
     'txt',
     'zip',
     'rar',
-    'mp4',
     "html",
     "css",
     "js",

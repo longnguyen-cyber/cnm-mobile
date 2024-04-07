@@ -49,12 +49,12 @@ class MyAppRouter {
               "65dd4ae4cbeffa04dbbc5b16"
             ]
           };
-          return MaterialPage(
-              child:
-                  // LoginScreen());
-                  MainScreen(
-            index: 0,
-          ));
+          // return MaterialPage(
+          //     child:
+          //         // LoginScreen());
+          //         MainScreen(
+          //   index: 0,
+          // ));
           // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,
@@ -68,11 +68,11 @@ class MyAppRouter {
           //   type: "channel",
           //   name: "lam dep",
           // ));
-          return MaterialPage(
-              child: VideoPlayerPage(
-            url: Uri.parse(
-                "https://workchatprod.s3.ap-southeast-1.amazonaws.com/2024-04-05+19-07-31.mp4"),
-          ));
+          // return MaterialPage(
+          //     child: VideoPlayerPage(
+          //   url: Uri.parse(
+          //       "https://workchatprod.s3.ap-southeast-1.amazonaws.com/2024-04-05+19-07-31.mp4"),
+          // ));
           return MaterialPage(
               child: DetailChatScreen(
             data: data,

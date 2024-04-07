@@ -1,7 +1,9 @@
 // ignore_for_file: collection_methods_unrelated_type
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:popover/popover.dart';
@@ -175,14 +177,16 @@ class _MessageBubbleState extends State<MessageBubble> {
               showPopover(
                 context: context,
                 bodyBuilder: (context) => ListItems(
-                    senderId: widget.user.id!,
-                    userId: userExisting!.id!,
-                    onReactionSelected: handleReaction,
-                    onFunctionSelected: handleFunction),
+                  senderId: widget.user.id!,
+                  userId: userExisting!.id!,
+                  onReactionSelected: handleReaction,
+                  onFunctionSelected: handleFunction,
+                  isRecall: widget.isRecall ?? false,
+                ),
                 onPop: () => print('Popover was popped!'),
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
-                height: 170,
+                height: null,
                 arrowHeight: 0,
                 arrowWidth: 0,
               );
@@ -594,12 +598,14 @@ class ListItems extends StatefulWidget {
     required this.onFunctionSelected,
     required this.senderId,
     required this.userId,
+    required this.isRecall,
   });
 
   final Function(Reaction) onReactionSelected;
   final Function(FunctionChat) onFunctionSelected;
   final String senderId;
   final String userId;
+  final bool isRecall;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -610,72 +616,76 @@ class _ListItemsState extends State<ListItems> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView(
-        padding: const EdgeInsets.all(8),
+      child: Wrap(
+        // padding: const EdgeInsets.all(8),
         children: [
-          Container(
+          SizedBox(
             height: 50,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.love);
-                    },
-                    child: loveEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.like);
-                    },
-                    child: likeEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.laugh);
-                    },
-                    child: laughingEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.wow);
-                    },
-                    child: wowEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.sad);
-                    },
-                    child: sadEmoji),
-                InkWell(
-                    onTap: () {
-                      widget.onReactionSelected(Reaction.angry);
-                    },
-                    child: angryEmoji),
-              ],
-            ),
+            // padding: const EdgeInsets.all(8.0),
+            child: widget.isRecall
+                ? const SizedBox()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.love);
+                          },
+                          child: loveEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.like);
+                          },
+                          child: likeEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.laugh);
+                          },
+                          child: laughingEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.wow);
+                          },
+                          child: wowEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.sad);
+                          },
+                          child: sadEmoji),
+                      InkWell(
+                          onTap: () {
+                            widget.onReactionSelected(Reaction.angry);
+                          },
+                          child: angryEmoji),
+                    ],
+                  ),
           ),
-          const Divider(),
+          widget.isRecall == false ? const Divider() : const SizedBox(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              MenuItemChat(
-                title: 'Trả lời',
-                icon: FontAwesomeIcons.reply,
-                color: Colors.purple,
-                func: FunctionChat.reply,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.reply);
-                },
-              ),
-              MenuItemChat(
-                title: 'Chuyển tiếp',
-                icon: FontAwesomeIcons.share,
-                color: Colors.blue,
-                func: FunctionChat.share,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.share);
-                },
-              ),
-              if (widget.senderId == widget.userId)
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Trả lời',
+                  icon: FontAwesomeIcons.reply,
+                  color: Colors.purple,
+                  func: FunctionChat.reply,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.reply);
+                  },
+                ),
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Chuyển tiếp',
+                  icon: FontAwesomeIcons.share,
+                  color: Colors.blue,
+                  func: FunctionChat.share,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.share);
+                  },
+                ),
+              if (widget.senderId == widget.userId && widget.isRecall == false)
                 MenuItemChat(
                   title: 'Thu hồi',
                   icon: FontAwesomeIcons.rotateLeft,
@@ -685,7 +695,7 @@ class _ListItemsState extends State<ListItems> {
                     widget.onFunctionSelected(FunctionChat.revert);
                   },
                 ),
-              if (widget.senderId == widget.userId)
+              if (widget.senderId == widget.userId || widget.isRecall == true)
                 MenuItemChat(
                     title: 'Xoá',
                     icon: FontAwesomeIcons.trash,

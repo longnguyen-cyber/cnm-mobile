@@ -1,1 +1,1 @@
-enum FunctionChat { reply, share, revert, delete }
+enum FunctionChat { reply, share, revert, delete, download }

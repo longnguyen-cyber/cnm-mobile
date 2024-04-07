@@ -10,6 +10,7 @@ import 'package:zalo_app/screens/auth/verify_noti_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
 import 'package:zalo_app/screens/chat/components/all_file.dart';
+import 'package:zalo_app/screens/chat/components/forward.dart';
 import 'package:zalo_app/screens/chat/components/full_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
 import 'package:zalo_app/screens/chat/components/video_player_page.dart';
@@ -29,12 +30,15 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: LoginScreen());
+          // return MaterialPage(
+          //     child: Forward(
+          //   content: "ddd",
+          // ));
           dynamic data = {
-            "id": "6610f9a628d401f71e8e4d65",
+            "id": "6612a049fa5b1f2b1c54d959",
             "name": "nesdw",
             "type": "chat",
-            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
+            "receiverId": "65ae380b966692ca03c0bc3e",
           };
           dynamic dataChannel = {
             "id": "65e480261644570261cadca4",
@@ -49,12 +53,12 @@ class MyAppRouter {
               "65dd4ae4cbeffa04dbbc5b16"
             ]
           };
-          // return MaterialPage(
-          //     child:
-          //         // LoginScreen());
-          //         MainScreen(
-          //   index: 0,
-          // ));
+          return MaterialPage(
+              child:
+                  // LoginScreen());
+                  MainScreen(
+            index: 0,
+          ));
           // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,
@@ -223,6 +227,19 @@ class MyAppRouter {
             context: context,
             state: state,
             child: AllFileScreen(files: files),
+          );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.forwardRouteName,
+        path: '/foward',
+        pageBuilder: (context, state) {
+          String content = state.extra as String;
+
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: Forward(content: content),
           );
         },
       ),

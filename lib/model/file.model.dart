@@ -5,7 +5,7 @@ class FileModel {
   final String? id;
   final String? filename;
   late String? path;
-  final dynamic size;
+  late dynamic size;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;

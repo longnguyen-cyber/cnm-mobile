@@ -122,39 +122,40 @@ class _ChatScreenState extends State<ChatScreen> {
           members =
               (response["members"] as List).map((e) => e.toString()).toList();
         }
+        if (response["message"] != null) {
+          var data = {
+            "lastedThread": {
+              "messages": {"message": response["messages"]["message"]},
+            },
+            "stoneId": response["stoneId"],
+            "isReply": response["isReply"],
+            "isRecall": response["isRecall"],
+            "user": response["user"],
+            "timeThread": response["timeThread"],
+            "id": response["type"] == "chat"
+                ? response["chatId"]
+                : response["channelId"],
+            "type": response["type"],
+          };
 
-        var data = {
-          "lastedThread": {
-            "messages": {"message": response["messages"]["message"]},
-          },
-          "stoneId": response["stoneId"],
-          "isReply": response["isReply"],
-          "isRecall": response["isRecall"],
-          "user": response["user"],
-          "timeThread": response["timeThread"],
-          "id": response["type"] == "chat"
-              ? response["chatId"]
-              : response["channelId"],
-          "type": response["type"],
-        };
-
-        if (mounted) {
-          if (userId == receiveId ||
-              userId == data["user"]["id"] ||
-              members.contains(userId)) {
-            var index =
-                all.indexWhere((element) => element["id"] == data["id"]);
-            setState(() {
-              if (userId == data["user"]["id"]) {
-                dynamic prevUser = all[index]["user"];
-                data["user"] = prevUser;
-              }
-              all[index] = data;
-              all.sort((a, b) {
-                return DateTime.parse(b["timeThread"])
-                    .compareTo(DateTime.parse(a["timeThread"]));
+          if (mounted) {
+            if (userId == receiveId ||
+                userId == data["user"]["id"] ||
+                members.contains(userId)) {
+              var index =
+                  all.indexWhere((element) => element["id"] == data["id"]);
+              setState(() {
+                if (userId == data["user"]["id"]) {
+                  dynamic prevUser = all[index]["user"];
+                  data["user"] = prevUser;
+                }
+                all[index] = data;
+                all.sort((a, b) {
+                  return DateTime.parse(b["timeThread"])
+                      .compareTo(DateTime.parse(a["timeThread"]));
+                });
               });
-            });
+            }
           }
         }
       }

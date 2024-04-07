@@ -15,6 +15,7 @@ import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
 
 import 'constants/constants.dart';
+import 'utils/caculate_text.dart';
 
 class MessageBubble extends StatefulWidget {
   const MessageBubble(
@@ -169,25 +170,28 @@ class _MessageBubbleState extends State<MessageBubble> {
           alignment: alignment,
           child: GestureDetector(
             onLongPress: () {
-              if (!widget.isRecall!) {
-                showPopover(
-                  context: context,
-                  bodyBuilder: (context) => ListItems(
-                      senderId: widget.user.id!,
-                      userId: userExisting!.id!,
-                      onReactionSelected: handleReaction,
-                      onFunctionSelected: handleFunction),
-                  onPop: () => print('Popover was popped!'),
-                  direction: PopoverDirection.bottom,
-                  width: size.width * 0.8,
-                  height: 170,
-                  arrowHeight: 0,
-                  arrowWidth: 0,
-                );
-              }
+              // if (!widget.isRecall!) {
+              showPopover(
+                context: context,
+                bodyBuilder: (context) => ListItems(
+                    isRecall: widget.isRecall!,
+                    senderId: widget.user.id!,
+                    userId: userExisting!.id!,
+                    onReactionSelected: handleReaction,
+                    onFunctionSelected: handleFunction),
+                onPop: () => print('Popover was popped!'),
+                direction: PopoverDirection.bottom,
+                width: size.width * 0.8,
+                height: null,
+                arrowHeight: 0,
+                arrowWidth: 0,
+              );
+              // }
             },
             child: Container(
               constraints: BoxConstraints(maxWidth: size.width * 0.66),
+              width: caulateWidth(widget.content ?? '', size.width * 0.66),
+              // width: 100,
               padding: const EdgeInsets.only(
                 top: 8.0,
                 bottom: 15.0,
@@ -205,6 +209,7 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   (widget.isReply == null || widget.isReply == false)
                       ? Text(
@@ -467,12 +472,14 @@ class ListItems extends StatefulWidget {
     required this.onFunctionSelected,
     required this.senderId,
     required this.userId,
+    required this.isRecall,
   });
 
   final Function(Reaction) onReactionSelected;
   final Function(FunctionChat) onFunctionSelected;
   final String senderId;
   final String userId;
+  final bool isRecall;
 
   @override
   _ListItemsState createState() => _ListItemsState();
@@ -483,8 +490,8 @@ class _ListItemsState extends State<ListItems> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView(
-        padding: const EdgeInsets.all(8),
+      child: Wrap(
+        // padding: const EdgeInsets.all(8),
         children: [
           Container(
             height: 50,
@@ -530,25 +537,27 @@ class _ListItemsState extends State<ListItems> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              MenuItemChat(
-                title: 'Trả lời',
-                icon: FontAwesomeIcons.reply,
-                color: Colors.purple,
-                func: FunctionChat.reply,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.reply);
-                },
-              ),
-              MenuItemChat(
-                title: 'Chuyển tiếp',
-                icon: FontAwesomeIcons.share,
-                color: Colors.blue,
-                func: FunctionChat.share,
-                onClick: () {
-                  widget.onFunctionSelected(FunctionChat.share);
-                },
-              ),
-              if (widget.senderId == widget.userId)
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Trả lời',
+                  icon: FontAwesomeIcons.reply,
+                  color: Colors.purple,
+                  func: FunctionChat.reply,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.reply);
+                  },
+                ),
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: 'Chuyển tiếp',
+                  icon: FontAwesomeIcons.share,
+                  color: Colors.blue,
+                  func: FunctionChat.share,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.share);
+                  },
+                ),
+              if (widget.senderId == widget.userId && widget.isRecall == false)
                 MenuItemChat(
                   title: 'Thu hồi',
                   icon: FontAwesomeIcons.rotateLeft,

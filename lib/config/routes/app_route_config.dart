@@ -32,7 +32,7 @@ class MyAppRouter {
             "id": "6610f9a628d401f71e8e4d65",
             "name": "nesdw",
             "type": "chat",
-            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
+            "receiverId": "65bceb94ceda5567efc0b629",
           };
           dynamic dataChannel = {
             "id": "65e480261644570261cadca4",

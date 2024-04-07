@@ -1,11 +1,18 @@
 // ignore_for_file: collection_methods_unrelated_type
 
+import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
@@ -95,6 +102,36 @@ class _MessageBubbleState extends State<MessageBubble> {
     if (widget.files == null) return;
     audioPlayers =
         List.generate(widget.files!.length, (index) => AudioPlayer());
+  }
+
+  final ReceivePort _port = ReceivePort();
+  initDownloader() async {
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
+    _port.listen((dynamic data) {
+      String id = data[0];
+      DownloadTaskStatus status = data[1];
+      int progress = data[2];
+      if (status == DownloadTaskStatus.complete) {
+        print("download complete");
+      }
+      setState(() {});
+    });
+
+    FlutterDownloader.registerCallback(downloadCallback);
+  }
+
+  @override
+  void dispose() {
+    IsolateNameServer.removePortNameMapping('downloader_send_port');
+    super.dispose();
+  }
+
+  @pragma('vm:entry-point')
+  static void downloadCallback(String id, int status, int progress) {
+    final SendPort? send =
+        IsolateNameServer.lookupPortByName('downloader_send_port');
+    send?.send([id, status, progress]);
   }
 
   @override
@@ -599,7 +636,27 @@ class _MessageBubbleState extends State<MessageBubble> {
       case FunctionChat.share:
         // share fuc
         break;
+      case FunctionChat.download:
+        widget.files?.forEach((element) {
+          downloadFnc(element.path!);
+        });
+
+        break;
       default:
+    }
+  }
+
+  Future<void> downloadFnc(String url) async {
+    final Directory? downloadsDir = await getDownloadsDirectory();
+    var status = await Permission.camera.status;
+    if (status.isGranted) {
+      print('Permission Granted and downloading');
+      await FlutterDownloader.enqueue(
+        url: url,
+        savedDir: downloadsDir!.path,
+        showNotification: true,
+        openFileFromNotification: true,
+      );
     }
   }
 }
@@ -726,15 +783,14 @@ class _ListItemsState extends State<ListItems> {
                     onClick: () {
                       widget.onFunctionSelected(FunctionChat.delete);
                     }),
-              if (widget.content == null)
-                MenuItemChat(
-                    title: 'Tải',
-                    icon: FontAwesomeIcons.download,
-                    color: Colors.black,
-                    func: FunctionChat.download,
-                    onClick: () {
-                      widget.onFunctionSelected(FunctionChat.download);
-                    })
+              MenuItemChat(
+                  title: 'Tải về',
+                  icon: FontAwesomeIcons.download,
+                  color: Colors.green,
+                  func: FunctionChat.download,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.download);
+                  })
             ],
           ),
         ],

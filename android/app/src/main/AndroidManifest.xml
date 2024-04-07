@@ -25,6 +25,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEOS" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="zalo_app"
         android:name="${applicationName}"
@@ -56,7 +57,39 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <provider
+        android:name="vn.hunghd.flutterdownloader.DownloadedFileProvider"
+        android:authorities="${applicationId}.flutter_downloader.provider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/provider_paths"/>
+    </provider>
+    <!-- Begin FlutterDownloader customization -->
+<!-- disable default Initializer -->
+<provider
+    android:name="androidx.startup.InitializationProvider"
+    android:authorities="${applicationId}.androidx-startup"
+    android:exported="false"
+    tools:node="merge">
+    <meta-data
+        android:name="androidx.work.WorkManagerInitializer"
+        android:value="androidx.startup"
+        tools:node="remove" />
+</provider>
 
+<!-- declare customized Initializer -->
+<provider
+    android:name="vn.hunghd.flutterdownloader.FlutterDownloaderInitializer"
+    android:authorities="${applicationId}.flutter-downloader-init"
+    android:exported="false">
+    <!-- changes this number to configure the maximum number of concurrent tasks -->
+    <meta-data
+        android:name="vn.hunghd.flutterdownloader.MAX_CONCURRENT_TASKS"
+        android:value="5" />
+</provider>
+<!-- End FlutterDownloader customization -->
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility?hl=en and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

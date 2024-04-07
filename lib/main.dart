@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
 import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
@@ -22,6 +23,12 @@ void main() async {
 
   // prefs.clear();
   await dotenv.load(fileName: "lib/.env");
+  await FlutterDownloader.initialize(
+      debug:
+          true, // optional: set to false to disable printing logs to console (default: true)
+      ignoreSsl:
+          true // option: set to false to disable working with http links (default: false)
+      );
   runApp(MyApp(
     userService: UserService(),
     channelService: ChannelService(),

@@ -34,7 +34,7 @@ class MyAppRouter {
             "id": "6610f9a628d401f71e8e4d65",
             "name": "nesdw",
             "type": "chat",
-            "receiverId": "65bceb94ceda5567efc0b629",
+            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
           };
           dynamic dataChannel = {
             "id": "65e480261644570261cadca4",
@@ -49,12 +49,12 @@ class MyAppRouter {
               "65dd4ae4cbeffa04dbbc5b16"
             ]
           };
-          // return MaterialPage(
-          //     child:
-          //         // LoginScreen());
-          //         MainScreen(
-          //   index: 0,
-          // ));
+          return MaterialPage(
+              child:
+                  // LoginScreen());
+                  MainScreen(
+            index: 0,
+          ));
           // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,

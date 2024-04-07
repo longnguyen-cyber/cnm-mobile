@@ -213,63 +213,18 @@ class _MessageBubbleState extends State<MessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  widget.content != ""
-                      ? (widget.isReply == null || widget.isReply == false)
-                          ? Text(
-                              widget.content ?? '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
+                  if (widget.content != "" && widget.files!.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.content ?? '',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: Colors.black,
                                   ),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width:
-                                          3, // Độ rộng của đường kẻ thẳng đứng
-                                      height:
-                                          20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
-                                      color: Colors
-                                          .blue, // Màu sắc của đường kẻ thẳng
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    RichText(
-                                      textAlign: TextAlign.left,
-                                      text: TextSpan(
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: '  ${widget.replyUser}\n',
-                                            style: const TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 12),
-                                          ),
-                                          TextSpan(
-                                            text: '${widget.replyContent}\n',
-                                            style: const TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 10),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                  ],
-                                ),
-                                Text(
-                                  widget.content ?? '',
-                                )
-                              ],
-                            )
-                      :
-                      // Image.network(widget.imageUrl!, width: size.width * 0.5)
-                      SizedBox(
+                        ),
+                        SizedBox(
                           width: size.width * 0.6,
                           child: ListView.builder(
                             shrinkWrap: true,
@@ -327,6 +282,113 @@ class _MessageBubbleState extends State<MessageBubble> {
                             },
                           ),
                         ),
+                      ],
+                    )
+                  else
+                    widget.content != ""
+                        ? (widget.isReply == null || widget.isReply == false)
+                            ? Text(
+                                widget.content ?? '',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      color: Colors.black,
+                                    ),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width:
+                                            3, // Độ rộng của đường kẻ thẳng đứng
+                                        height:
+                                            20, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                        color: Colors
+                                            .blue, // Màu sắc của đường kẻ thẳng
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      RichText(
+                                        textAlign: TextAlign.left,
+                                        text: TextSpan(
+                                          children: <TextSpan>[
+                                            TextSpan(
+                                              text: '  ${widget.replyUser}\n',
+                                              style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 12),
+                                            ),
+                                            TextSpan(
+                                              text: '${widget.replyContent}\n',
+                                              style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                    ],
+                                  ),
+                                  Text(
+                                    widget.content ?? '',
+                                  )
+                                ],
+                              )
+                        : SizedBox(
+                            width: size.width * 0.6,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.files!.length,
+                              itemBuilder: (context, index) {
+                                String fileType =
+                                    widget.files![index].path!.split('.').last;
+                                if (fileImage.contains(fileType)) {
+                                  return GestureDetector(
+                                      onTap: () {
+                                        //download image
+                                        GoRouter.of(context).pushNamed(
+                                            MyAppRouteConstants.fullRouteName,
+                                            extra: widget.files![index].path!);
+                                      },
+                                      child: imageFile(
+                                          widget.files![index].path!, size));
+                                } else if (fileType == 'mp3') {
+                                  AudioPlayer player = audioPlayers![index];
+                                  player.setReleaseMode(ReleaseMode.stop);
+
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) async {
+                                    await player.setSourceUrl(
+                                        widget.files![index].path!);
+                                  });
+
+                                  return PlayerWidget(
+                                    player: player,
+                                  );
+                                } else if (fileDoc.contains(fileType)) {
+                                  return Row(
+                                    children: [
+                                      getIconForFileType(fileType),
+                                      Expanded(
+                                        child: ListTile(
+                                          title: Text(
+                                              widget.files![index].filename!),
+                                          subtitle: Text(
+                                              (widget.files![index].size!)),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
                   Text(parseTime(widget.timeSent),
                       textAlign: TextAlign.left,
                       style: Theme.of(context).textTheme.bodySmall),

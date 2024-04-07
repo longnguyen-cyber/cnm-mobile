@@ -335,15 +335,28 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         });
 
         final response = await api.uploadFiles(files);
-        setState(() {
-          for (var i = 0; i < threads[threads.length - 1].files!.length; i++) {
-            var path = response[i]["path"];
-            threads[threads.length - 1].files![i].path = path;
-          }
-          fileData = response;
-        });
+        if (response == null) {
+          //remove thread
+          SnackBar snackBar = const SnackBar(
+            content: Text("Upload file thất bại"),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          setState(() {
+            threads.removeLast();
+          });
+        } else {
+          setState(() {
+            for (var i = 0;
+                i < threads[threads.length - 1].files!.length;
+                i++) {
+              var path = response[i]["path"];
+              threads[threads.length - 1].files![i].path = path;
+            }
+            fileData = response;
+          });
 
-        _sendMessage();
+          _sendMessage();
+        }
       }
     }
 
@@ -769,6 +782,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           "receiveId": receiveId,
         });
       }
+      setState(() {
+        isTextNotEmpty = false;
+      });
       messageController.clear();
     } else if (fileData.length > 0) {
       if (widget.data["type"] == "channel") {

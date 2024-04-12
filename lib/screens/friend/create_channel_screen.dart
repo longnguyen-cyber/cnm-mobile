@@ -1,21 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
-import 'package:zalo_app/blocs/bloc_chat/chat_cubit.dart';
-import 'package:zalo_app/blocs/bloc_friend/friend_cubit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/user.model.dart';
-
-const List<String> list = <String>['Public', 'Priavte'];
-
-List<User> selectedUsersFinal = [];
+import 'package:zalo_app/services/api_service.dart';
 
 class CreateChannelScreen extends StatefulWidget {
   const CreateChannelScreen({super.key});
@@ -26,45 +20,76 @@ class CreateChannelScreen extends StatefulWidget {
 
 class _CreateChannelScreenState extends State<CreateChannelScreen>
     with TickerProviderStateMixin {
+  final api = API();
+  List<Chat> all = [];
+  List<Chat> whitelist = [];
+  late String userId = "";
+  late bool adding = false;
+  List<User> selectedUsersFinal = [];
+
+  void getAll() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var token = prefs.getString("token") ?? "";
+    var userOfToken = prefs.getString(token) ?? "";
+    if (userOfToken != "") {
+      userId = User.fromJson(userOfToken).id!;
+      setState(() {
+        userId = userId;
+      });
+    }
+    String urlAll = "chats";
+    String urlWhiteList = "chats/friend/whitelistFriendAccept";
+
+    final responseWaitList = await api.get(urlAll, {});
+    final responseWhiteList = await api.get(urlWhiteList, {});
+
+    if (mounted) {
+      setState(() {
+        all = (responseWaitList["data"] as List)
+            .map((e) => Chat.fromMap(e))
+            .toList();
+
+        whitelist = (responseWhiteList["data"] as List)
+            .map((e) => Chat.fromMap(e))
+            .toList();
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    SocketConfig.listen(SocketEvent.channelWS, (response) {
-      var status = response['status'];
-      if (status == 201) {
-        if (mounted) {
-          SnackBar snackBar = const SnackBar(
-            content: Text('Tạo nhóm thành công'),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          selectedUsersFinal.clear();
-          //delay 2s
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              // Check if the widget is still in the tree
-              GoRouter.of(context)
-                  .pushNamed(MyAppRouteConstants.friendRouteName, extra: 1);
-            }
-          });
-        }
-      } else {
-        if (mounted) {
-          SnackBar snackBar = const SnackBar(
-            content: Text('Tạo nhóm thất bại'),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        }
-      }
-    });
+    getAll();
   }
 
   void createChannel(dynamic obj) {
+    setState(() {
+      adding = true;
+    });
+    SocketConfig.listen(SocketEvent.channelWS, (response) {
+      var status = response['status'];
+      if (status == 201) {
+        setState(() {
+          adding = false;
+        });
+        SnackBar snackBar = const SnackBar(
+          content: Text("Tạo nhóm thành công"),
+          duration: Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        //delay 2s
+        Future.delayed(const Duration(seconds: 2), () {
+          GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
+          // Navigator.pop(context);
+        });
+      }
+    });
     SocketConfig.emit(SocketMessage.createChannel, obj);
   }
 
   late final TabController _tabController =
       TabController(length: 2, vsync: this);
-  late String dropdownValue = 'Public';
   late String name = "";
   @override
   Widget build(BuildContext context) {
@@ -81,6 +106,71 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
           },
         ),
       ),
+      bottomNavigationBar: selectedUsersFinal.isNotEmpty
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 1.0,
+                ),
+              ),
+              height: 60,
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: selectedUsersFinal
+                          .map((e) => Container(
+                                margin: const EdgeInsets.only(left: 10),
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(e.avatar!),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                  adding
+                      ? const CircularProgressIndicator()
+                      : IconButton(
+                          onPressed: () {
+                            // Navigator.pop(context)
+                            // ;
+                            List<String> users =
+                                selectedUsersFinal.map((e) => e.id!).toList();
+                            if (name.isEmpty) {
+                              SnackBar snackBar = const SnackBar(
+                                content: Text('Tên nhóm không được để trống'),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                            } else if (users.length < 2) {
+                              SnackBar snackBar = const SnackBar(
+                                content: Text('Nhóm phải có ít nhất 2 người'),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                            } else {
+                              Map<String, dynamic> obj = {
+                                "name": name,
+                                "members": users
+                              };
+                              createChannel(obj);
+                            }
+                          },
+                          icon: const Icon(Icons.send),
+                        ),
+                  const SizedBox(
+                    width: 10,
+                  )
+                ],
+              ),
+            )
+          : null,
       body: Column(
         children: [
           Container(
@@ -107,92 +197,9 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
                 const SizedBox(
                   width: 10,
                 ),
-                DropdownButton<String>(
-                  value: dropdownValue,
-                  icon: const Icon(Icons.arrow_drop_down_circle_outlined),
-                  elevation: 16,
-                  style: const TextStyle(
-                    color: Colors.black,
-                  ),
-                  // border for it
-                  borderRadius: BorderRadius.circular(10),
-
-                  onChanged: (String? value) {
-                    setState(() {
-                      dropdownValue = value!;
-                    });
-                  },
-                  items: list.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
               ],
             ),
           ),
-          selectedUsersFinal.isNotEmpty
-              ? Row(
-                  children: [
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: Row(
-                        children: selectedUsersFinal
-                            .map((e) => Container(
-                                  margin: const EdgeInsets.only(left: 10),
-                                  child: CircleAvatar(
-                                    radius: 20,
-                                    backgroundImage: NetworkImage(e.avatar!),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                    BlocBuilder<ChannelCubit, ChannelState>(
-                      builder: (context, state) {
-                        return TextButton(
-                          onPressed: () async {
-                            List<String> users =
-                                selectedUsersFinal.map((e) => e.id!).toList();
-                            if (name.isEmpty) {
-                              SnackBar snackBar = const SnackBar(
-                                content: Text('Tên nhóm không được để trống'),
-                              );
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar);
-                            } else if (users.length < 2) {
-                              SnackBar snackBar = const SnackBar(
-                                content: Text('Nhóm phải có ít nhất 2 người'),
-                              );
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar);
-                            } else {
-                              Map<String, dynamic> obj = {
-                                "name": name,
-                                "isPublic":
-                                    dropdownValue == 'Public' ? false : true,
-                                "members": users
-                              };
-                              createChannel(obj);
-                            }
-                          },
-                          child: const Text(
-                            'Tạo nhóm ',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                  ],
-                )
-              : Container(),
           Container(
             color: Colors.white,
             child: TabBar(
@@ -217,170 +224,143 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
                 dragStartBehavior: DragStartBehavior.start,
                 controller: _tabController,
                 children: [
-                  BlocBuilder<ChatCubit, ChatState>(builder: (context, state) {
-                    if (state is ChatInitial) {
-                      context.read<ChatCubit>().getAllChats();
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is GetAllChatsLoaded) {
-                      List<Chat> all = state.chats;
-                      return SingleChildScrollView(
-                        child: Column(children: [
-                          for (int i = 0; i < all.length; i++)
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  // ignore: collection_methods_unrelated_type
-                                  if (selectedUsersFinal
-                                      .map((e) => e.id)
-                                      .contains(all[i].user!.id)) {
-                                    selectedUsersFinal.remove(all[i].user);
-                                  } else {
-                                    selectedUsersFinal.add(all[i].user!);
-                                  }
-                                });
-                              },
-                              child: Container(
-                                width: size.width,
-                                padding: EdgeInsets.all(size.width * 0.02),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                        margin: const EdgeInsets.only(left: 20),
-                                        child: CircleAvatar(
-                                            radius: 30,
-                                            backgroundImage: NetworkImage(
-                                                all[i].user!.avatar!))),
-                                    const SizedBox(
-                                      width: 20,
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text(
-                                            all[i].user!.name!,
-                                            style:
-                                                const TextStyle(fontSize: 16),
-                                          ),
-                                          all[i].timeThread != null
-                                              ? Text(
-                                                  formatTime(
-                                                      all[i].timeThread!),
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey),
-                                                )
-                                              : const SizedBox(),
-                                        ],
-                                      ),
-                                    ),
-                                    Radio<String>(
-                                      value: all[i].user!.id!,
-                                      groupValue: selectedUsersFinal
-                                              .map((e) => e.id)
-                                              .contains(all[i].user!.id!)
-                                          ? all[i].user!.id!
-                                          : null,
-                                      onChanged: (String? value) {},
-                                    )
-                                  ],
+                  SingleChildScrollView(
+                    child: Column(children: [
+                      for (int i = 0; i < all.length; i++)
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              // ignore: collection_methods_unrelated_type
+                              if (selectedUsersFinal
+                                  .map((e) => e.id)
+                                  .contains(all[i].user!.id)) {
+                                selectedUsersFinal.remove(all[i].user);
+                              } else {
+                                selectedUsersFinal.add(all[i].user!);
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: size.width,
+                            padding: EdgeInsets.all(size.width * 0.02),
+                            child: Row(
+                              children: [
+                                Container(
+                                    margin: const EdgeInsets.only(left: 20),
+                                    child: CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: NetworkImage(
+                                            all[i].user!.avatar!))),
+                                const SizedBox(
+                                  width: 20,
                                 ),
-                              ),
-                            )
-                        ]),
-                      );
-                    } else {
-                      return const Text('Error');
-                    }
-                  }),
-                  BlocBuilder<FriendCubit, FriendState>(
-                    builder: (context, state) {
-                      if (state is FriendInitial) {
-                        context.read<FriendCubit>().whitelistFriendAccept();
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (state is WhitelistFriendAcceptLoaded) {
-                        List<Chat> all = state.chats;
-                        return SingleChildScrollView(
-                          child: Column(children: [
-                            for (int i = 0; i < all.length; i++)
-                              InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    // ignore: collection_methods_unrelated_type
-                                    if (selectedUsersFinal
-                                        .map((e) => e.id)
-                                        .contains(all[i].user!.id)) {
-                                      selectedUsersFinal.remove(all[i].user);
-                                    } else {
-                                      selectedUsersFinal.add(all[i].user!);
-                                    }
-                                  });
-                                },
-                                child: Container(
-                                  width: size.width,
-                                  padding: EdgeInsets.all(size.width * 0.02),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                          margin:
-                                              const EdgeInsets.only(left: 20),
-                                          child: CircleAvatar(
-                                              radius: 30,
-                                              backgroundImage: NetworkImage(
-                                                  all[i].user!.avatar!))),
-                                      const SizedBox(
-                                        width: 20,
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      Text(
+                                        all[i].user!.name!,
+                                        style: const TextStyle(fontSize: 16),
                                       ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Text(
-                                              all[i].user!.name!,
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            // all[i].timeThread != null
-                                            //     ? Text(
-                                            //         formatTime(
-                                            //             all[i].timeThread!),
-                                            //         style: const TextStyle(
-                                            //             fontSize: 12,
-                                            //             color: Colors.grey),
-                                            //       )
-                                            //     : const SizedBox(),
-                                          ],
-                                        ),
-                                      ),
-                                      Radio<String>(
-                                        value: all[i].user!.id!,
-                                        groupValue: selectedUsersFinal
-                                                .map((e) => e.id)
-                                                .contains(all[i].user!.id!)
-                                            ? all[i].user!.id!
-                                            : null,
-                                        onChanged: (String? value) {},
-                                      )
+                                      all[i].timeThread != null
+                                          ? Text(
+                                              formatTime(all[i].timeThread!),
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey),
+                                            )
+                                          : const SizedBox(),
                                     ],
                                   ),
                                 ),
-                              )
-                          ]),
-                        );
-                      } else {
-                        return const Text('Error');
-                      }
-                    },
+                                Radio<String>(
+                                  value: all[i].user!.id!,
+                                  groupValue: selectedUsersFinal
+                                          .map((e) => e.id)
+                                          .contains(all[i].user!.id!)
+                                      ? all[i].user!.id!
+                                      : null,
+                                  onChanged: (String? value) {},
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                    ]),
+                  ),
+                  SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < all.length; i++)
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                // ignore: collection_methods_unrelated_type
+                                if (selectedUsersFinal
+                                    .map((e) => e.id)
+                                    .contains(all[i].user!.id)) {
+                                  selectedUsersFinal.remove(all[i].user);
+                                } else {
+                                  selectedUsersFinal.add(all[i].user!);
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: size.width,
+                              padding: EdgeInsets.all(size.width * 0.02),
+                              child: Row(
+                                children: [
+                                  Container(
+                                      margin: const EdgeInsets.only(left: 20),
+                                      child: CircleAvatar(
+                                          radius: 30,
+                                          backgroundImage: NetworkImage(
+                                              all[i].user!.avatar!))),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Text(
+                                          all[i].user!.name!,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        // all[i].timeThread != null
+                                        //     ? Text(
+                                        //         formatTime(
+                                        //             all[i].timeThread!),
+                                        //         style: const TextStyle(
+                                        //             fontSize: 12,
+                                        //             color: Colors.grey),
+                                        //       )
+                                        //     : const SizedBox(),
+                                      ],
+                                    ),
+                                  ),
+                                  Radio<String>(
+                                    value: all[i].user!.id!,
+                                    groupValue: selectedUsersFinal
+                                            .map((e) => e.id)
+                                            .contains(all[i].user!.id!)
+                                        ? all[i].user!.id!
+                                        : null,
+                                    onChanged: (String? value) {},
+                                  )
+                                ],
+                              ),
+                            ),
+                          )
+                      ],
+                    ),
                   ),
                 ],
               ),

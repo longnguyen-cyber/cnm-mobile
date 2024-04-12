@@ -20,7 +20,6 @@ import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/channel.model.dart';
 import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/model/file.model.dart';
-import 'package:zalo_app/model/message.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
@@ -57,6 +56,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   late AudioPlayer audioPlayer;
   bool isRecording = false;
   String path = "";
+  late String name;
+  late dynamic members;
+
   final api = API();
   void setPath() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -106,7 +108,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     audioPlayer.dispose();
     audioRecord.dispose();
@@ -120,11 +121,63 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     getUser();
     getData();
     setPath();
-    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
-      var members = response['members'] != null
-          ? (response['members'] as List<dynamic>).map((e) => e).toList()
-          : [];
 
+    SocketConfig.listen(SocketEvent.channelWS, (response) {
+      String? userId = userExisting!.id;
+      var status = response['status'];
+      var data = response['data'];
+      if (status == 200) {
+        if (mounted) {
+          var type = data["type"];
+          var channel = data["channel"];
+          var userIds = (channel["users"] as List)
+              .map((e) => User.fromMap(e))
+              .toList()
+              .map((e) => e.id)
+              .toList();
+          if (type != "deleteChannel") {
+            Thread thread = Thread.fromMap(channel["lastedThread"]);
+            setState(() {
+              if (userIds.contains(userId)) {
+                if (type == "updateChannel") {
+                  name = channel["name"];
+                  threadsChannel.add(thread);
+                } else if (type == "addUserToChannel") {
+                  members =
+                      (channel["users"] as List).map((e) => e["id "]).toList();
+                  threadsChannel.add(thread);
+                } else if (type == "deleteChannel") {
+                  GoRouter.of(context)
+                      .pushNamed(MyAppRouteConstants.mainRouteName);
+                } else if (type == "removeUserFromChannel") {
+                  // all[index] = channel;
+                  var removeMember = data["removeMember"];
+                  if (removeMember == (userId)) {
+                    GoRouter.of(context)
+                        .pushNamed(MyAppRouteConstants.mainRouteName);
+                  } else {
+                    threadsChannel.add(thread);
+                  }
+                } else if (type == "leaveChannel") {
+                  // all[index] = channel;
+                  String userLeave = data["userLeave"];
+
+                  if (userLeave == userId) {
+                    GoRouter.of(context)
+                        .pushNamed(MyAppRouteConstants.mainRouteName);
+                  } else {
+                    threadsChannel.add(thread);
+                  }
+                } else if (type == "updateRoleUserInChannel") {
+                  threadsChannel.add(thread);
+                }
+              }
+            });
+          }
+        }
+      }
+    });
+    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
       if (mounted) {
         if (response["typeMsg"] == "recall" ||
             response["typeMsg"] == "delete") {
@@ -167,16 +220,12 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           //send new message
           // ignore: prefer_typing_uninitialized_variables
           var data;
-          var members = response['fileCreateDto'] != null
-              ? (response['fileCreateDto'] as List<dynamic>)
-                  .map((e) => e)
-                  .toList()
+          var members = response['members'] != null
+              ? (response['members'] as List<dynamic>).map((e) => e).toList()
               : [];
-          print("members: $response");
           if (response['messages'] != null &&
               response['messages']['message'] != null &&
               response['fileCreateDto'] == null) {
-            print("case 1");
             data = {
               "stoneId": response['stoneId'],
               "messages": {"message": response['messages']['message']},
@@ -188,8 +237,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             };
           } else if (response['messages'] == null &&
               response['fileCreateDto'] != null) {
-            print("case 2");
-
             data = {
               "stoneId": response['stoneId'],
               "user": response['user'],
@@ -200,7 +247,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               "files": response['fileCreateDto']
             };
           } else {
-            print("case 3 ${response['messages']['message']}");
             data = {
               "stoneId": response['stoneId'],
               "user": response['user'],
@@ -216,7 +262,19 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           Thread thread = Thread.fromMap(data);
           if (members.contains(userExisting!.id)) {
             setState(() {
-              threadsChannel.add(thread);
+              if (thread.files!.isNotEmpty &&
+                  thread.messages == null &&
+                  response["receiveId"] != userExisting!.id) {
+                print("thread.files!.isNotEmpty $thread");
+                //get latest thread and update file path
+                var index = threadsChannel.length - 1;
+                for (var i = 0; i < thread.files!.length; i++) {
+                  var path = thread.files![i].path;
+                  threadsChannel[index].files![i].path = path;
+                }
+              } else {
+                threadsChannel.add(thread);
+              }
             });
           } else if (response["receiveId"] == userExisting!.id ||
               response["user"]["id"] == userExisting!.id) {
@@ -246,9 +304,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
 
-    final String name = widget.data["name"];
+    name = widget.data["name"];
     final String type = widget.data["type"];
-    late dynamic members;
     if (widget.data["type"] == "channel") {
       members = widget.data["members"];
     }
@@ -453,11 +510,13 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
                   if (thread.user == null) {
                     children.add(
-                      Text(
-                        thread.messages!.message,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+                      Center(
+                        child: Text(
+                          thread.messages!.message,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     );
@@ -465,7 +524,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     bool nameExisted = index > 0 &&
                         threads[index - 1].user != null &&
                         threads[index - 1].user!.name == thread.user!.name;
-
                     if (thread.user!.id == userExisting!.id) {
                       children.add(
                         MessageBubble(
@@ -620,6 +678,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                     ),
                   ])
                 : Container(),
+            const SizedBox(height: 10),
             Row(children: [
               IconButton(
                 onPressed: () async {
@@ -786,7 +845,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     late String receiveId;
     late dynamic members;
     if (widget.data["type"] == "channel") {
-      members = widget.data["members"].map((e) => e["id"]).toList();
+      members = widget.data["members"].map((e) => e).toList();
     } else {
       receiveId = widget.data["receiverId"];
     }

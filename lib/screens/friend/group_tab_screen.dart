@@ -1,14 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zalo_app/blocs/bloc_channel/channel_cubit.dart';
+import 'package:zalo_app/components/channel_item.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/model/channel.model.dart';
-import 'package:zalo_app/components/channel_item.dart';
+import 'package:zalo_app/services/api_service.dart';
 
-class GroupTabScreen extends StatelessWidget {
+class GroupTabScreen extends StatefulWidget {
   const GroupTabScreen({super.key});
+
+  @override
+  State<GroupTabScreen> createState() => _GroupTabScreenState();
+}
+
+class _GroupTabScreenState extends State<GroupTabScreen> {
+  final api = API();
+  List<Channel> channels = [];
+  void getAll() async {
+    String urlAll = "channels";
+
+    final response = await api.get(urlAll, {});
+
+    if (mounted) {
+      setState(() {
+        channels =
+            (response["data"] as List).map((e) => Channel.fromMap(e)).toList();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getAll();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,54 +79,38 @@ class GroupTabScreen extends StatelessWidget {
       ],
     );
     return Scaffold(
-      body: BlocBuilder<ChannelCubit, ChannelState>(
-        builder: (context, state) {
-          if (state is ChannelInitial) {
-            context.read<ChannelCubit>().getAllChannels();
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (state is GetAllChannelsLoaded) {
-            context.read<ChannelCubit>().getAllChannels();
-            List<Channel> channels = state.channels;
-            return Container(
-              padding: EdgeInsets.all(size.width * 0.02),
-              width: size.width,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    topGroupItem,
-                    SizedBox(
-                      height: size.height * 0.01,
-                    ),
-                    const Divider(
-                      color: Colors.grey,
-                    ),
-                    SizedBox(
-                      height: size.height * 0.01,
-                    ),
-                    const Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text('Danh sách nhóm', style: TextStyle(fontSize: 16)),
-                        Spacer(),
-                        // Text('Xem tất cả',
-                        //     style: TextStyle(fontSize: 16, color: Colors.blue)),
-                      ],
-                    ),
-                    for (int i = 0; i < channels.length; i++)
-                      ChannelItem(obj: channels[i]),
-                  ],
-                ),
+      body: Container(
+        padding: EdgeInsets.all(size.width * 0.02),
+        width: size.width,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              topGroupItem,
+              SizedBox(
+                height: size.height * 0.01,
               ),
-            );
-          } else {
-            print('Error');
-            return const CircularProgressIndicator();
-          }
-        },
+              const Divider(
+                color: Colors.grey,
+              ),
+              SizedBox(
+                height: size.height * 0.01,
+              ),
+              const Row(
+                children: <Widget>[
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Danh sách nhóm', style: TextStyle(fontSize: 16)),
+                  Spacer(),
+                  // Text('Xem tất cả',
+                  //     style: TextStyle(fontSize: 16, color: Colors.blue)),
+                ],
+              ),
+              for (int i = 0; i < channels.length; i++)
+                ChannelItem(obj: channels[i]),
+            ],
+          ),
+        ),
       ),
     );
   }

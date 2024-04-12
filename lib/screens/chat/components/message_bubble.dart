@@ -1,17 +1,13 @@
-// ignore_for_file: collection_methods_unrelated_type
+// ignore_for_file: collection_methods_unrelated_type, library_private_types_in_public_api
 
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,7 +18,7 @@ import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
-import 'package:zalo_app/screens/chat/components/video_player_page.dart';
+// import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
@@ -64,7 +60,6 @@ class MessageBubble extends StatefulWidget {
   final Function(String, String) onFuctionReply; // người rep và content
 
   @override
-  // ignore: library_private_types_in_public_api
   _MessageBubbleState createState() => _MessageBubbleState();
 }
 
@@ -75,6 +70,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     Reaction.laugh.name: laughingEmoji,
     Reaction.sad.name: sadEmoji,
     Reaction.angry.name: angryEmoji,
+    Reaction.wow.name: wowEmoji,
   };
   bool isReactionSelected = false;
   late List<Map<String, dynamic>> reactionIcon = [];
@@ -104,21 +100,21 @@ class _MessageBubbleState extends State<MessageBubble> {
         List.generate(widget.files!.length, (index) => AudioPlayer());
   }
 
-  final ReceivePort _port = ReceivePort();
+  // final ReceivePort _port = ReceivePort();
   initDownloader() async {
-    IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'downloader_send_port');
-    _port.listen((dynamic data) {
-      String id = data[0];
-      DownloadTaskStatus status = data[1];
-      int progress = data[2];
-      if (status == DownloadTaskStatus.complete) {
-        print("download complete");
-      }
-      setState(() {});
-    });
+    // IsolateNameServer.registerPortWithName(
+    //     _port.sendPort, 'downloader_send_port');
+    // _port.listen((dynamic data) {
+    //   String id = data[0];
+    //   DownloadTaskStatus status = data[1];
+    //   int progress = data[2];
+    //   if (status == DownloadTaskStatus.complete) {
+    //     print("download complete");
+    //   }
+    //   setState(() {});
+    // });
 
-    FlutterDownloader.registerCallback(downloadCallback);
+    // FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
@@ -139,7 +135,25 @@ class _MessageBubbleState extends State<MessageBubble> {
     super.initState();
     getUser();
     initAudioPlayers();
+    SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
+      String stoneId = response['stoneId'];
+      var members = response['members'] != null
+          ? (response['members'] as List<dynamic>).map((e) => e).toList()
+          : [];
 
+      if (userExisting?.id == response['receiveId'] ||
+          members.contains(userExisting?.id)) {
+        if (response["typeMsg"] == "recall" ||
+            response["typeMsg"] == "delete") {
+          if (stoneId != widget.stoneId) return;
+          if (mounted) {
+            setState(() {
+              reactionIcon.clear();
+            });
+          }
+        }
+      }
+    });
     for (var e in widget.emojis) {
       var emoji = emojiMap[e.emoji];
       if (emoji != null) {
@@ -151,19 +165,18 @@ class _MessageBubbleState extends State<MessageBubble> {
         }
       }
     }
-// response:{
-//     "emoji": "love",
-//     "stoneId": "c376010a-fcd0-4aea-9094-77d162b56632",
-//     "receiveId": "65dd4ae4cbeffa04dbbc5b16",
-//     "typeEmoji": "add",
-//     "type": "chat"
-// }
+
     SocketConfig.listen(SocketEvent.updatedEmojiThread, (response) {
       String emoji = response['emoji'];
       var index =
           reactionIcon.indexWhere((element) => element['emoji'] == emoji);
       String stoneId = response['stoneId'];
-      if (userExisting?.id == response['receiveId']) {
+      var members = response['members'] != null
+          ? (response['members'] as List<dynamic>).map((e) => e).toList()
+          : [];
+
+      if (userExisting?.id == response['receiveId'] ||
+          members.contains(userExisting?.id)) {
         if (stoneId != widget.stoneId) return;
         if (index != -1) {
           if (mounted) {
@@ -220,10 +233,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onReactionSelected: handleReaction,
                   onFunctionSelected: handleFunction,
                   isRecall: widget.isRecall ?? false,
-                  isFile: widget.files != null,
+                  isFile: widget.files!.isNotEmpty,
                   content: widget.content != "" ? widget.content : null,
                 ),
-                onPop: () => print('Popover was popped!'),
+                onPop: () {},
                 direction: PopoverDirection.bottom,
                 width: size.width * 0.8,
                 height: null,
@@ -293,10 +306,14 @@ class _MessageBubbleState extends State<MessageBubble> {
                                 return PlayerWidget(
                                   player: player,
                                 );
-                              } else if (fileType == 'mp4') {
-                                return VideoPlayerPage(
-                                    url: Uri.parse(widget.files![index].path!));
-                              } else if (fileDoc.contains(fileType)) {
+                              }
+
+                              //  else if (fileType == 'mp4') {
+                              //   return VideoPlayerPage(
+                              //       url: Uri.parse(widget.files![index].path!));
+                              // }
+
+                              else if (fileDoc.contains(fileType)) {
                                 return Row(
                                   children: [
                                     getIconForFileType(fileType),
@@ -403,11 +420,15 @@ class _MessageBubbleState extends State<MessageBubble> {
                                   return PlayerWidget(
                                     player: player,
                                   );
-                                } else if (fileType == 'mp4') {
-                                  return VideoPlayerPage(
-                                      url: Uri.parse(
-                                          widget.files![index].path!));
-                                } else if (fileDoc.contains(fileType)) {
+                                }
+
+                                //  else if (fileType == 'mp4') {
+                                //   return VideoPlayerPage(
+                                //       url: Uri.parse(
+                                //           widget.files![index].path!));
+                                // }
+
+                                else if (fileDoc.contains(fileType)) {
                                   return Row(
                                     children: [
                                       getIconForFileType(fileType),
@@ -496,11 +517,19 @@ class _MessageBubbleState extends State<MessageBubble> {
   var fileImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
   Image imageFile(String path, Size size) {
-    return Image.network(
-      path,
-      width: size.width * 0.5,
-      fit: BoxFit.cover,
-    );
+    if (path.contains("http")) {
+      return Image.network(
+        path,
+        width: size.width * 0.5,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return Image.file(
+        File(path),
+        width: size.width * 0.5,
+        fit: BoxFit.cover,
+      );
+    }
   }
 
   String parseTime(DateTime time) {
@@ -601,6 +630,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       "type": widget.type,
       "typeRecall": widget.typeRecall
     };
+    reactionIcon.clear();
     SocketConfig.emit(SocketMessage.recallSendThread, data);
   }
 
@@ -610,6 +640,8 @@ class _MessageBubbleState extends State<MessageBubble> {
       "receiveId": widget.receiveId,
       "type": widget.type
     };
+    reactionIcon.clear();
+
     SocketConfig.emit(SocketMessage.deleteThread, data);
   }
 
@@ -647,16 +679,15 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   Future<void> downloadFnc(String url) async {
-    final Directory? downloadsDir = await getDownloadsDirectory();
+    // final Directory? downloadsDir = await getDownloadsDirectory();
     var status = await Permission.camera.status;
     if (status.isGranted) {
-      print('Permission Granted and downloading');
-      await FlutterDownloader.enqueue(
-        url: url,
-        savedDir: downloadsDir!.path,
-        showNotification: true,
-        openFileFromNotification: true,
-      );
+      // await FlutterDownloader.enqueue(
+      //   url: url,
+      //   savedDir: downloadsDir!.path,
+      //   showNotification: true,
+      //   openFileFromNotification: true,
+      // );
     }
   }
 }
@@ -783,14 +814,15 @@ class _ListItemsState extends State<ListItems> {
                     onClick: () {
                       widget.onFunctionSelected(FunctionChat.delete);
                     }),
-              MenuItemChat(
-                  title: 'Tải về',
-                  icon: FontAwesomeIcons.download,
-                  color: Colors.green,
-                  func: FunctionChat.download,
-                  onClick: () {
-                    widget.onFunctionSelected(FunctionChat.download);
-                  })
+              if (widget.isFile == true)
+                MenuItemChat(
+                    title: 'Tải về',
+                    icon: FontAwesomeIcons.download,
+                    color: Colors.green,
+                    func: FunctionChat.download,
+                    onClick: () {
+                      widget.onFunctionSelected(FunctionChat.download);
+                    })
             ],
           ),
         ],
@@ -830,7 +862,7 @@ class MenuItemChat extends StatelessWidget {
             const Spacer(),
             Text(
               title,
-              style: TextStyle(fontSize: 9),
+              style: const TextStyle(fontSize: 9),
             ),
             const Spacer(),
           ],

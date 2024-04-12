@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/blocs/bloc_friend/friend_cubit.dart';
 import 'package:zalo_app/components/index.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/config/socket/socket.dart';

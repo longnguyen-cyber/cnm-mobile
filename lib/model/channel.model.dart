@@ -8,7 +8,7 @@ import 'package:zalo_app/model/user.model.dart';
 
 class Channel {
   final String? id;
-  final String name;
+  late String name;
   final bool isPublic;
   final List<User>? users;
   final String? userCreated;

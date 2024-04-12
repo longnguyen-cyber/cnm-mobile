@@ -2,8 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zalo_app/components/custom_button.dart';
-import 'package:zalo_app/components/customer_text_field.dart';
 import 'package:zalo_app/constants.dart';
 import 'package:zalo_app/services/api_service.dart';
 import 'package:zalo_app/utils/valid.dart';

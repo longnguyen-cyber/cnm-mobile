@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 class User {
-  final String? id;
+  late String? id;
   final String? name;
   late final String? password;
   final String? displayName;
@@ -12,6 +12,7 @@ class User {
   final String? avatar;
   final bool? isTwoFactorAuthenticationEnabled;
   final String? twoFactorAuthenticationSecret;
+  late String? role;
 
   User({
     this.id,
@@ -24,6 +25,7 @@ class User {
     this.avatar,
     this.isTwoFactorAuthenticationEnabled,
     this.twoFactorAuthenticationSecret,
+    this.role,
   });
 
   User copyWith({
@@ -88,6 +90,7 @@ class User {
           map['twoFactorAuthenticationSecret'] != null
               ? map['twoFactorAuthenticationSecret'] as String
               : null,
+      role: map['role'] != null ? map['role'] as String : null,
     );
   }
 
@@ -98,7 +101,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, password: $password, displayName: $displayName, status: $status, phone: $phone, email: $email, avatar: $avatar, isTwoFactorAuthenticationEnabled: $isTwoFactorAuthenticationEnabled, twoFactorAuthenticationSecret: $twoFactorAuthenticationSecret)';
+    return 'User(id: $id, name: $name, password: $password, displayName: $displayName, status: $status, phone: $phone, email: $email, avatar: $avatar, isTwoFactorAuthenticationEnabled: $isTwoFactorAuthenticationEnabled, twoFactorAuthenticationSecret: $twoFactorAuthenticationSecret, role: $role)';
   }
 
   @override

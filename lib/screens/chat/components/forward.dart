@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:zalo_app/config/socket/socket.dart';
-import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/chat.model.dart';
-import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/api_service.dart';
 
 class Forward extends StatefulWidget {

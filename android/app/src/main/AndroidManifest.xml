@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+>
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -56,16 +58,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-            <provider
-                android:name="vn.hunghd.flutterdownloader.DownloadedFileProvider"
-                android:authorities="${applicationId}.flutter_downloader.provider"
-                android:exported="false"
-                android:grantUriPermissions="true">
-                <meta-data
-                    android:name="android.support.FILE_PROVIDER_PATHS"
-                    android:resource="@xml/provider_paths"/>
-            </provider>
-            <!-- Begin FlutterDownloader customization -->
+        <provider
+            android:name="vn.hunghd.flutterdownloader.DownloadedFileProvider"
+            android:authorities="${applicationId}.flutter_downloader.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+        <!-- Begin FlutterDownloader customization -->
         <!-- disable default Initializer -->
         <provider
             android:name="androidx.startup.InitializationProvider"

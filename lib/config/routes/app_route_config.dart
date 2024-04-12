@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/forgot_pass_screen.dart';
@@ -9,11 +8,11 @@ import 'package:zalo_app/screens/auth/signup_screen.dart';
 import 'package:zalo_app/screens/auth/verify_noti_screen.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/chat/chat_screen.dart';
+import 'package:zalo_app/screens/chat/components/add_member.dart';
 import 'package:zalo_app/screens/chat/components/all_file.dart';
 import 'package:zalo_app/screens/chat/components/forward.dart';
 import 'package:zalo_app/screens/chat/components/full_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
-import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 import 'package:zalo_app/screens/friend/add_friend_screen.dart';
 import 'package:zalo_app/screens/friend/create_channel_screen.dart';
@@ -30,10 +29,7 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(
-          //     child: Forward(
-          //   content: "ddd",
-          // ));
+          // return MaterialPage(child: CreateChannelScreen());
           dynamic data = {
             "id": "6612a049fa5b1f2b1c54d959",
             "name": "nesdw",
@@ -41,24 +37,23 @@ class MyAppRouter {
             "receiverId": "65ae380b966692ca03c0bc3e",
           };
           dynamic dataChannel = {
-            "id": "65e480261644570261cadca4",
+            "id": "6617402ac1b75463d2c871dd",
             "name": "lam dep",
             "type": "channel",
             "members": [
-              "65a4aa4dc2f43ffc23ef4c16",
+              "65bb5c7a63ae7aafb9619706",
               "65a4abaac2f43ffc23ef4c18",
-              "65a4ac2ccd6716d6b33286c5",
               "65ae380b966692ca03c0bc3e",
               "65bceb94ceda5567efc0b629",
               "65dd4ae4cbeffa04dbbc5b16"
             ]
           };
-          return MaterialPage(
-              child:
-                  // LoginScreen());
-                  MainScreen(
-            index: 0,
-          ));
+          // return MaterialPage(
+          //     child:
+          //         // LoginScreen());
+          //         MainScreen(
+          //   index: 0,
+          // ));
           // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,
@@ -79,7 +74,7 @@ class MyAppRouter {
           // ));
           return MaterialPage(
               child: DetailChatScreen(
-            data: data,
+            data: dataChannel,
           ));
         },
       ),
@@ -227,6 +222,25 @@ class MyAppRouter {
             context: context,
             state: state,
             child: AllFileScreen(files: files),
+          );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.addMemberRouteName,
+        path: '/addMember',
+        pageBuilder: (context, state) {
+          // List<String> members = state.extra as List<String>;
+          dynamic params = state.extra as dynamic;
+          List<String> members = params["members"] as List<String>;
+          String channelId = params["channelId"] as String;
+
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: AddMember(
+              members: members,
+              channelId: channelId,
+            ),
           );
         },
       ),

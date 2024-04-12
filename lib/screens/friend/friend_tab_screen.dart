@@ -1,10 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zalo_app/blocs/bloc_friend/friend_cubit.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
@@ -23,8 +20,6 @@ class FriendTabScreen extends StatefulWidget {
 
 class _FriendTabScreenState extends State<FriendTabScreen>
     with TickerProviderStateMixin {
-  final Dio _dio = Dio();
-  var baseUrl = dotenv.env['API_URL'];
   // ignore: avoid_init_to_null
   late dynamic newEvent = null;
   late String userId = "";
@@ -45,16 +40,6 @@ class _FriendTabScreenState extends State<FriendTabScreen>
     }
     String urlWaitList = "chats/friend/waitlistFriendAccept";
     String urlWhiteList = "chats/friend/whitelistFriendAccept";
-    // final response = await _dio.get(
-    //   url,
-    //   options: Options(
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Accept': 'application/json',
-    //       'Authorization': 'Bearer $token',
-    //     },
-    //   ),
-    // );
 
     final responseWaitList = await api.get(urlWaitList, {});
     final responseWhiteList = await api.get(urlWhiteList, {});
@@ -71,8 +56,6 @@ class _FriendTabScreenState extends State<FriendTabScreen>
       });
     }
   }
-
-  void whitelistFriendAccept() {}
 
   @override
   void initState() {

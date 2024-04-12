@@ -8,13 +8,13 @@ class PopoverModal extends StatefulWidget {
 }
 
 class _PopoverModalState extends State<PopoverModal> {
-  bool _showPopover = false;
+  // bool _showPopover = false;
 
-  void _togglePopover() {
-    setState(() {
-      _showPopover = !_showPopover;
-    });
-  }
+  // void _togglePopover() {
+  //   setState(() {
+  //     _showPopover = !_showPopover;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {

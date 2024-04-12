@@ -1,14 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SocketConfig {
-  static late IO.Socket socket;
+  static late io.Socket socket;
 
   //connect to the socket server
   static void connect(String token) {
-    socket = IO.io(
+    socket = io.io(
         dotenv.env["BASE_URL"]!,
-        IO.OptionBuilder()
+        io.OptionBuilder()
             .setTransports(['websocket'])
             .enableAutoConnect()
             .setAuth({
@@ -16,7 +17,9 @@ class SocketConfig {
             }) // set the authorization header
             .build());
     socket.connect();
-    print('Connected to the socket server');
+    if (kDebugMode) {
+      print('Connected to the socket server');
+    }
   }
 
   //disconnect from the socket server

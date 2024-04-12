@@ -30,12 +30,12 @@ class MyAppRouter {
         path: '/',
         pageBuilder: (context, state) {
           // return MaterialPage(child: CreateChannelScreen());
-          dynamic data = {
-            "id": "6612a049fa5b1f2b1c54d959",
-            "name": "nesdw",
-            "type": "chat",
-            "receiverId": "65ae380b966692ca03c0bc3e",
-          };
+          // dynamic data = {
+          //   "id": "6612a049fa5b1f2b1c54d959",
+          //   "name": "nesdw",
+          //   "type": "chat",
+          //   "receiverId": "65ae380b966692ca03c0bc3e",
+          // };
           dynamic dataChannel = {
             "id": "6617402ac1b75463d2c871dd",
             "name": "lam dep",

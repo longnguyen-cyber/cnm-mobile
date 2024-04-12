@@ -265,7 +265,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
                   response["receiveId"] != userExisting!.id) {
-                print("thread.files!.isNotEmpty $thread");
                 //get latest thread and update file path
                 var index = threadsChannel.length - 1;
                 for (var i = 0; i < thread.files!.length; i++) {
@@ -282,7 +281,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
                   response["receiveId"] != userExisting!.id) {
-                print("thread.files!.isNotEmpty $thread");
                 //get latest thread and update file path
                 var index = threadsChat.length - 1;
                 for (var i = 0; i < thread.files!.length; i++) {
@@ -290,7 +288,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat[index].files![i].path = path;
                 }
               } else {
-                print("thread.files!.isEmpty ${thread}");
                 threadsChat.add(thread);
               }
             });
@@ -422,6 +419,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           SnackBar snackBar = const SnackBar(
             content: Text("Upload file thất bại"),
           );
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
           setState(() {
             threads.removeLast();
@@ -797,6 +795,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                                     title: 'Huỷ',
                                                     onPressed: () async {
                                                       await audioRecord.stop();
+                                                      // ignore: use_build_context_synchronously
                                                       Navigator.pop(context);
                                                     },
                                                   ),

@@ -118,7 +118,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
             size: 18,
           ),
 
-          waitList.length == 0
+          waitList.isEmpty
               ? const SizedBox()
               : Container(
                   color: Colors.black,

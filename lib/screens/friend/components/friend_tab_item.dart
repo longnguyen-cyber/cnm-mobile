@@ -31,6 +31,7 @@ class FriendTabItem extends StatelessWidget {
                 child: SvgPicture.asset(
                   iconUrl,
                   width: size.width * 0.08,
+                  // ignore: deprecated_member_use
                   color: Colors.white,
                 ),
               ),

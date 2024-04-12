@@ -31,7 +31,6 @@ class _GroupTabScreenState extends State<GroupTabScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getAll();
   }
@@ -51,6 +50,7 @@ class _GroupTabScreenState extends State<GroupTabScreen> {
             child: SvgPicture.asset(
               'assets/icons/group-106.svg',
               width: size.width * 0.1,
+              // ignore: deprecated_member_use
               color: Colors.white,
             ),
           ),

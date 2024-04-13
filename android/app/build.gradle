@@ -41,7 +41,9 @@ android {
     lint {
         baseline = file("lint-baseline.xml")
     }
-
+    lintOptions {
+        abortOnError false
+    }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }

@@ -47,6 +47,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   final List<dynamic> messages = [];
   String _replyUser = "";
   String _replyContent = "";
+  String _replyStoneId = "";
+  late Thread replyThread;
+
   bool _reply = false;
   List<Thread> threadsChannel = [];
   List<Thread> threadsChat = [];
@@ -259,15 +262,20 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             };
           }
 
+          if (response["replysTo"] != null) {
+            data["replysTo"] = response["replysTo"];
+            data["isReply"] = true;
+          }
+
           Thread thread = Thread.fromMap(data);
           if (members.contains(userExisting!.id)) {
             setState(() {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
                   response["receiveId"] != userExisting!.id) {
-                print("thread.files!.isNotEmpty $thread");
                 //get latest thread and update file path
                 var index = threadsChannel.length - 1;
+                threadsChannel[index].stoneId = thread.stoneId;
                 for (var i = 0; i < thread.files!.length; i++) {
                   var path = thread.files![i].path;
                   threadsChannel[index].files![i].path = path;
@@ -282,7 +290,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
                   response["receiveId"] != userExisting!.id) {
-                print("thread.files!.isNotEmpty $thread");
                 //get latest thread and update file path
                 var index = threadsChat.length - 1;
                 for (var i = 0; i < thread.files!.length; i++) {
@@ -290,7 +297,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   threadsChat[index].files![i].path = path;
                 }
               } else {
-                print("thread.files!.isEmpty ${thread}");
                 threadsChat.add(thread);
               }
             });
@@ -507,6 +513,10 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 itemBuilder: (BuildContext context, int index) {
                   Thread thread = threads[index];
                   List<Widget> children = [];
+                  if (_replyStoneId.isNotEmpty) {
+                    replyThread = threads.firstWhere(
+                        (element) => element.stoneId == _replyStoneId);
+                  }
 
                   if (thread.user == null) {
                     children.add(
@@ -540,13 +550,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           timeSent: (thread.createdAt!),
                           emojis: thread.emojis != null ? thread.emojis! : [],
                           files: thread.files!,
-                          isReply: thread.isReply,
                           isRecall: thread.isRecall,
-                          onFuctionReply: (sender, content) {
+                          isReply: thread.isReply,
+                          replyThread:
+                              thread.isReply == true ? thread.replysTo : null,
+                          onFuctionReply: (sender, content, stonedId) {
                             setState(() {
                               _reply = true;
                               _replyUser = sender;
                               _replyContent = content;
+                              _replyStoneId = stonedId;
                             });
                           },
                         ),
@@ -564,13 +577,17 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                               : "",
                           messageType: MessageType.text,
                           timeSent: thread.createdAt!,
-                          onFuctionReply: (sender, content) {
+                          onFuctionReply: (sender, content, stoneId) {
                             setState(() {
                               _reply = true;
                               _replyUser = sender;
                               _replyContent = content;
+                              _replyStoneId = stoneId;
                             });
                           },
+                          isReply: thread.isReply,
+                          replyThread:
+                              thread.isReply == true ? thread.replysTo : null,
                           exist: !nameExisted,
                           isRecall: thread.isRecall!,
                           emojis: thread.emojis!,
@@ -844,52 +861,42 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   void _sendMessage() async {
     late String receiveId;
     late dynamic members;
-    if (widget.data["type"] == "channel") {
+    String type = widget.data["type"];
+    String id = widget.data["id"];
+    bool isChannel = type == "channel";
+    if (isChannel) {
       members = widget.data["members"].map((e) => e).toList();
     } else {
       receiveId = widget.data["receiverId"];
     }
 
-    if (messageController.text.isNotEmpty) {
-      if (widget.data["type"] == "channel") {
-        SocketConfig.emit(SocketMessage.sendThread, {
-          "messages": {
-            "message": messageController.text,
-          },
-          "channelId": widget.data["id"],
+    if (messageController.text.isNotEmpty || fileData.length > 0) {
+      var data = {
+        if (messageController.text.isNotEmpty)
+          "messages": {"message": messageController.text},
+        if (fileData.length > 0) "fileCreateDto": fileData,
+        if (_replyStoneId.isNotEmpty) "replyId": _replyStoneId,
+        if (_replyStoneId.isNotEmpty) "replysTo": replyThread.toMap(),
+        if (isChannel) ...{
+          "channelId": id,
           "members": members,
-        });
-      } else {
-        SocketConfig.emit(SocketMessage.sendThread, {
-          "messages": {
-            "message": messageController.text,
-          },
-          "chatId": widget.data["id"],
+        } else ...{
+          "chatId": id,
           "receiveId": receiveId,
-        });
-      }
+        }
+      };
       setState(() {
-        isTextNotEmpty = false;
+        _reply = false;
       });
-      messageController.clear();
-    } else if (fileData.length > 0) {
-      if (widget.data["type"] == "channel") {
-        SocketConfig.emit(SocketMessage.sendThread, {
-          "channelId": widget.data["id"],
-          "members": members,
-          "fileCreateDto": fileData
+
+      SocketConfig.emit(SocketMessage.sendThread, data);
+
+      if (messageController.text.isNotEmpty) {
+        setState(() {
+          isTextNotEmpty = false;
         });
-      } else {
-        SocketConfig.emit(SocketMessage.sendThread, {
-          "chatId": widget.data["id"],
-          "receiveId": receiveId,
-          "fileCreateDto": fileData
-        });
+        messageController.clear();
       }
     }
   }
 }
-
-//
-
-

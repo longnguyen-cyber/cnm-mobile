@@ -17,6 +17,7 @@ import 'package:zalo_app/config/socket/socket_event.dart';
 import 'package:zalo_app/config/socket/socket_message.dart';
 import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/file.model.dart';
+import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 // import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
@@ -38,8 +39,7 @@ class MessageBubble extends StatefulWidget {
       required this.emojis,
       this.isRecall,
       this.isReply,
-      this.replyContent,
-      this.replyUser,
+      this.replyThread,
       required this.onFuctionReply,
       this.receiveId,
       this.typeRecall});
@@ -54,10 +54,9 @@ class MessageBubble extends StatefulWidget {
   final List<EmojiModel> emojis;
   final bool? isRecall;
   final bool? isReply;
-  final String? replyContent;
-  final String? replyUser;
+  final Thread? replyThread;
   final String? typeRecall;
-  final Function(String, String) onFuctionReply; // người rep và content
+  final Function(String, String, String) onFuctionReply; // người rep và content
 
   @override
   _MessageBubbleState createState() => _MessageBubbleState();
@@ -336,7 +335,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                     )
                   else
                     widget.content != ""
-                        ? (widget.isReply == null || widget.isReply == false)
+                        ? (widget.isReply == false)
                             ? Text(
                                 widget.content ?? '',
                                 style: Theme.of(context)
@@ -349,7 +348,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                             : Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  Wrap(
                                     children: [
                                       Container(
                                         width:
@@ -367,13 +366,15 @@ class _MessageBubbleState extends State<MessageBubble> {
                                         text: TextSpan(
                                           children: <TextSpan>[
                                             TextSpan(
-                                              text: '  ${widget.replyUser}\n',
+                                              text:
+                                                  '  ${widget.replyThread!.user!.name}\n',
                                               style: const TextStyle(
                                                   color: Colors.black,
                                                   fontSize: 12),
                                             ),
                                             TextSpan(
-                                              text: '${widget.replyContent}\n',
+                                              text:
+                                                  '${widget.replyThread!.messages!.message}\n',
                                               style: const TextStyle(
                                                   color: Colors.grey,
                                                   fontSize: 10),
@@ -663,7 +664,8 @@ class _MessageBubbleState extends State<MessageBubble> {
       case FunctionChat.reply:
         String? sender = widget.user.name;
         String? content = widget.content;
-        widget.onFuctionReply(sender!, content!);
+        widget.onFuctionReply(sender!, content!, widget.stoneId);
+        Navigator.pop(context);
         break;
       case FunctionChat.share:
         // share fuc

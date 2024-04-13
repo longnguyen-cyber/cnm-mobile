@@ -14,7 +14,7 @@ class Thread {
   bool? isRecall;
   final String? receiveId;
   final String? senderId;
-  final String? stoneId;
+  late String? stoneId;
   final String? chatId;
   final String? channelId;
   final String? threadId;
@@ -22,7 +22,7 @@ class Thread {
   final List<EmojiModel>? emojis;
   late List<FileModel>? files;
   final User? user;
-  final List<Thread>? replys;
+  final Thread? replysTo;
   Thread({
     this.id,
     required this.createdAt,
@@ -39,7 +39,7 @@ class Thread {
     this.emojis,
     this.files,
     this.user,
-    this.replys,
+    this.replysTo,
   });
 
   Thread copyWith({
@@ -77,7 +77,7 @@ class Thread {
       emojis: emojis ?? this.emojis,
       files: files ?? this.files,
       user: user ?? this.user,
-      replys: replys ?? this.replys,
+      replysTo: replysTo ?? replysTo,
     );
   }
 
@@ -98,7 +98,6 @@ class Thread {
       'emojis': emojis?.map((x) => x.toMap()).toList(),
       'files': files?.map((x) => x.toMap()).toList(),
       'user': user?.toMap(),
-      'replys': replys?.map((x) => x.toMap()).toList(),
     };
   }
 
@@ -135,11 +134,9 @@ class Thread {
       user: map['user'] != null
           ? User.fromMap(map['user'] as Map<String, dynamic>)
           : null,
-      replys: map['replys'] != null
-          ? (map['replys'] as List<dynamic>)
-              .map<Thread>((e) => Thread.fromMap(e as Map<String, dynamic>))
-              .toList()
-          : [],
+      replysTo: map['replysTo'] != null
+          ? Thread.fromMap(map['replysTo'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -150,7 +147,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, emojis: $emojis, files: $files, user: $user, replys: $replys)';
+    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, emojis: $emojis, files: $files, user: $user, replysTo: $replysTo)';
   }
 
   @override
@@ -169,10 +166,10 @@ class Thread {
         other.channelId == channelId &&
         other.threadId == threadId &&
         other.messages == messages &&
+        other.replysTo == replysTo &&
         listEquals(other.emojis, emojis) &&
         listEquals(other.files, files) &&
-        other.user == user &&
-        listEquals(other.replys, replys);
+        other.user == user;
   }
 
   @override
@@ -192,6 +189,6 @@ class Thread {
         emojis.hashCode ^
         files.hashCode ^
         user.hashCode ^
-        replys.hashCode;
+        replysTo.hashCode;
   }
 }

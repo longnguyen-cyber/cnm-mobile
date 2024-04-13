@@ -37,7 +37,7 @@ class MyAppRouter {
             "receiverId": "65ae380b966692ca03c0bc3e",
           };
           dynamic dataChannel = {
-            "id": "6617402ac1b75463d2c871dd",
+            "id": "66174080c1b75463d2c871de",
             "name": "lam dep",
             "type": "channel",
             "members": [

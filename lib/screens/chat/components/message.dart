@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/file.model.dart';
+import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/chat/components/avatar.dart';
 import 'package:zalo_app/screens/chat/components/message_bubble.dart';
@@ -21,6 +22,8 @@ class Message extends StatefulWidget {
     required this.emojis,
     this.files,
     required this.receiveId,
+    this.isReply,
+    this.replyThread,
   });
   final List<EmojiModel> emojis;
   final String receiveId;
@@ -32,9 +35,11 @@ class Message extends StatefulWidget {
   final String content;
   final MessageType messageType;
   final DateTime timeSent;
+  final bool? isReply;
+  final Thread? replyThread;
   final List<FileModel>? files;
 
-  final Function(String, String) onFuctionReply;
+  final Function(String, String, String) onFuctionReply;
 
   @override
   State<Message> createState() => _MessageState();
@@ -70,6 +75,8 @@ class _MessageState extends State<Message> {
               isRecall: widget.isRecall,
               receiveId: widget.receiveId,
               files: widget.files,
+              isReply: widget.isReply,
+              replyThread: widget.replyThread,
             ),
           ],
         ),

@@ -115,7 +115,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                       ? formatDuration(_duration!)
                       : '',
               softWrap: true,
-              style: const TextStyle(fontSize: 13.0),
+              style: const TextStyle(fontSize: 10.0),
             ),
           ],
         ),

@@ -6,8 +6,10 @@ import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:popover/popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +21,7 @@ import 'package:zalo_app/model/emoji.model.dart';
 import 'package:zalo_app/model/file.model.dart';
 import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
-// import 'package:zalo_app/screens/chat/components/video_player_page.dart';
+import 'package:zalo_app/screens/chat/components/video_player_page.dart';
 import 'package:zalo_app/screens/chat/components/voice.dart';
 import 'package:zalo_app/screens/chat/enums/function_chat.dart';
 import 'package:zalo_app/screens/chat/enums/reaction.dart';
@@ -27,22 +29,24 @@ import 'package:zalo_app/screens/chat/enums/reaction.dart';
 import 'constants/constants.dart';
 
 class MessageBubble extends StatefulWidget {
-  const MessageBubble(
-      {super.key,
-      required this.stoneId,
-      required this.user,
-      required this.type,
-      this.content,
-      required this.timeSent,
-      this.files,
-      this.videoUrl,
-      required this.emojis,
-      this.isRecall,
-      this.isReply,
-      this.replyThread,
-      required this.onFuctionReply,
-      this.receiveId,
-      this.typeRecall});
+  const MessageBubble({
+    super.key,
+    required this.stoneId,
+    required this.user,
+    required this.type,
+    this.content,
+    required this.timeSent,
+    this.files,
+    this.videoUrl,
+    required this.emojis,
+    this.isRecall,
+    this.isReply,
+    this.replyThread,
+    required this.onFuctionReply,
+    this.receiveId,
+    this.typeRecall,
+    this.id,
+  });
   final String? receiveId;
   final String stoneId;
   final User user;
@@ -56,6 +60,7 @@ class MessageBubble extends StatefulWidget {
   final bool? isReply;
   final Thread? replyThread;
   final String? typeRecall;
+  final String? id;
   final Function(String, String, String) onFuctionReply; // người rep và content
 
   @override
@@ -99,21 +104,21 @@ class _MessageBubbleState extends State<MessageBubble> {
         List.generate(widget.files!.length, (index) => AudioPlayer());
   }
 
-  // final ReceivePort _port = ReceivePort();
+  final ReceivePort _port = ReceivePort();
   initDownloader() async {
-    // IsolateNameServer.registerPortWithName(
-    //     _port.sendPort, 'downloader_send_port');
-    // _port.listen((dynamic data) {
-    //   String id = data[0];
-    //   DownloadTaskStatus status = data[1];
-    //   int progress = data[2];
-    //   if (status == DownloadTaskStatus.complete) {
-    //     print("download complete");
-    //   }
-    //   setState(() {});
-    // });
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
+    _port.listen((dynamic data) {
+      String id = data[0];
+      DownloadTaskStatus status = data[1];
+      int progress = data[2];
+      if (status == DownloadTaskStatus.complete) {
+        print("download complete");
+      }
+      setState(() {});
+    });
 
-    // FlutterDownloader.registerCallback(downloadCallback);
+    FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
@@ -305,14 +310,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                                 return PlayerWidget(
                                   player: player,
                                 );
-                              }
-
-                              //  else if (fileType == 'mp4') {
-                              //   return VideoPlayerPage(
-                              //       url: Uri.parse(widget.files![index].path!));
-                              // }
-
-                              else if (fileDoc.contains(fileType)) {
+                              } else if (fileType == 'mp4') {
+                                return VideoPlayerPage(
+                                    url: Uri.parse(widget.files![index].path!));
+                              } else if (fileDoc.contains(fileType)) {
                                 return Row(
                                   children: [
                                     getIconForFileType(fileType),
@@ -421,15 +422,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                                   return PlayerWidget(
                                     player: player,
                                   );
-                                }
-
-                                //  else if (fileType == 'mp4') {
-                                //   return VideoPlayerPage(
-                                //       url: Uri.parse(
-                                //           widget.files![index].path!));
-                                // }
-
-                                else if (fileDoc.contains(fileType)) {
+                                } else if (fileType == 'mp4') {
+                                  return VideoPlayerPage(
+                                      url: Uri.parse(
+                                          widget.files![index].path!));
+                                } else if (fileDoc.contains(fileType)) {
                                   return Row(
                                     children: [
                                       getIconForFileType(fileType),
@@ -629,8 +626,11 @@ class _MessageBubbleState extends State<MessageBubble> {
       "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
       "type": widget.type,
+      if (widget.type == "chat") "chatId": widget.id,
+      if (widget.type == "channel") "channelId": widget.id,
       "typeRecall": widget.typeRecall
     };
+    print(data);
     reactionIcon.clear();
     SocketConfig.emit(SocketMessage.recallSendThread, data);
   }
@@ -639,8 +639,11 @@ class _MessageBubbleState extends State<MessageBubble> {
     var data = {
       "stoneId": widget.stoneId,
       "receiveId": widget.receiveId,
-      "type": widget.type
+      "type": widget.type,
+      if (widget.type == "chat") "chatId": widget.id,
+      if (widget.type == "channel") "channelId": widget.id,
     };
+    print(data);
     reactionIcon.clear();
 
     SocketConfig.emit(SocketMessage.deleteThread, data);
@@ -675,21 +678,22 @@ class _MessageBubbleState extends State<MessageBubble> {
           downloadFnc(element.path!);
         });
 
+        Navigator.pop(context);
         break;
       default:
     }
   }
 
   Future<void> downloadFnc(String url) async {
-    // final Directory? downloadsDir = await getDownloadsDirectory();
+    final Directory? downloadsDir = await getDownloadsDirectory();
     var status = await Permission.camera.status;
     if (status.isGranted) {
-      // await FlutterDownloader.enqueue(
-      //   url: url,
-      //   savedDir: downloadsDir!.path,
-      //   showNotification: true,
-      //   openFileFromNotification: true,
-      // );
+      await FlutterDownloader.enqueue(
+        url: url,
+        savedDir: downloadsDir!.path,
+        showNotification: true,
+        openFileFromNotification: true,
+      );
     }
   }
 }

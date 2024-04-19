@@ -48,12 +48,14 @@ class MyAppRouter {
               "65dd4ae4cbeffa04dbbc5b16"
             ]
           };
-          // return MaterialPage(
-          //     child:
-          //         // LoginScreen());
-          //         MainScreen(
-          //   index: 0,
-          // ));
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: MainScreen(
+              index: 0,
+            ),
+          );
+
           // return MaterialPage(
           //     child: DetailChatScreen(
           //   data: data,

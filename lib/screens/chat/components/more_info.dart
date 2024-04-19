@@ -28,6 +28,7 @@ class _MoreInfoState extends State<MoreInfo> {
   List<FileModel> files = [];
   List<FileModel> filesUI = [];
   late bool isAdmin = false;
+  late bool isCoadmin = false;
   List<User> users = [];
   List<User> members = [];
   late bool isEdit = false;
@@ -54,6 +55,10 @@ class _MoreInfoState extends State<MoreInfo> {
       if (admin.role! == "ADMIN") {
         setState(() {
           isAdmin = true;
+        });
+      } else if (admin.role! == "CO-ADMIN") {
+        setState(() {
+          isCoadmin = true;
         });
       }
       for (var user in channel!.users!) {
@@ -109,12 +114,6 @@ class _MoreInfoState extends State<MoreInfo> {
       }
     }
   }
-//   {
-//     "channelUpdate":{
-//         "name":"update socket channel 300"
-//     },
-//     "channelId":"65ea7894304905092a6d02f6"
-// }
 
   void updateChannel(String channelId, String name) {
     var data = {
@@ -353,7 +352,7 @@ class _MoreInfoState extends State<MoreInfo> {
                               ListTile(
                                 onLongPress: () {
                                   if (user.role == "ADMIN") return;
-                                  if (isAdmin) {
+                                  if (isAdmin || isCoadmin) {
                                     showModalBottomSheet<void>(
                                       context: context,
                                       shape: RoundedRectangleBorder(
@@ -362,7 +361,7 @@ class _MoreInfoState extends State<MoreInfo> {
                                       ),
                                       builder: (BuildContext context) {
                                         return SizedBox(
-                                          height: 160,
+                                          height: 170,
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 10),
@@ -404,35 +403,39 @@ class _MoreInfoState extends State<MoreInfo> {
                                                   ],
                                                 ),
                                                 const SizedBox(height: 10),
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 3.0),
-                                                  child: InkWell(
-                                                    hoverColor:
-                                                        Colors.transparent,
-                                                    onTap: () {
-                                                      if (user.role
-                                                              .toString() ==
-                                                          "CO-ADMIN") {
-                                                        updateRoleUserInChannel(
-                                                            channel!.id!,
-                                                            user.id!,
-                                                            "MEMBER");
-                                                      } else {
-                                                        updateRoleUserInChannel(
-                                                            channel!.id!,
-                                                            user.id!,
-                                                            "CO-ADMIN");
-                                                      }
-                                                    },
-                                                    child: Text(
-                                                      user.role.toString() ==
-                                                              "CO-ADMIN"
-                                                          ? "Xoá vai trò phó nhóm"
-                                                          : "Bổ nhiệm làm phó nhóm",
-                                                    ),
-                                                  ),
-                                                ),
+                                                isAdmin
+                                                    ? Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                vertical: 3.0),
+                                                        child: InkWell(
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          onTap: () {
+                                                            if (user.role
+                                                                    .toString() ==
+                                                                "CO-ADMIN") {
+                                                              updateRoleUserInChannel(
+                                                                  channel!.id!,
+                                                                  user.id!,
+                                                                  "MEMBER");
+                                                            } else {
+                                                              updateRoleUserInChannel(
+                                                                  channel!.id!,
+                                                                  user.id!,
+                                                                  "CO-ADMIN");
+                                                            }
+                                                          },
+                                                          child: Text(
+                                                            user.role.toString() ==
+                                                                    "CO-ADMIN"
+                                                                ? "Xoá vai trò phó nhóm"
+                                                                : "Bổ nhiệm làm phó nhóm",
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : Container(),
                                                 Padding(
                                                   padding: const EdgeInsets
                                                       .symmetric(vertical: 2.0),
@@ -548,7 +551,7 @@ class _MoreInfoState extends State<MoreInfo> {
                                 children: <Widget>[
                                   const Text('Chọn trưởng nhóm trước khi rời'),
                                   SizedBox(
-                                    height: 270,
+                                    height: 150,
                                     child: SingleChildScrollView(
                                       child: Column(
                                         crossAxisAlignment:
@@ -673,8 +676,6 @@ class _MoreInfoState extends State<MoreInfo> {
                         );
                       } else {
                         leaveChannel(channel!.id!);
-                        GoRouter.of(context)
-                            .pushNamed(MyAppRouteConstants.mainRouteName);
                       }
                     },
                     child: const Row(
@@ -753,7 +754,7 @@ class _MoreInfoState extends State<MoreInfo> {
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
             //delay 2s
             Future.delayed(const Duration(seconds: 2), () {
-              GoRouter.of(context).go(MyAppRouteConstants.mainRouteName);
+              GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
               // Navigator.pop(context);
             });
           }
@@ -798,7 +799,7 @@ class _MoreInfoState extends State<MoreInfo> {
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
             //delay 2s
             Future.delayed(const Duration(seconds: 2), () {
-              // GoRouter.of(context).go(MyAppRouteConstants.mainRouteName);
+              GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
               // Navigator.pop(context);
             });
           }
@@ -820,7 +821,7 @@ class _MoreInfoState extends State<MoreInfo> {
     var data = {"channelId": channelId, "userId": userId};
 
     setState(() {
-      channel!.users!.removeWhere((user) => user.id == userId);
+      members.removeWhere((user) => user.id == userId);
     });
 
     SocketConfig.emit(SocketMessage.removeUserFromChannel, data);

@@ -124,6 +124,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     getUser();
     getData();
     setPath();
+    name = widget.data["name"];
 
     SocketConfig.listen(SocketEvent.channelWS, (response) {
       String? userId = userExisting!.id;
@@ -154,6 +155,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                       .pushNamed(MyAppRouteConstants.mainRouteName);
                 } else if (type == "removeUserFromChannel") {
                   // all[index] = channel;
+                  members =
+                      (channel["users"] as List).map((e) => e["id "]).toList();
                   var removeMember = data["removeMember"];
                   if (removeMember == (userId)) {
                     GoRouter.of(context)
@@ -164,6 +167,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 } else if (type == "leaveChannel") {
                   // all[index] = channel;
                   String userLeave = data["userLeave"];
+                  members =
+                      (channel["users"] as List).map((e) => e["id "]).toList();
 
                   if (userLeave == userId) {
                     GoRouter.of(context)
@@ -269,12 +274,14 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
           Thread thread = Thread.fromMap(data);
           if (members.contains(userExisting!.id)) {
+            var index = threadsChannel.length - 1;
+
             setState(() {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
-                  response["receiveId"] != userExisting!.id) {
+                  response["receiveId"] != userExisting!.id &&
+                  threadsChannel[index].stoneId != thread.stoneId) {
                 //get latest thread and update file path
-                var index = threadsChannel.length - 1;
                 threadsChannel[index].stoneId = thread.stoneId;
                 for (var i = 0; i < thread.files!.length; i++) {
                   var path = thread.files![i].path;
@@ -310,7 +317,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
 
-    name = widget.data["name"];
     final String type = widget.data["type"];
     if (widget.data["type"] == "channel") {
       members = widget.data["members"];
@@ -552,6 +558,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           files: thread.files!,
                           isRecall: thread.isRecall,
                           isReply: thread.isReply,
+                          id: widget.data["id"],
                           replyThread:
                               thread.isReply == true ? thread.replysTo : null,
                           onFuctionReply: (sender, content, stonedId) {
@@ -865,7 +872,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     String id = widget.data["id"];
     bool isChannel = type == "channel";
     if (isChannel) {
-      members = widget.data["members"].map((e) => e).toList();
+      members = widget.data["members"].map((e) => e["id"]).toList();
     } else {
       receiveId = widget.data["receiverId"];
     }

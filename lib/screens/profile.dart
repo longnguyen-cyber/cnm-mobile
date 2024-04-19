@@ -130,7 +130,7 @@ class _ProfileState extends State<Profile> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Thông tin'),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(

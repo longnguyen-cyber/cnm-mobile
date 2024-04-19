@@ -69,20 +69,29 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
     });
     SocketConfig.listen(SocketEvent.channelWS, (response) {
       var status = response['status'];
+      var data = response['data'];
+
       if (status == 201) {
-        setState(() {
-          adding = false;
-        });
-        SnackBar snackBar = const SnackBar(
-          content: Text("Tạo nhóm thành công"),
-          duration: Duration(seconds: 2),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        //delay 2s
-        Future.delayed(const Duration(seconds: 2), () {
-          GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
-          // Navigator.pop(context);
-        });
+        var userIds = (data["users"] as List)
+            .map((e) => User.fromMap(e))
+            .toList()
+            .map((e) => e.id)
+            .toList();
+        if (userIds.contains(userId)) {
+          setState(() {
+            adding = false;
+          });
+          SnackBar snackBar = const SnackBar(
+            content: Text("Tạo nhóm thành công"),
+            duration: Duration(seconds: 2),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          //delay 2s
+          Future.delayed(const Duration(seconds: 2), () {
+            GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
+            // Navigator.pop(context);
+          });
+        }
       }
     });
     SocketConfig.emit(SocketMessage.createChannel, obj);
@@ -97,7 +106,7 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nhóm mới"),
+        title: const Text("Tạo nhóm mới"),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -200,171 +209,76 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
               ],
             ),
           ),
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Gần đây'),
-                Tab(text: 'Bạn bè'),
-              ],
-              labelColor: Colors.black,
-              unselectedLabelStyle: const TextStyle(
-                color: Colors.grey,
-              ),
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-              indicatorColor: Colors.blue,
-            ),
-          ),
           Expanded(
-            child: Stack(children: [
-              TabBarView(
-                dragStartBehavior: DragStartBehavior.start,
-                controller: _tabController,
+            child: SingleChildScrollView(
+              child: Column(
                 children: [
-                  SingleChildScrollView(
-                    child: Column(children: [
-                      for (int i = 0; i < all.length; i++)
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              // ignore: collection_methods_unrelated_type
-                              if (selectedUsersFinal
-                                  .map((e) => e.id)
-                                  .contains(all[i].user!.id)) {
-                                selectedUsersFinal.remove(all[i].user);
-                              } else {
-                                selectedUsersFinal.add(all[i].user!);
-                              }
-                            });
-                          },
-                          child: Container(
-                            width: size.width,
-                            padding: EdgeInsets.all(size.width * 0.02),
-                            child: Row(
-                              children: [
-                                Container(
-                                    margin: const EdgeInsets.only(left: 20),
-                                    child: CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage: NetworkImage(
-                                            all[i].user!.avatar!))),
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Text(
-                                        all[i].user!.name!,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      all[i].timeThread != null
-                                          ? Text(
-                                              formatTime(all[i].timeThread!),
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey),
-                                            )
-                                          : const SizedBox(),
-                                    ],
-                                  ),
-                                ),
-                                Radio<String>(
-                                  value: all[i].user!.id!,
-                                  groupValue: selectedUsersFinal
-                                          .map((e) => e.id)
-                                          .contains(all[i].user!.id!)
-                                      ? all[i].user!.id!
-                                      : null,
-                                  onChanged: (String? value) {},
-                                )
-                              ],
+                  for (int i = 0; i < all.length; i++)
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          // ignore: collection_methods_unrelated_type
+                          if (selectedUsersFinal
+                              .map((e) => e.id)
+                              .contains(all[i].user!.id)) {
+                            selectedUsersFinal.remove(all[i].user);
+                          } else {
+                            selectedUsersFinal.add(all[i].user!);
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: size.width,
+                        padding: EdgeInsets.all(size.width * 0.02),
+                        child: Row(
+                          children: [
+                            Container(
+                                margin: const EdgeInsets.only(left: 20),
+                                child: CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage:
+                                        NetworkImage(all[i].user!.avatar!))),
+                            const SizedBox(
+                              width: 20,
                             ),
-                          ),
-                        )
-                    ]),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        for (int i = 0; i < all.length; i++)
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                // ignore: collection_methods_unrelated_type
-                                if (selectedUsersFinal
-                                    .map((e) => e.id)
-                                    .contains(all[i].user!.id)) {
-                                  selectedUsersFinal.remove(all[i].user);
-                                } else {
-                                  selectedUsersFinal.add(all[i].user!);
-                                }
-                              });
-                            },
-                            child: Container(
-                              width: size.width,
-                              padding: EdgeInsets.all(size.width * 0.02),
-                              child: Row(
-                                children: [
-                                  Container(
-                                      margin: const EdgeInsets.only(left: 20),
-                                      child: CircleAvatar(
-                                          radius: 30,
-                                          backgroundImage: NetworkImage(
-                                              all[i].user!.avatar!))),
-                                  const SizedBox(
-                                    width: 20,
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Text(
+                                    all[i].user!.name!,
+                                    style: const TextStyle(fontSize: 16),
                                   ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: <Widget>[
-                                        Text(
-                                          all[i].user!.name!,
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                        // all[i].timeThread != null
-                                        //     ? Text(
-                                        //         formatTime(
-                                        //             all[i].timeThread!),
-                                        //         style: const TextStyle(
-                                        //             fontSize: 12,
-                                        //             color: Colors.grey),
-                                        //       )
-                                        //     : const SizedBox(),
-                                      ],
-                                    ),
-                                  ),
-                                  Radio<String>(
-                                    value: all[i].user!.id!,
-                                    groupValue: selectedUsersFinal
-                                            .map((e) => e.id)
-                                            .contains(all[i].user!.id!)
-                                        ? all[i].user!.id!
-                                        : null,
-                                    onChanged: (String? value) {},
-                                  )
+                                  // all[i].timeThread != null
+                                  //     ? Text(
+                                  //         formatTime(
+                                  //             all[i].timeThread!),
+                                  //         style: const TextStyle(
+                                  //             fontSize: 12,
+                                  //             color: Colors.grey),
+                                  //       )
+                                  //     : const SizedBox(),
                                 ],
                               ),
                             ),
-                          )
-                      ],
-                    ),
-                  ),
+                            Radio<String>(
+                              value: all[i].user!.id!,
+                              groupValue: selectedUsersFinal
+                                      .map((e) => e.id)
+                                      .contains(all[i].user!.id!)
+                                  ? all[i].user!.id!
+                                  : null,
+                              onChanged: (String? value) {},
+                            )
+                          ],
+                        ),
+                      ),
+                    )
                 ],
               ),
-            ]),
+            ),
           ),
         ],
       ),

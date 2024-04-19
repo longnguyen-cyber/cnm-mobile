@@ -43,7 +43,9 @@ class _ChatItemState extends State<ChatItem> {
             const SizedBox(
               width: 10,
             ),
-            map["user"] != null && map["user"]["avatar"] != null
+            map["user"] != null &&
+                    map["user"]["avatar"] != null &&
+                    map["type"] != "channel"
                 ? SizedBox(
                     height: 80,
                     width: 80,
@@ -99,9 +101,7 @@ class _ChatItemState extends State<ChatItem> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Text(
-                    map["user"] != null ? map["user"]["name"] : map["name"],
-                  ),
+                  Text(map["user"] == null ? map["name"] : map["user"]["name"]),
                   SizedBox(
                     height: size.height * 0.01,
                   ),

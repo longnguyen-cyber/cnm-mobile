@@ -38,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getAll() async {
     final response = await api.get("all", {});
+    print(response);
 
     if (mounted) {
       setState(() {
@@ -85,12 +86,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 int index =
                     all.indexWhere((element) => element["id"] == channel["id"]);
                 // all[index] = channel;
-                var removeMember = data["removeMember"];
-                if (removeMember == (userId)) {
-                  all.removeWhere((c) => c["id"] == channel["id"]);
-                } else {
-                  all[index] = channel;
-                }
+
+                all[index] = channel;
               } else if (type == "updateRoleUserInChannel") {
                 int index =
                     all.indexWhere((element) => element["id"] == channel["id"]);
@@ -108,6 +105,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       .indexWhere((element) => element["id"] == channel["id"]);
                   all[index] = channel;
                 }
+              }
+            } else if (type == "removeUserFromChannel") {
+              // all[index] = channel;
+              var removeMember = data["removeMember"];
+              if (removeMember == (userId)) {
+                all.removeWhere((c) => c["id"] == channel["id"]);
               }
             }
 
@@ -193,8 +196,12 @@ class _ChatScreenState extends State<ChatScreen> {
             } else if (members.contains(userId)) {
               var index =
                   all.indexWhere((element) => element["id"] == data["id"]);
+              var item = all[index];
               setState(() {
                 all[index] = data;
+                all[index]["users"] = item["users"];
+                all[index]["user"] = null;
+                all[index]["name"] = item["name"];
                 all.sort((a, b) {
                   return DateTime.parse(b["timeThread"])
                       .compareTo(DateTime.parse(a["timeThread"]));
@@ -209,6 +216,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    for (int i = 0; i < all.length; i++) {
+      print(all[i]);
+    }
     return ListView(
       children: [for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])],
     );

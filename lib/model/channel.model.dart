@@ -15,6 +15,7 @@ class Channel {
   final List<Thread>? threads;
   final DateTime? timeThread;
   final Thread? lastedThread;
+  late bool? disableThread;
   Channel({
     this.id,
     required this.name,
@@ -24,6 +25,7 @@ class Channel {
     this.threads,
     this.timeThread,
     this.lastedThread,
+    this.disableThread,
   });
 
   Channel copyWith({
@@ -57,6 +59,7 @@ class Channel {
       'userCreated': userCreated,
       'timeThread': timeThread?.millisecondsSinceEpoch,
       "lastedThread": lastedThread?.toMap(),
+      "disableThread": disableThread,
     };
   }
 
@@ -87,6 +90,8 @@ class Channel {
       lastedThread: map['lastedThread'] == null
           ? null
           : Thread.fromMap(map['lastedThread'] as Map<String, dynamic>),
+      disableThread:
+          map['disableThread'] != null ? map['disableThread'] as bool : false,
     );
   }
 
@@ -97,7 +102,7 @@ class Channel {
 
   @override
   String toString() {
-    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread, lastedThread: $lastedThread)';
+    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread, lastedThread: $lastedThread, disableThread: $disableThread)';
   }
 
   @override

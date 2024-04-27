@@ -182,7 +182,7 @@ class _ProfileState extends State<Profile> {
             height: 40,
           ),
           Text(
-            "${userDefine.name!}${userDefine.displayName != null ? "(${userDefine.displayName})" : ""}",
+            userDefine.name!,
             style: const TextStyle(
               fontSize: 20,
             ),

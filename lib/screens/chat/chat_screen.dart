@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/model/thread.model.dart';
 import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/api_service.dart';
 
@@ -21,6 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late dynamic newEvent = null;
   late String userId = "";
   final api = API();
+  late dynamic cloud = null;
 
   List<dynamic> all = [];
   void getUser() async {
@@ -38,11 +40,37 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getAll() async {
     final response = await api.get("all", {});
-    print(response);
 
     if (mounted) {
       setState(() {
         all = response;
+      });
+    }
+  }
+
+  Future<void> getCloud() async {
+    final response = await api.get("users/my-cloud", {});
+    var lastedThread;
+    List<Thread> threads = [];
+    if (mounted) {
+      setState(() {
+        threads = (response["data"]["threads"] as List)
+            .map((e) => Thread.fromMap(e))
+            .toList();
+        lastedThread = threads[threads.length - 1];
+        cloud = {
+          "id": response["data"]["id"],
+          "timeThread": lastedThread.createdAt.toString(),
+          "type": "cloud",
+          "lastedThread": {
+            "messages": {"message": lastedThread.messages.message}
+          },
+          "user": {
+            "avatar":
+                "https://workchatprod.s3.ap-southeast-1.amazonaws.com/memmme.jpg",
+            "name": "Cloud của tôi"
+          },
+        };
       });
     }
   }
@@ -52,6 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     getAll();
     getUser();
+    getCloud();
 
     SocketConfig.listen(SocketEvent.channelWS, (response) {
       var status = response['status'];
@@ -153,10 +182,10 @@ class _ChatScreenState extends State<ChatScreen> {
     SocketConfig.listen(SocketEvent.updatedSendThread, (response) {
       if (response["typeMsg"] == null) {
         var receiveId;
-        var members;
+        List<String> members = [];
         if (response["type"] == "chat") {
           receiveId = response["receiveId"];
-        } else {
+        } else if (response["type"] == "channel") {
           members =
               (response["members"] as List).map((e) => e.toString()).toList();
         }
@@ -193,7 +222,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       .compareTo(DateTime.parse(a["timeThread"]));
                 });
               });
-            } else if (members.contains(userId)) {
+            } else if (members.isNotEmpty && members.contains(userId)) {
               var index =
                   all.indexWhere((element) => element["id"] == data["id"]);
               var item = all[index];
@@ -216,11 +245,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    for (int i = 0; i < all.length; i++) {
-      print(all[i]);
-    }
+    // all.insert(0, {
+    //   "id": "0",
+    //   "timeThread": "2021-09-01T00:00:00.000Z",
+    //   "lastedThread": {
+    //     "messages": {"message": "Xin chào"}
+    //   },
+    //   "user": {
+    //     "avatar":
+    //         "https://workchatprod.s3.ap-southeast-1.amazonaws.com/memmme.jpg",
+    //     "name": "Cloud của tôi"
+    //   },
+    // });
     return ListView(
-      children: [for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])],
+      children: [
+        cloud != null
+            ? ChatItem(
+                obj: cloud,
+              )
+            : Container(),
+        for (int i = 0; i < all.length; i++) ChatItem(obj: all[i])
+      ],
     );
   }
 }

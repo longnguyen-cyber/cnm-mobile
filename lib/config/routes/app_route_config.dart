@@ -13,10 +13,13 @@ import 'package:zalo_app/screens/chat/components/all_file.dart';
 import 'package:zalo_app/screens/chat/components/forward.dart';
 import 'package:zalo_app/screens/chat/components/full_screen.dart';
 import 'package:zalo_app/screens/chat/components/more_info.dart';
+import 'package:zalo_app/screens/chat/components/test.dart';
 import 'package:zalo_app/screens/chat/detail_chat_screen.dart';
 import 'package:zalo_app/screens/friend/add_friend_screen.dart';
 import 'package:zalo_app/screens/friend/create_channel_screen.dart';
 import 'package:zalo_app/screens/home/main_screen.dart';
+import 'package:zalo_app/screens/personal/edit_presonal.dart';
+import 'package:zalo_app/screens/personal/edit_setting.dart';
 import 'package:zalo_app/screens/profile.dart';
 import 'package:zalo_app/screens/search_screen.dart';
 
@@ -29,32 +32,46 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: CreateChannelScreen());
+          // return MaterialPage(child: BottomSheetApp());
+          // return MaterialPage(
+          //     child: MoreInfo(
+          //   data: {
+          //     "type": "channel",
+          //     "data": {
+          //       "id": "661e2a10db85acbc89a5732c",
+          //       "name": "update socket channel 300",
+          //       "type": "channel",
+          //       "members": [
+          //         "65bceb94ceda5567efc0b629",
+          //         "65dd4ae4cbeffa04dbbc5b16"
+          //       ]
+          //     }
+          //   },
+          // ));
           dynamic data = {
-            "id": "6612a049fa5b1f2b1c54d959",
+            "id": "661de3d568d65e1a851a2e2e",
             "name": "nesdw",
             "type": "chat",
-            "receiverId": "65ae380b966692ca03c0bc3e",
+            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
           };
           dynamic dataChannel = {
-            "id": "66174080c1b75463d2c871de",
-            "name": "lam dep",
+            "id": "661e2a10db85acbc89a5732c",
+            "name": "update socket channel 300",
             "type": "channel",
-            "members": [
-              "65bb5c7a63ae7aafb9619706",
-              "65a4abaac2f43ffc23ef4c18",
-              "65ae380b966692ca03c0bc3e",
-              "65bceb94ceda5567efc0b629",
-              "65dd4ae4cbeffa04dbbc5b16"
-            ]
+            "members": ["65bceb94ceda5567efc0b629", "65dd4ae4cbeffa04dbbc5b16"]
           };
-          return buildPageWithDefaultTransition<void>(
-            context: context,
-            state: state,
-            child: MainScreen(
-              index: 0,
-            ),
-          );
+          dynamic dataCloud = {
+            "id": "661e158bcb9d1afaad63d296",
+            "name": "cloud của tôi",
+            "type": "cloud",
+          };
+          // return buildPageWithDefaultTransition<void>(
+          //   context: context,
+          //   state: state,
+          //   child: MainScreen(
+          //     index: 0,
+          //   ),
+          // );
 
           // return MaterialPage(
           //     child: DetailChatScreen(
@@ -181,6 +198,12 @@ class MyAppRouter {
               "members":
                   (params["users"] as List<dynamic>).map((e) => e).toList(),
             };
+          } else if (params["type"] == "cloud") {
+            data = {
+              "id": params["id"],
+              "type": "cloud",
+              "name": params["user"]["name"],
+            };
           } else {
             data = {
               "id": params["id"],
@@ -190,13 +213,14 @@ class MyAppRouter {
             };
           }
 
-          return buildPageWithDefaultTransition<void>(
-            context: context,
-            state: state,
-            child: DetailChatScreen(
-              data: data,
-            ),
-          );
+          // return buildPageWithDefaultTransition<void>(
+          //   context: context,
+          //   state: state,
+          //   child: DetailChatScreen(
+          //     data: data,
+          //   ),
+          // );
+          return MaterialPage(child: DetailChatScreen(data: data));
         },
       ),
       GoRoute(
@@ -260,10 +284,34 @@ class MyAppRouter {
         },
       ),
       GoRoute(
+        name: MyAppRouteConstants.editPersonRouteName,
+        path: '/editPerson',
+        pageBuilder: (context, state) {
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: const EditPerson(),
+          );
+        },
+      ),
+      GoRoute(
+        name: MyAppRouteConstants.editSettingRouteName,
+        path: '/editSetting',
+        pageBuilder: (context, state) {
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: const EditSetting(),
+          );
+        },
+      ),
+      GoRoute(
         name: MyAppRouteConstants.fullRouteName,
         path: '/full',
         pageBuilder: (context, state) {
-          return MaterialPage(
+          return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
               child: FullScreenImage(image: state.extra as String));
         },
       ),

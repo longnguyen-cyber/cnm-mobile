@@ -1,31 +1,31 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:zalo_app/model/setting.model.dart';
+
 class User {
   late String? id;
-  final String? name;
-  late final String? password;
-  final String? displayName;
+  late String? name;
+  late String? password;
   final String? status;
-  final String? phone;
-  late final String? email;
-  final String? avatar;
-  final bool? isTwoFactorAuthenticationEnabled;
-  final String? twoFactorAuthenticationSecret;
+  late String? email;
+  late String? avatar;
+  late bool? isTwoFactorAuthenticationEnabled;
+  late String? twoFactorAuthenticationSecret;
   late String? role;
+  late Setting? setting;
 
   User({
     this.id,
     this.name,
     this.password,
-    this.displayName,
     this.status,
-    this.phone,
     this.email,
     this.avatar,
     this.isTwoFactorAuthenticationEnabled,
     this.twoFactorAuthenticationSecret,
     this.role,
+    this.setting,
   });
 
   User copyWith({
@@ -44,9 +44,7 @@ class User {
       id: id ?? this.id,
       name: name ?? this.name,
       password: password ?? this.password,
-      displayName: displayName ?? this.displayName,
       status: status ?? this.status,
-      phone: phone ?? this.phone,
       email: email ?? this.email,
       avatar: avatar ?? this.avatar,
       isTwoFactorAuthenticationEnabled: isTwoFactorAuthenticationEnabled ??
@@ -61,13 +59,13 @@ class User {
       'id': id,
       'name': name,
       'password': password,
-      'displayName': displayName,
       'status': status,
-      'phone': phone,
       'email': email,
       'avatar': avatar,
       'isTwoFactorAuthenticationEnabled': isTwoFactorAuthenticationEnabled,
       'twoFactorAuthenticationSecret': twoFactorAuthenticationSecret,
+      'role': role,
+      'setting': setting?.toMap(),
     };
   }
 
@@ -76,10 +74,7 @@ class User {
       id: map['id'] != null ? map['id'] as String : null,
       name: map['name'] != null ? map['name'] as String : null,
       password: map['password'] != null ? map['password'] as String : null,
-      displayName:
-          map['displayName'] != null ? map['displayName'] as String : null,
       status: map['status'] != null ? map['status'] as String : null,
-      phone: map['phone'] != null ? map['phone'] as String : null,
       email: map['email'] != null ? map['email'] as String : null,
       avatar: map['avatar'] != null ? map['avatar'] as String : null,
       isTwoFactorAuthenticationEnabled:
@@ -91,6 +86,9 @@ class User {
               ? map['twoFactorAuthenticationSecret'] as String
               : null,
       role: map['role'] != null ? map['role'] as String : null,
+      setting: map['setting'] != null
+          ? Setting.fromMap(map['setting'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -101,7 +99,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, password: $password, displayName: $displayName, status: $status, phone: $phone, email: $email, avatar: $avatar, isTwoFactorAuthenticationEnabled: $isTwoFactorAuthenticationEnabled, twoFactorAuthenticationSecret: $twoFactorAuthenticationSecret, role: $role)';
+    return 'User(id: $id, name: $name, password: $password, status: $status, email: $email, avatar: $avatar, isTwoFactorAuthenticationEnabled: $isTwoFactorAuthenticationEnabled, twoFactorAuthenticationSecret: $twoFactorAuthenticationSecret, role: $role, setting: $setting)';
   }
 
   @override
@@ -111,9 +109,7 @@ class User {
     return other.id == id &&
         other.name == name &&
         other.password == password &&
-        other.displayName == displayName &&
         other.status == status &&
-        other.phone == phone &&
         other.email == email &&
         other.avatar == avatar &&
         other.isTwoFactorAuthenticationEnabled ==
@@ -126,9 +122,7 @@ class User {
     return id.hashCode ^
         name.hashCode ^
         password.hashCode ^
-        displayName.hashCode ^
         status.hashCode ^
-        phone.hashCode ^
         email.hashCode ^
         avatar.hashCode ^
         isTwoFactorAuthenticationEnabled.hashCode ^

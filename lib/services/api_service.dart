@@ -73,6 +73,54 @@ class API {
     }
   }
 
+  put(String url, dynamic data) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
+    try {
+      final response = await _dio.put(
+        "$baseUrl/$url",
+        data: data,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print(response);
+      return response.data;
+    } catch (error) {
+      if (error is DioError) {
+        // Here's the error message
+        print("Dio error: ${error.message}");
+
+        // Here's the error response data
+        print("Dio error response data: ${error.response?.data}");
+
+        // Here's the request that caused the error
+        print("Dio error request: ${error.requestOptions.path}");
+
+        // Handle the error
+        if (error.response?.statusCode == 400) {
+          return {"status": 400};
+          // Handle 400 error
+        } else if (error.response?.statusCode == 500) {
+          // Handle 500 error
+        }
+      } else if (kDebugMode) {
+        print("Error :$error");
+        final errorResponse = Response(
+          requestOptions: RequestOptions(path: url),
+          statusCode: 500,
+        );
+        print(errorResponse);
+        return errorResponse;
+      }
+    }
+  }
+
   String convertToSize(int bytes) {
     double kb = bytes / 1024;
     if (kb > 1024) {

@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
@@ -27,7 +29,7 @@ class _MoreInfoState extends State<MoreInfo> {
   late Chat? chat = null;
   List<FileModel> files = [];
   List<FileModel> filesUI = [];
-  late bool isAdmin = false;
+  late bool isAdmin = true;
   late bool isCoadmin = false;
   List<User> users = [];
   List<User> members = [];
@@ -52,6 +54,7 @@ class _MoreInfoState extends State<MoreInfo> {
       User admin = channel!.users!.firstWhere(
         (element) => element.id == currentUser.id!,
       );
+      print(admin);
       if (admin.role! == "ADMIN") {
         setState(() {
           isAdmin = true;
@@ -59,6 +62,11 @@ class _MoreInfoState extends State<MoreInfo> {
       } else if (admin.role! == "CO-ADMIN") {
         setState(() {
           isCoadmin = true;
+        });
+      } else {
+        setState(() {
+          isAdmin = false;
+          isCoadmin = false;
         });
       }
       for (var user in channel!.users!) {
@@ -113,16 +121,19 @@ class _MoreInfoState extends State<MoreInfo> {
         filesUI.add(file);
       }
     }
+    print(isAdmin);
   }
 
-  void updateChannel(String channelId, String name) {
-    var data = {
-      "channelUpdate": {"name": name},
-      "channelId": channelId
-    };
+  void updateChannel(String channelId, dynamic dataUpdate) {
+    var data = {"channelUpdate": dataUpdate, "channelId": channelId};
 
     setState(() {
-      channel!.name = name;
+      if (dataUpdate["name"] != null) {
+        channel!.name = dataUpdate["name"];
+      }
+      if (dataUpdate["disableThread"] != null) {
+        channel!.disableThread = dataUpdate["disableThread"];
+      }
       Navigator.pop(context);
     });
     SocketConfig.emit(SocketMessage.updateChannel, data);
@@ -194,22 +205,22 @@ class _MoreInfoState extends State<MoreInfo> {
                         mainAxisSpacing: 2,
                         crossAxisCount: 2,
                         children: [
-                          for (var user in channel!.users!.take(4))
-                            user.avatar != null
-                                ? CircleAvatar(
-                                    backgroundImage:
-                                        NetworkImage(user.avatar ?? ""))
-                                : Center(
-                                    child: CircleAvatar(
-                                      child: Text(
-                                        user.name.toString()[0],
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 25,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                          // for (var user in channel!.users!.take(4))
+                          //   user.avatar != null
+                          //       ? CircleAvatar(
+                          //           backgroundImage:
+                          //               NetworkImage(user.avatar ?? ""))
+                          //       : Center(
+                          //           child: CircleAvatar(
+                          //             child: Text(
+                          //               user.name.toString()[0],
+                          //               style: const TextStyle(
+                          //                 color: Colors.white,
+                          //                 fontSize: 25,
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         ),
                         ],
                       ),
                     )
@@ -218,13 +229,13 @@ class _MoreInfoState extends State<MoreInfo> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    chat != null ? chat!.user!.name.toString() : channel!.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  // Text(
+                  //   chat != null ? chat!.user!.name.toString() : channel!.name,
+                  //   style: const TextStyle(
+                  //     fontSize: 20,
+                  //     fontWeight: FontWeight.bold,
+                  //   ),
+                  // ),
                   chat == null
                       ? IconButton(
                           onPressed: () {
@@ -249,7 +260,9 @@ class _MoreInfoState extends State<MoreInfo> {
                                         ),
                                         ElevatedButton(
                                           onPressed: () {
-                                            updateChannel(channel!.id!, name);
+                                            updateChannel(channel!.id!, {
+                                              "name": name,
+                                            });
                                           },
                                           child: const Text("Lưu"),
                                         ),
@@ -508,13 +521,110 @@ class _MoreInfoState extends State<MoreInfo> {
                     ],
                   )
                 : Container(),
-            isAdmin
+            (isAdmin || isCoadmin) && chat == null
                 ? const Divider(
                     height: 20,
                     thickness: 2,
                   )
                 : Container(),
-            isAdmin
+            (isAdmin || isCoadmin) && chat == null
+                ? GestureDetector(
+                    onTap: () {
+                      if (isAdmin) {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SizedBox(
+                              height: 85,
+                              child: Column(
+                                children: <Widget>[
+                                  const SizedBox(
+                                    height: 20,
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      updateChannel(channel!.id!,
+                                          {"disableThread": true});
+                                    },
+                                    child: Container(
+                                      width: size.width,
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: size.width * 0.02),
+                                      child: Row(
+                                        children: [
+                                          const Expanded(
+                                            child: Text(
+                                              "Chỉ trưởng/phó nhóm nhắn tin",
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          channel!.disableThread!
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  size: 20,
+                                                )
+                                              : Container()
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      updateChannel(channel!.id!,
+                                          {"disableThread": false});
+                                    },
+                                    child: Container(
+                                      width: size.width,
+                                      padding:
+                                          EdgeInsets.all(size.width * 0.02),
+                                      child: Row(
+                                        children: [
+                                          const Expanded(
+                                            child: Text(
+                                              "Tất cả thành viên nhắn tin",
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          !channel!.disableThread!
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  size: 20,
+                                                )
+                                              : Container()
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    },
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Icon(
+                          Icons.settings,
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text("Quyền gửi tin nhắn", style: TextStyle()),
+                      ],
+                    ),
+                  )
+                : Container(),
+            isAdmin && chat == null
+                ? const Divider(
+                    height: 20,
+                    thickness: 2,
+                  )
+                : Container(),
+            isAdmin && chat == null
                 ? GestureDetector(
                     onTap: () {},
                     child: const Row(
@@ -532,10 +642,12 @@ class _MoreInfoState extends State<MoreInfo> {
                     ),
                   )
                 : Container(),
-            const Divider(
-              height: 20,
-              thickness: 2,
-            ),
+            chat == null
+                ? const Divider(
+                    height: 20,
+                    thickness: 2,
+                  )
+                : Container(),
             chat != null
                 ? Container()
                 : GestureDetector(
@@ -544,133 +656,130 @@ class _MoreInfoState extends State<MoreInfo> {
                         showModalBottomSheet<void>(
                           context: context,
                           builder: (BuildContext context) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  const Text('Chọn trưởng nhóm trước khi rời'),
-                                  SizedBox(
-                                    height: 150,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          for (int i = 0; i < users.length; i++)
-                                            InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  userSelected = users[i];
-                                                });
-                                              },
-                                              child: Container(
-                                                width: size.width,
-                                                padding: EdgeInsets.all(
-                                                    size.width * 0.02),
-                                                child: Row(
-                                                  children: [
-                                                    Container(
-                                                        margin: const EdgeInsets
-                                                            .only(left: 20),
-                                                        child: CircleAvatar(
-                                                            radius: 20,
-                                                            backgroundImage:
-                                                                NetworkImage(users[
-                                                                        i]
-                                                                    .avatar!))),
-                                                    const SizedBox(
-                                                      width: 20,
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const Text('Chọn trưởng nhóm trước khi rời'),
+                                SizedBox(
+                                  height: 150,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        for (int i = 0; i < users.length; i++)
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                userSelected = users[i];
+                                              });
+                                            },
+                                            child: Container(
+                                              width: size.width,
+                                              padding: EdgeInsets.all(
+                                                  size.width * 0.02),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              left: 20),
+                                                      child: CircleAvatar(
+                                                          radius: 20,
+                                                          backgroundImage:
+                                                              NetworkImage(users[
+                                                                      i]
+                                                                  .avatar!))),
+                                                  const SizedBox(
+                                                    width: 20,
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: <Widget>[
+                                                        Text(
+                                                          users[i].name!,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 16),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    Expanded(
-                                                      flex: 1,
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: <Widget>[
-                                                          Text(
-                                                            users[i].name!,
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        16),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Radio<String>(
-                                                      value: users[i].id!,
-                                                      groupValue:
-                                                          userSelected.id,
-                                                      onChanged:
-                                                          (String? value) {
+                                                  ),
+                                                  Radio<String>(
+                                                    value: users[i].id!,
+                                                    groupValue: userSelected.id,
+                                                    onChanged: (String? value) {
+                                                      setState(() {
                                                         setState(() {
-                                                          setState(() {
-                                                            userSelected = users
-                                                                .firstWhere(
-                                                                    (user) =>
-                                                                        user.id ==
-                                                                        value);
-                                                          });
+                                                          userSelected =
+                                                              users.firstWhere(
+                                                            (user) =>
+                                                                user.id ==
+                                                                value,
+                                                          );
                                                         });
-                                                      },
-                                                    )
-                                                  ],
-                                                ),
+                                                      });
+                                                    },
+                                                  )
+                                                ],
                                               ),
-                                            )
-                                        ],
-                                      ),
+                                            ),
+                                          )
+                                      ],
                                     ),
                                   ),
-                                  InkWell(
-                                    hoverColor: Colors.transparent,
-                                    onTap: () {
-                                      leaveChannel(channel!.id!);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.only(
-                                        top: 5,
-                                        bottom: 5,
-                                      ),
-                                      margin: const EdgeInsets.all(4.0),
-                                      decoration: BoxDecoration(
+                                ),
+                                InkWell(
+                                  hoverColor: Colors.transparent,
+                                  onTap: () {
+                                    leaveChannel(channel!.id!);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.only(
+                                      top: 5,
+                                      bottom: 5,
+                                    ),
+                                    margin: const EdgeInsets.all(4.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
                                         color: Colors.blue,
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.blue,
-                                          width: 1.0,
-                                        ),
+                                        width: 1.0,
                                       ),
-                                      width: double.infinity,
-                                      child: const Center(
-                                        child: Text(
-                                          "Xác nhận",
-                                          style: TextStyle(color: Colors.white),
-                                        ),
+                                    ),
+                                    width: double.infinity,
+                                    child: const Center(
+                                      child: Text(
+                                        "Xác nhận",
+                                        style: TextStyle(color: Colors.white),
                                       ),
                                     ),
                                   ),
-                                  InkWell(
-                                    hoverColor: Colors.transparent,
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      userSelected = users[0];
-                                    },
-                                    child: const SizedBox(
-                                      width: double.infinity,
-                                      height: 30,
-                                      child: Center(
-                                        child: Text("Hủy"),
-                                      ),
+                                ),
+                                InkWell(
+                                  hoverColor: Colors.transparent,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    userSelected = users[0];
+                                  },
+                                  child: const SizedBox(
+                                    width: double.infinity,
+                                    height: 30,
+                                    child: Center(
+                                      child: Text("Hủy"),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             );
                           },
                         );
@@ -691,11 +800,13 @@ class _MoreInfoState extends State<MoreInfo> {
                       ],
                     ),
                   ),
-            const Divider(
-              height: 20,
-              thickness: 2,
-            ),
-            isAdmin
+            chat == null
+                ? const Divider(
+                    height: 20,
+                    thickness: 2,
+                  )
+                : Container(),
+            isAdmin && chat == null
                 ? GestureDetector(
                     onTap: () {
                       _deleteChannel(channel!.id!);

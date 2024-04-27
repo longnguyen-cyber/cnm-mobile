@@ -8,9 +8,11 @@ import 'package:motion_tab_bar/MotionTabBarController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
 import 'package:zalo_app/model/chat.model.dart';
+import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/screens/auth/welcome_screen.dart';
 import 'package:zalo_app/screens/friend/friend_screen.dart';
-import 'package:zalo_app/screens/personal.dart';
+import 'package:zalo_app/screens/personal/personal.dart';
+import 'package:zalo_app/services/api_service.dart';
 
 import '../chat/chat_screen.dart';
 
@@ -190,6 +192,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final api = API();
   late String _token = "";
 
   @override
@@ -197,6 +200,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
 
     fetchToken();
+    fecthUser();
     if (widget.index == null) {
       setState(() {
         widget.index = 0;
@@ -204,9 +208,26 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  void fecthUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var userOfToken = prefs.getString(_token) ?? "";
+    if (mounted) {
+      if (userOfToken != "") {
+        User userExisting = User.fromJson(userOfToken);
+        // prefs.setString(response.data["data"]["token"], user.toJson());
+        var responseUser =
+            await api.get("users/${userExisting.id}/profile", {});
+        User userUpdate = User.fromMap(responseUser["data"]);
+        prefs.setString(_token, userUpdate.toJson());
+      }
+    }
+  }
+
   void fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
+
     setState(() {
       _token = token;
     });

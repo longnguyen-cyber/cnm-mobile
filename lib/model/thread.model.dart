@@ -23,24 +23,25 @@ class Thread {
   late List<FileModel>? files;
   final User? user;
   final Thread? replysTo;
-  Thread({
-    this.id,
-    required this.createdAt,
-    this.stoneId,
-    this.isEdited,
-    this.isReply,
-    this.isRecall,
-    this.receiveId,
-    this.senderId,
-    this.chatId,
-    this.channelId,
-    this.threadId,
-    this.messages,
-    this.emojis,
-    this.files,
-    this.user,
-    this.replysTo,
-  });
+  late bool? pin;
+  Thread(
+      {this.id,
+      required this.createdAt,
+      this.stoneId,
+      this.isEdited,
+      this.isReply,
+      this.isRecall,
+      this.receiveId,
+      this.senderId,
+      this.chatId,
+      this.channelId,
+      this.threadId,
+      this.messages,
+      this.emojis,
+      this.files,
+      this.user,
+      this.replysTo,
+      this.pin});
 
   Thread copyWith({
     String? id,
@@ -137,6 +138,7 @@ class Thread {
       replysTo: map['replysTo'] != null
           ? Thread.fromMap(map['replysTo'] as Map<String, dynamic>)
           : null,
+      pin: map['pin'] != null ? map['pin'] as bool : false,
     );
   }
 
@@ -147,7 +149,7 @@ class Thread {
 
   @override
   String toString() {
-    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, emojis: $emojis, files: $files, user: $user, replysTo: $replysTo)';
+    return 'Thread(id: $id, createdAt: $createdAt, isEdited: $isEdited, isReply: $isReply, isRecall: $isRecall, receiveId: $receiveId, senderId: $senderId, stoneId: $stoneId, chatId: $chatId, channelId: $channelId, threadId: $threadId, messages: $messages, emojis: $emojis, files: $files, user: $user, replysTo: $replysTo, pin: $pin)';
   }
 
   @override

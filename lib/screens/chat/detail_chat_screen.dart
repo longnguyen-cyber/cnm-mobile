@@ -49,18 +49,23 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   String _replyContent = "";
   String _replyStoneId = "";
   late Thread replyThread;
+  late bool isSend = false;
 
   bool _reply = false;
   List<Thread> threadsChannel = [];
   List<Thread> threadsChat = [];
-  late dynamic data;
+  List<Thread> threadsCloud = [];
+  late dynamic data = null;
   late dynamic fileData = [];
   late AudioRecorder audioRecord;
   late AudioPlayer audioPlayer;
   bool isRecording = false;
+  late bool showAllPin = false;
+
   String path = "";
   late String name;
-  late dynamic members;
+  late dynamic members = [];
+  List<Thread> pinThreads = [];
 
   final api = API();
   void setPath() async {
@@ -80,14 +85,44 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             threadsChat = chat.threads!;
             data = chat;
           });
+
+          for (var i = 0; i < threadsChat.length; i++) {
+            if (threadsChat[i].pin == true) {
+              pinThreads.insert(0, threadsChat[i]);
+            }
+          }
+
+          setState(() {
+            pinThreads = pinThreads;
+          });
+        }
+      } else if (type == "cloud") {
+        final response = await api.get("users/my-cloud", {});
+        if (response != null) {
+          setState(() {
+            threadsCloud = (response["data"]["threads"] as List)
+                .map((e) => Thread.fromMap(e))
+                .toList();
+          });
         }
       } else {
         final response = await api.get("channels/$id", {});
         if (response != null) {
           Channel channel = Channel.fromMap(response["data"]);
+
           setState(() {
             threadsChannel = channel.threads!;
             data = channel;
+          });
+
+          for (var i = 0; i < threadsChannel.length; i++) {
+            if (threadsChannel[i].pin == true) {
+              pinThreads.insert(0, threadsChannel[i]);
+            }
+          }
+
+          setState(() {
+            pinThreads = pinThreads;
           });
         }
       }
@@ -199,8 +234,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 } else {
                   threadsChat[indexOfThread].isRecall = true;
                   if (response["typeRecall"] == "image") {
-                    //create new message in thread[index]
-
                     threadsChat[indexOfThread].messages = response["messages"];
                     threadsChat[indexOfThread].files = [];
                   } else {
@@ -291,8 +324,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 threadsChannel.add(thread);
               }
             });
-          } else if (response["receiveId"] == userExisting!.id ||
-              response["user"]["id"] == userExisting!.id) {
+          } else if ((response["receiveId"] == userExisting!.id ||
+                  response["user"]["id"] == userExisting!.id) &&
+              response["type"] == "chat") {
             setState(() {
               if (thread.files!.isNotEmpty &&
                   thread.messages == null &&
@@ -307,6 +341,21 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 threadsChat.add(thread);
               }
             });
+          } else if (response["user"]["id"] == userExisting!.id &&
+              response["type"] == "cloud") {
+            //cloud
+            setState(() {
+              if (thread.files!.isNotEmpty && thread.messages == null) {
+                //get latest thread and update file path
+                var index = threadsCloud.length - 1;
+                for (var i = 0; i < thread.files!.length; i++) {
+                  var path = thread.files![i].path;
+                  threadsCloud[index].files![i].path = path;
+                }
+              } else {
+                threadsCloud.add(thread);
+              }
+            });
           }
         }
       }
@@ -316,57 +365,70 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
-
     final String type = widget.data["type"];
-    if (widget.data["type"] == "channel") {
+    if (widget.data["type"] == "channel" && data != null) {
       members = widget.data["members"];
+      Channel channel = data;
+      User user = channel.users!
+          .firstWhere((element) => element.id == userExisting!.id);
+      setState(() {
+        if (channel.disableThread == true && user.role != "MEMBER") {
+          isSend = true;
+        } else {
+          isSend = false;
+        }
+      });
     }
 
     return Scaffold(
-        appBar: AppBar(
-          title: Column(
-            children: [
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (type == "channel")
               Text(
-                name,
+                "${members.length} thành viên",
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
-              if (type == "channel")
-                Text(
-                  "${members.length} thành viên",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                GoRouter.of(context).pushNamed(
-                    MyAppRouteConstants.moreRouteName,
-                    extra: {"data": data, "type": type});
-              },
-              icon: const Icon(Icons.format_list_bulleted),
-            ),
           ],
-          backgroundColor: Colors.blue,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
-            },
-          ),
         ),
-        body: type == 'channel'
-            ? common(viewInsets, threadsChannel, type)
-            : common(viewInsets, threadsChat, type));
+        actions: [
+          IconButton(
+            onPressed: () {
+              GoRouter.of(context).pushNamed(MyAppRouteConstants.moreRouteName,
+                  extra: {"data": data, "type": type});
+            },
+            icon: const Icon(Icons.format_list_bulleted),
+          ),
+        ],
+        backgroundColor: Colors.blue,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
+          },
+        ),
+      ),
+      body: type == 'channel'
+          ? common(viewInsets, threadsChannel, type)
+          : type == 'cloud'
+              ? common(viewInsets, threadsCloud, type)
+              : common(viewInsets, threadsChat, type),
+    );
   }
 
   String convertToSize(int bytes) {
@@ -501,352 +563,491 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     }
 
     return SafeArea(
-        child: Container(
-      width: double.infinity,
-      color: Colors.blueGrey[50],
-      child: Padding(
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            top: 8.0,
-            bottom: (viewInsets.bottom > 0) ? 8.0 : 0.0,
-          ),
-          child: Column(children: <Widget>[
-            Expanded(
-              child: ListView.builder(
-                controller: controller,
-                itemCount: threads.length,
-                itemBuilder: (BuildContext context, int index) {
-                  Thread thread = threads[index];
-                  List<Widget> children = [];
-                  if (_replyStoneId.isNotEmpty) {
-                    replyThread = threads.firstWhere(
-                        (element) => element.stoneId == _replyStoneId);
-                  }
-
-                  if (thread.user == null) {
-                    children.add(
-                      Center(
-                        child: Text(
-                          thread.messages!.message,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    bool nameExisted = index > 0 &&
-                        threads[index - 1].user != null &&
-                        threads[index - 1].user!.name == thread.user!.name;
-                    if (thread.user!.id == userExisting!.id) {
-                      children.add(
-                        MessageBubble(
-                          stoneId: thread.stoneId!,
-                          user: userExisting!,
-                          receiveId:
-                              thread.receiveId != null ? thread.receiveId! : "",
-                          type: type,
-                          typeRecall:
-                              thread.messages != null ? "text" : "image",
-                          content: thread.messages != null
-                              ? thread.messages!.message
-                              : "",
-                          timeSent: (thread.createdAt!),
-                          emojis: thread.emojis != null ? thread.emojis! : [],
-                          files: thread.files!,
-                          isRecall: thread.isRecall,
-                          isReply: thread.isReply,
-                          id: widget.data["id"],
-                          replyThread:
-                              thread.isReply == true ? thread.replysTo : null,
-                          onFuctionReply: (sender, content, stonedId) {
-                            setState(() {
-                              _reply = true;
-                              _replyUser = sender;
-                              _replyContent = content;
-                              _replyStoneId = stonedId;
-                            });
-                          },
-                        ),
-                      );
-                    } else {
-                      children.add(
-                        Message(
-                          stoneId: thread.stoneId!,
-                          sender: thread.user!,
-                          type: type,
-                          receiveId:
-                              thread.senderId != null ? thread.senderId! : "",
-                          content: thread.messages != null
-                              ? thread.messages!.message
-                              : "",
-                          messageType: MessageType.text,
-                          timeSent: thread.createdAt!,
-                          onFuctionReply: (sender, content, stoneId) {
-                            setState(() {
-                              _reply = true;
-                              _replyUser = sender;
-                              _replyContent = content;
-                              _replyStoneId = stoneId;
-                            });
-                          },
-                          isReply: thread.isReply,
-                          replyThread:
-                              thread.isReply == true ? thread.replysTo : null,
-                          exist: !nameExisted,
-                          isRecall: thread.isRecall!,
-                          emojis: thread.emojis!,
-                          files: thread.files!,
-                        ),
-                      );
-                    }
-                  }
-
-                  if (isDifferentDay(index)) {
-                    DateTime currentMessageDate = (threads[index].createdAt!);
-                    DateTime now = DateTime.now();
-
-                    String formattedDate;
-                    if (currentMessageDate.year == now.year &&
-                        currentMessageDate.month == now.month &&
-                        currentMessageDate.day == now.day - 1) {
-                      formattedDate = 'Hôm nay';
-                    } else {
-                      formattedDate =
-                          DateFormat('dd/MM/yyyy').format(currentMessageDate);
-                    }
-
-                    children.add(
-                      Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 60),
-                            child: const Divider(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            formattedDate,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return Wrap(children: children);
-                },
+      child: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            color: Colors.blueGrey[50],
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                top: 8.0,
+                bottom: (viewInsets.bottom > 0) ? 8.0 : 0.0,
               ),
-            ),
-            _reply
-                ? Row(children: <Widget>[
-                    Container(
-                      width: size.width * 0.9,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white54,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                          ),
-                          Container(
-                            width: 3, // Độ rộng của đường kẻ thẳng đứng
-                            height:
-                                40, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
-                            color: Colors.blue, // Màu sắc của đường kẻ thẳng
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              children: <TextSpan>[
-                                TextSpan(
-                                  text: '  $_replyUser\n',
-                                  style: const TextStyle(
-                                      color: Colors.black, fontSize: 16),
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: ListView.builder(
+                      controller: controller,
+                      itemCount: threads.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        Thread thread = threads[index];
+                        List<Widget> children = [];
+                        if (_replyStoneId.isNotEmpty) {
+                          replyThread = threads.firstWhere(
+                              (element) => element.stoneId == _replyStoneId);
+                        }
+
+                        if (thread.user == null) {
+                          children.add(
+                            Center(
+                              child: Text(
+                                thread.messages!.message,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
                                 ),
-                                TextSpan(
-                                  text: _replyContent,
+                              ),
+                            ),
+                          );
+                        } else {
+                          bool nameExisted = index > 0 &&
+                              threads[index - 1].user != null &&
+                              threads[index - 1].user!.name ==
+                                  thread.user!.name;
+                          if (thread.user!.id == userExisting!.id) {
+                            children.add(
+                              MessageBubble(
+                                stoneId: thread.stoneId!,
+                                user: userExisting!,
+                                receiveId: thread.receiveId != null
+                                    ? thread.receiveId!
+                                    : "",
+                                type: type,
+                                typeRecall:
+                                    thread.messages != null ? "text" : "image",
+                                content: thread.messages != null
+                                    ? thread.messages!.message
+                                    : "",
+                                timeSent: (thread.createdAt!),
+                                emojis:
+                                    thread.emojis != null ? thread.emojis! : [],
+                                files: thread.files!,
+                                isRecall: thread.isRecall,
+                                isReply: thread.isReply,
+                                id: widget.data["id"],
+                                replyThread: thread.isReply == true
+                                    ? thread.replysTo
+                                    : null,
+                                onFuctionReply: (sender, content, stonedId) {
+                                  setState(() {
+                                    _reply = true;
+                                    _replyUser = sender;
+                                    _replyContent = content;
+                                    _replyStoneId = stonedId;
+                                  });
+                                },
+                              ),
+                            );
+                          } else {
+                            children.add(
+                              Message(
+                                stoneId: thread.stoneId!,
+                                sender: thread.user!,
+                                type: type,
+                                receiveId: thread.senderId != null
+                                    ? thread.senderId!
+                                    : "",
+                                content: thread.messages != null
+                                    ? thread.messages!.message
+                                    : "",
+                                messageType: MessageType.text,
+                                timeSent: thread.createdAt!,
+                                onFuctionReply: (sender, content, stoneId) {
+                                  setState(() {
+                                    _reply = true;
+                                    _replyUser = sender;
+                                    _replyContent = content;
+                                    _replyStoneId = stoneId;
+                                  });
+                                },
+                                isReply: thread.isReply,
+                                replyThread: thread.isReply == true
+                                    ? thread.replysTo
+                                    : null,
+                                exist: !nameExisted,
+                                isRecall: thread.isRecall!,
+                                emojis: thread.emojis!,
+                                files: thread.files!,
+                              ),
+                            );
+                          }
+                        }
+
+                        if (isDifferentDay(index)) {
+                          DateTime currentMessageDate =
+                              (threads[index].createdAt!);
+                          DateTime now = DateTime.now();
+
+                          String formattedDate;
+                          if (currentMessageDate.year == now.year &&
+                              currentMessageDate.month == now.month &&
+                              currentMessageDate.day == now.day - 1) {
+                            formattedDate = 'Hôm nay';
+                          } else {
+                            formattedDate = DateFormat('dd/MM/yyyy')
+                                .format(currentMessageDate);
+                          }
+
+                          children.add(
+                            Column(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      vertical: 0, horizontal: 60),
+                                  child: const Divider(
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  formattedDate,
                                   style: const TextStyle(
-                                      color: Colors.grey, fontSize: 12),
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        // Add a space above the first message if have pin thread
+                        if (true) {
+                          children.insert(0, const SizedBox(height: 40));
+                        }
+
+                        return Wrap(children: children);
+                      },
+                    ),
+                  ),
+                  _reply
+                      ? Row(children: <Widget>[
+                          Container(
+                            width: size.width * 0.9,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.white54,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                ),
+                                Container(
+                                  width: 3, // Độ rộng của đường kẻ thẳng đứng
+                                  height:
+                                      40, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                  color:
+                                      Colors.blue, // Màu sắc của đường kẻ thẳng
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                        text: '  $_replyUser\n',
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 16),
+                                      ),
+                                      TextSpan(
+                                        text: _replyContent,
+                                        style: const TextStyle(
+                                            color: Colors.grey, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  child: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _reply = false;
+                                      });
+                                    },
+                                    icon: const Icon(Icons.close),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const Spacer(),
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _reply = false;
-                                });
-                              },
-                              icon: const Icon(Icons.close),
+                        ])
+                      : Container(),
+                  const SizedBox(height: 10),
+                  isSend == false
+                      ? Container(
+                          height: 50,
+                          width: size.width,
+                          child: const Center(
+                            child: Text(
+                              "Chỉ có quản trị viên mới có thể gửi tin nhắn",
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ])
-                : Container(),
-            const SizedBox(height: 10),
-            Row(children: [
-              IconButton(
-                onPressed: () async {
-                  final ImagePicker picker = ImagePicker();
-                  final XFile? image =
-                      await picker.pickImage(source: ImageSource.camera);
-                  if (image != null) {
-                    // Read the image file into a Uint8List
-                    FileModel fileModel = FileModel(path: image.path);
-                    setState(() {
-                      threads.add(Thread(
-                          files: [fileModel],
-                          createdAt:
-                              DateTime.now().subtract(const Duration(hours: 7)),
-                          user: userExisting,
-                          stoneId: "11111111"));
-                    });
-
-                    final bytes = await image.readAsBytes();
-
-                    // Get the file extension
-                    final extension = image.path.split(".").last;
-                    final size = bytes.length;
-
-                    var data = {
-                      "filename": image.name,
-                      "extension": extension,
-                      "size": size,
-                      "bytes": bytes,
-                    };
-                    final response = await api.uploadFile(data);
-                    setState(() {
-                      fileData = [response];
-                    });
-
-                    _sendMessage();
-                  }
-                },
-                icon: const Icon(Icons.camera_alt),
-              ),
-              Expanded(
-                  child: TextFormField(
-                controller: messageController,
-                onChanged: (value) {
-                  setState(() {
-                    isTextNotEmpty = value.isNotEmpty;
-                  });
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'Tin nhắn',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  // Kiểm tra biến isTextNotEmpty để xác định icon sẽ hiển thị
-                  suffixIcon: isTextNotEmpty
-                      ? IconButton(
-                          onPressed: () {
-                            // Xử lý sự kiện khi trường văn bản không trống
-                            _sendMessage();
-                          },
-                          icon: const Icon(Icons.send),
                         )
                       : Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              onPressed: () => handleFilePicked(),
-                              icon: const Icon(Icons.attach_file),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                showModalBottomSheet(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      _startRecord();
-                                      return Container(
-                                        height: size.height * 0.4,
-                                        width: size.width,
-                                        // color: Colors.white,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                        ),
-                                        child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Container(
-                                                width: size.width * 0.8,
-                                                height: 50,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            18.0)),
-                                                child: const Center(
-                                                    child: Text(
-                                                  'Đang ghi âm...',
-                                                )),
-                                              ),
-                                              const SizedBox(height: 20),
-                                              const CircularProgressIndicator(),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceAround,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: <Widget>[
-                                                  RecordFunction(
-                                                    icon:
-                                                        FontAwesomeIcons.trash,
-                                                    title: 'Huỷ',
-                                                    onPressed: () async {
-                                                      await audioRecord.stop();
-                                                      Navigator.pop(context);
-                                                    },
-                                                  ),
-                                                  RecordFunction(
-                                                    icon: Icons.send,
-                                                    title: 'Gửi',
-                                                    onPressed: sendRecord,
-                                                  ),
-                                                ],
-                                              )
-                                            ]),
-                                      );
-                                    });
-                              },
-                              icon: const Icon(Icons.mic),
-                            ),
+                              onPressed: () async {
+                                final ImagePicker picker = ImagePicker();
+                                final XFile? image = await picker.pickImage(
+                                    source: ImageSource.camera);
+                                if (image != null) {
+                                  // Read the image file into a Uint8List
+                                  FileModel fileModel =
+                                      FileModel(path: image.path);
+                                  setState(() {
+                                    threads.add(Thread(
+                                        files: [fileModel],
+                                        createdAt: DateTime.now()
+                                            .subtract(const Duration(hours: 7)),
+                                        user: userExisting,
+                                        stoneId: "11111111"));
+                                  });
 
-                            // Thêm các IconButton khác nếu cần
+                                  final bytes = await image.readAsBytes();
+
+                                  // Get the file extension
+                                  final extension = image.path.split(".").last;
+                                  final size = bytes.length;
+
+                                  var data = {
+                                    "filename": image.name,
+                                    "extension": extension,
+                                    "size": size,
+                                    "bytes": bytes,
+                                  };
+                                  final response = await api.uploadFile(data);
+                                  setState(() {
+                                    fileData = [response];
+                                  });
+
+                                  _sendMessage();
+                                }
+                              },
+                              icon: const Icon(Icons.camera_alt),
+                            ),
+                            Expanded(
+                              child: TextFormField(
+                                controller: messageController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    isTextNotEmpty = value.isNotEmpty;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  hintText: 'Tin nhắn',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  // Kiểm tra biến isTextNotEmpty để xác định icon sẽ hiển thị
+                                  suffixIcon: isTextNotEmpty
+                                      ? IconButton(
+                                          onPressed: () {
+                                            // Xử lý sự kiện khi trường văn bản không trống
+                                            _sendMessage();
+                                          },
+                                          icon: const Icon(Icons.send),
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              onPressed: () =>
+                                                  handleFilePicked(),
+                                              icon:
+                                                  const Icon(Icons.attach_file),
+                                            ),
+                                            IconButton(
+                                              onPressed: () {
+                                                showModalBottomSheet(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      _startRecord();
+                                                      return Container(
+                                                        height:
+                                                            size.height * 0.4,
+                                                        width: size.width,
+                                                        // color: Colors.white,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          color: Colors.white,
+                                                        ),
+                                                        child: Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: <Widget>[
+                                                              Container(
+                                                                width:
+                                                                    size.width *
+                                                                        0.8,
+                                                                height: 50,
+                                                                decoration: BoxDecoration(
+                                                                    color: Colors
+                                                                        .grey,
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            18.0)),
+                                                                child:
+                                                                    const Center(
+                                                                        child:
+                                                                            Text(
+                                                                  'Đang ghi âm...',
+                                                                )),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 20),
+                                                              const CircularProgressIndicator(),
+                                                              const SizedBox(
+                                                                  height: 20),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceAround,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .center,
+                                                                children: <Widget>[
+                                                                  RecordFunction(
+                                                                    icon: FontAwesomeIcons
+                                                                        .trash,
+                                                                    title:
+                                                                        'Huỷ',
+                                                                    onPressed:
+                                                                        () async {
+                                                                      await audioRecord
+                                                                          .stop();
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    },
+                                                                  ),
+                                                                  RecordFunction(
+                                                                    icon: Icons
+                                                                        .send,
+                                                                    title:
+                                                                        'Gửi',
+                                                                    onPressed:
+                                                                        sendRecord,
+                                                                  ),
+                                                                ],
+                                                              )
+                                                            ]),
+                                                      );
+                                                    });
+                                              },
+                                              icon: const Icon(Icons.mic),
+                                            ),
+
+                                            // Thêm các IconButton khác nếu cần
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
+                  const SizedBox(height: 8.0),
+                ],
+              ),
+            ),
+          ),
+          pinThreads.isNotEmpty
+              ? Positioned(
+                  child: SingleChildScrollView(
+                    child: Container(
+                      width: size.width,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: showAllPin
+                          ? Column(
+                              children: [
+                                for (var i = 0; i < pinThreads.length; i++)
+                                  pinThread(pinThreads[i]),
+                                TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        showAllPin = false;
+                                      });
+                                    },
+                                    child: const Text("Thu gọn"))
+                              ],
+                            )
+                          : pinThread(pinThreads[0]),
+                    ),
+                  ),
+                )
+              : Container(),
+        ],
+      ),
+    );
+  }
+
+  Container pinThread(Thread thread) {
+    String text = thread.messages!.message;
+    int lengthEnable = showAllPin ? 30 : 20;
+    if (text.toString().length > lengthEnable) {
+      text = "${text.toString().substring(0, lengthEnable)}...";
+    } else {
+      text = text;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey, width: 1.0),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              // GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
+              //go to position of thread use stoneId
+            },
+            icon: const Icon(Icons.message_rounded, color: Colors.blue),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Tin nhắn",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
-              )),
-            ]),
-            const SizedBox(height: 8.0),
-          ])),
-    ));
+              ),
+              Text("${thread.user!.name}: $text"),
+            ],
+          ),
+          const Spacer(),
+          showAllPin
+              ? Container()
+              : TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAllPin = true;
+                    });
+                  },
+                  child: const Text(
+                    "Xem tất cả",
+                  ),
+                ),
+        ],
+      ),
+    );
   }
 
   Future<void> _startRecord() async {
@@ -868,15 +1069,25 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   void _sendMessage() async {
     late String receiveId;
     late dynamic members;
+    late String cloudId;
     String type = widget.data["type"];
     String id = widget.data["id"];
-    bool isChannel = type == "channel";
+    bool isChannel = false;
+    bool isChat = false;
+    bool isCloud = false;
+    type == "channel"
+        ? isChannel = true
+        : type == "chat"
+            ? isChat = true
+            : isCloud = true;
+
     if (isChannel) {
       members = widget.data["members"].map((e) => e["id"]).toList();
-    } else {
+    } else if (isChat) {
       receiveId = widget.data["receiverId"];
+    } else {
+      cloudId = widget.data["id"];
     }
-
     if (messageController.text.isNotEmpty || fileData.length > 0) {
       var data = {
         if (messageController.text.isNotEmpty)
@@ -887,9 +1098,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         if (isChannel) ...{
           "channelId": id,
           "members": members,
-        } else ...{
+        } else if (isChat) ...{
           "chatId": id,
           "receiveId": receiveId,
+        } else ...{
+          "cloudId": cloudId,
         }
       };
       setState(() {

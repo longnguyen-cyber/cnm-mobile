@@ -106,33 +106,33 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   final ReceivePort _port = ReceivePort();
   initDownloader() async {
-    IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'downloader_send_port');
-    _port.listen((dynamic data) {
-      String id = data[0];
-      DownloadTaskStatus status = data[1];
-      int progress = data[2];
-      if (status == DownloadTaskStatus.complete) {
-        print("download complete");
-      }
-      setState(() {});
-    });
+    // IsolateNameServer.registerPortWithName(
+    //     _port.sendPort, 'downloader_send_port');
+    // _port.listen((dynamic data) {
+    //   String id = data[0];
+    //   DownloadTaskStatus status = data[1];
+    //   int progress = data[2];
+    //   if (status == DownloadTaskStatus.complete) {
+    //     print("download complete");
+    //   }
+    //   setState(() {});
+    // });
 
-    FlutterDownloader.registerCallback(downloadCallback);
+    // FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
   void dispose() {
-    IsolateNameServer.removePortNameMapping('downloader_send_port');
+    // IsolateNameServer.removePortNameMapping('downloader_send_port');
     super.dispose();
   }
 
-  @pragma('vm:entry-point')
-  static void downloadCallback(String id, int status, int progress) {
-    final SendPort? send =
-        IsolateNameServer.lookupPortByName('downloader_send_port');
-    send?.send([id, status, progress]);
-  }
+  // @pragma('vm:entry-point')
+  // static void downloadCallback(String id, int status, int progress) {
+  //   final SendPort? send =
+  //       IsolateNameServer.lookupPortByName('downloader_send_port');
+  //   send?.send([id, status, progress]);
+  // }
 
   @override
   void initState() {
@@ -630,7 +630,6 @@ class _MessageBubbleState extends State<MessageBubble> {
       if (widget.type == "channel") "channelId": widget.id,
       "typeRecall": widget.typeRecall
     };
-    print(data);
     reactionIcon.clear();
     SocketConfig.emit(SocketMessage.recallSendThread, data);
   }
@@ -643,7 +642,6 @@ class _MessageBubbleState extends State<MessageBubble> {
       if (widget.type == "chat") "chatId": widget.id,
       if (widget.type == "channel") "channelId": widget.id,
     };
-    print(data);
     reactionIcon.clear();
 
     SocketConfig.emit(SocketMessage.deleteThread, data);
@@ -685,16 +683,16 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   Future<void> downloadFnc(String url) async {
-    final Directory? downloadsDir = await getDownloadsDirectory();
-    var status = await Permission.camera.status;
-    if (status.isGranted) {
-      await FlutterDownloader.enqueue(
-        url: url,
-        savedDir: downloadsDir!.path,
-        showNotification: true,
-        openFileFromNotification: true,
-      );
-    }
+    // final Directory? downloadsDir = await getDownloadsDirectory();
+    // var status = await Permission.camera.status;
+    // if (status.isGranted) {
+    //   await FlutterDownloader.enqueue(
+    //     url: url,
+    //     savedDir: downloadsDir!.path,
+    //     showNotification: true,
+    //     openFileFromNotification: true,
+    //   );
+    // }
   }
 }
 

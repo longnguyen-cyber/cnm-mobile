@@ -15,12 +15,12 @@ void main() async {
   // SharedPreferences prefs = await SharedPreferences.getInstance();
   // prefs.clear();
   await dotenv.load(fileName: "lib/.env");
-  await FlutterDownloader.initialize(
-      debug:
-          true, // optional: set to false to disable printing logs to console (default: true)
-      ignoreSsl:
-          true // option: set to false to disable working with http links (default: false)
-      );
+  // await FlutterDownloader.initialize(
+  //     debug:
+  //         true, // optional: set to false to disable printing logs to console (default: true)
+  //     ignoreSsl:
+  //         true // option: set to false to disable working with http links (default: false)
+  //     );
   runApp(MyApp(
     userService: UserService(),
   ));

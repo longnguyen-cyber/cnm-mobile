@@ -11,6 +11,7 @@ class Channel {
   late String name;
   final bool isPublic;
   final List<User>? users;
+  final List<String>? blockUser;
   final String? userCreated;
   final List<Thread>? threads;
   final DateTime? timeThread;
@@ -26,6 +27,7 @@ class Channel {
     this.timeThread,
     this.lastedThread,
     this.disableThread,
+    this.blockUser,
   });
 
   Channel copyWith({
@@ -75,6 +77,13 @@ class Channel {
                 (x) => User.fromMap(x),
               ),
             ),
+      blockUser: map['blockUser'] == null
+          ? []
+          : List<String>.from(
+              (map['blockUser'] as List<dynamic>).map<String>(
+                (x) => x as String,
+              ),
+            ),
       threads: map['threads'] == null
           ? []
           : List<Thread>.from(
@@ -102,7 +111,7 @@ class Channel {
 
   @override
   String toString() {
-    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread, lastedThread: $lastedThread, disableThread: $disableThread)';
+    return 'Channel(id: $id, name: $name, isPublic: $isPublic, users: $users, userCreated: $userCreated, timeThread: $timeThread, lastedThread: $lastedThread, disableThread: $disableThread, blockUser: $blockUser)';
   }
 
   @override

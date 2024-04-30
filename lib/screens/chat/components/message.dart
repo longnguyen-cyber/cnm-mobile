@@ -24,11 +24,15 @@ class Message extends StatefulWidget {
     required this.receiveId,
     this.isReply,
     this.replyThread,
+    required this.isPin,
+    required this.id,
   });
   final List<EmojiModel> emojis;
   final String receiveId;
   final bool exist;
+  final String id;
   final bool isRecall;
+  final bool isPin;
   final User sender;
   final String type;
   final String stoneId;
@@ -65,6 +69,7 @@ class _MessageState extends State<Message> {
         Column(
           children: <Widget>[
             MessageBubble(
+              id: widget.id,
               stoneId: widget.stoneId,
               user: widget.sender,
               type: widget.type,
@@ -77,6 +82,7 @@ class _MessageState extends State<Message> {
               files: widget.files,
               isReply: widget.isReply,
               replyThread: widget.replyThread,
+              isPin: widget.isPin,
             ),
           ],
         ),

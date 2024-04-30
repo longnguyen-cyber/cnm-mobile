@@ -9,10 +9,16 @@ import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/api_service.dart';
 
 class AddMember extends StatefulWidget {
-  const AddMember({super.key, required this.members, required this.channelId});
+  const AddMember({
+    super.key,
+    required this.members,
+    required this.channelId,
+    required this.blockUser,
+  });
 
   final List<String> members;
   final String channelId;
+  final List<String> blockUser;
   @override
   State<AddMember> createState() => AddMemberState();
 }
@@ -59,6 +65,8 @@ class AddMemberState extends State<AddMember> with TickerProviderStateMixin {
 
     if (mounted) {
       setState(() {
+        // if(responseSearch["data"])
+        print(responseSearch["data"]);
         searchFriends = (responseSearch["data"] as List)
             .map((e) => Chat.fromMap(e))
             .toList();
@@ -208,7 +216,8 @@ class AddMemberState extends State<AddMember> with TickerProviderStateMixin {
             for (int i = 0; i < whiteList.length; i++)
               InkWell(
                 onTap: () {
-                  if (members.contains(whiteList[i].user!.id!)) {
+                  if (members.contains(whiteList[i].user!.id!) ||
+                      widget.blockUser.contains(whiteList[i].user!.id!)) {
                     return;
                   }
                   setState(() {
@@ -225,7 +234,8 @@ class AddMemberState extends State<AddMember> with TickerProviderStateMixin {
                 child: Container(
                   width: size.width,
                   padding: EdgeInsets.all(size.width * 0.02),
-                  color: members.contains(whiteList[i].user!.id!)
+                  color: members.contains(whiteList[i].user!.id!) ||
+                          widget.blockUser.contains(whiteList[i].user!.id!)
                       ? Colors.grey[300]
                       : Colors.white,
                   child: Row(
@@ -247,9 +257,33 @@ class AddMemberState extends State<AddMember> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(
-                              whiteList[i].user!.name!,
-                              style: const TextStyle(fontSize: 16),
+                            // Text(
+                            //   whiteList[i].user!.name!,
+                            //   style: const TextStyle(fontSize: 16),
+                            // ),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: whiteList[i].user!.name!,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  widget.blockUser
+                                          .contains(whiteList[i].user!.id!)
+                                      ? const TextSpan(
+                                          text:
+                                              " - Đã bị chặn bởi trưởng/phó nhóm",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.red,
+                                          ),
+                                        )
+                                      : const TextSpan(text: "")
+                                ],
+                              ),
                             ),
                             whiteList[i].timeThread != null
                                 ? Text(

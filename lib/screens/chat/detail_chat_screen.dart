@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -41,7 +43,7 @@ class DetailChatScreen extends StatefulWidget {
 
 class _DetailChatScreenState extends State<DetailChatScreen> {
   User? userExisting = User();
-
+  FocusNode myFocusNode = FocusNode();
   final messageController = TextEditingController();
   bool isTextNotEmpty = false;
   final List<dynamic> messages = [];
@@ -49,7 +51,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   String _replyContent = "";
   String _replyStoneId = "";
   late Thread replyThread;
-  late bool isSend = false;
+  late bool blockChat = false;
+  late bool isAdmin = false;
 
   bool _reply = false;
   List<Thread> threadsChannel = [];
@@ -66,6 +69,12 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   late String name;
   late dynamic members = [];
   List<Thread> pinThreads = [];
+  List<User> mentionsDefault = [];
+  List<User> mentionsShow = [];
+  List<User> mentionsSelected = [];
+  List<Map<String, String>> mentionsMap = [];
+  late bool isMention = false;
+  late bool notiAll = false;
 
   final api = API();
   void setPath() async {
@@ -109,10 +118,25 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         final response = await api.get("channels/$id", {});
         if (response != null) {
           Channel channel = Channel.fromMap(response["data"]);
-
+          User user = channel.users!
+              .firstWhere((element) => element.id == userExisting!.id);
           setState(() {
             threadsChannel = channel.threads!;
             data = channel;
+            if (channel.disableThread == true) {
+              blockChat = true;
+            } else {
+              blockChat = false;
+            }
+
+            mentionsShow = channel.users!;
+            mentionsDefault = channel.users!;
+
+            if (user.role == "AMDIN" || user.role == "CO-ADMIN") {
+              isAdmin = true;
+            } else {
+              isAdmin = false;
+            }
           });
 
           for (var i = 0; i < threadsChannel.length; i++) {
@@ -180,6 +204,9 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               if (userIds.contains(userId)) {
                 if (type == "updateChannel") {
                   name = channel["name"];
+                  setState(() {
+                    blockChat = channel["disableThread"];
+                  });
                   threadsChannel.add(thread);
                 } else if (type == "addUserToChannel") {
                   members =
@@ -257,6 +284,36 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
               }
             }
           });
+        } else if (response["typeMsg"] == "update") {
+          List<Thread> snapThreads = [];
+          if (response["type"] == "chat") {
+            snapThreads = threadsChat;
+          } else {
+            snapThreads = threadsChannel;
+          }
+          if (snapThreads.isNotEmpty) {
+            int indexOfThread = snapThreads.indexWhere(
+                (element) => element.stoneId == response['stoneId']);
+            if (indexOfThread != -1) {
+              //add to pin thread
+              setState(() {
+                if (response["pin"] == true) {
+                  pinThreads.insert(0, snapThreads[indexOfThread]);
+                } else {
+                  pinThreads.removeWhere(
+                      (element) => element.stoneId == response['stoneId']);
+                }
+              });
+              //update for threads of chat or channel
+              setState(() {
+                if (response["type"] == "chat") {
+                  threadsChat[indexOfThread].pin = response["pin"];
+                } else {
+                  threadsChannel[indexOfThread].pin = response["pin"];
+                }
+              });
+            }
+          }
         } else {
           //send new message
           // ignore: prefer_typing_uninitialized_variables
@@ -368,16 +425,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     final String type = widget.data["type"];
     if (widget.data["type"] == "channel" && data != null) {
       members = widget.data["members"];
-      Channel channel = data;
-      User user = channel.users!
-          .firstWhere((element) => element.id == userExisting!.id);
-      setState(() {
-        if (channel.disableThread == true && user.role != "MEMBER") {
-          isSend = true;
-        } else {
-          isSend = false;
-        }
-      });
     }
 
     return Scaffold(
@@ -466,102 +513,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           currentMessageDate.year != nextMessageDate.year;
     }
 
-    handleFilePicked() async {
-      FilePickerResult? result = await FilePicker.platform
-          .pickFiles(withReadStream: true, allowMultiple: true);
-
-      List<PlatformFile> files = result!.files;
-      if (files.isNotEmpty) {
-        // add to thread show in UI
-        setState(() {});
-        List<FileModel> fileList = [];
-        for (var file in files) {
-          FileModel fileModel = FileModel(
-              path: file.path!,
-              filename: file.name,
-              size: convertToSize(file.size));
-          fileList.add(fileModel);
-        }
-        setState(() {
-          threads.add(Thread(
-              files: fileList,
-              createdAt: DateTime.now().subtract(const Duration(hours: 7)),
-              user: userExisting,
-              stoneId: "11111111"));
-        });
-
-        final response = await api.uploadFiles(files);
-        if (response == null) {
-          //remove thread
-          SnackBar snackBar = const SnackBar(
-            content: Text("Upload file thất bại"),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          setState(() {
-            threads.removeLast();
-          });
-        } else {
-          setState(() {
-            for (var i = 0;
-                i < threads[threads.length - 1].files!.length;
-                i++) {
-              var path = response[i]["path"];
-              threads[threads.length - 1].files![i].path = path;
-            }
-            fileData = response;
-          });
-
-          _sendMessage();
-        }
-      }
-    }
-
-    Future<void> sendRecord() async {
-      var path = await audioRecord.stop();
-      var uuid = const Uuid();
-      String randomFileName = uuid.v4();
-
-      // Create an instance of FlutterSoundHelper
-      final FlutterSoundHelper audioHelper = FlutterSoundHelper();
-
-      // Convert the audio file to mp3
-      final String mp3Path = path!.replaceFirst('.wav', '.mp3');
-      await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
-      // Now you have an mp3 file at the path mp3Path
-      path = mp3Path;
-      // Read the mp3 file as bytes
-      final mp3File = File(mp3Path);
-      FileModel fileModel = FileModel(path: mp3Path);
-      setState(() {
-        threads.add(Thread(
-            files: [fileModel],
-            createdAt: DateTime.now().subtract(const Duration(hours: 7)),
-            user: userExisting,
-            stoneId: "11111111"));
-      });
-      final bytes = await mp3File.readAsBytes();
-
-      // Get the file extension and size
-      final extension = mp3Path.split(".").last;
-      final size = bytes.length;
-
-      // Create the data object
-      var data = {
-        "filename": randomFileName + p.basename(mp3File.path),
-        "extension": extension,
-        "size": size,
-        "bytes": bytes,
-      };
-
-      final response = await api.uploadFile(data);
-      setState(() {
-        fileData = [response];
-      });
-      _sendMessage();
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    }
-
     return SafeArea(
       child: Stack(
         children: [
@@ -627,6 +578,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                 isRecall: thread.isRecall,
                                 isReply: thread.isReply,
                                 id: widget.data["id"],
+                                isPin: thread.pin!,
                                 replyThread: thread.isReply == true
                                     ? thread.replysTo
                                     : null,
@@ -643,6 +595,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                           } else {
                             children.add(
                               Message(
+                                id: widget.data["id"],
                                 stoneId: thread.stoneId!,
                                 sender: thread.user!,
                                 type: type,
@@ -654,6 +607,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                     : "",
                                 messageType: MessageType.text,
                                 timeSent: thread.createdAt!,
+                                isPin: thread.pin!,
                                 onFuctionReply: (sender, content, stoneId) {
                                   setState(() {
                                     _reply = true;
@@ -780,185 +734,22 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                         ])
                       : Container(),
                   const SizedBox(height: 10),
-                  isSend == false
-                      ? Container(
-                          height: 50,
-                          width: size.width,
-                          child: const Center(
-                            child: Text(
-                              "Chỉ có quản trị viên mới có thể gửi tin nhắn",
-                              style: TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        )
-                      : Row(
-                          children: [
-                            IconButton(
-                              onPressed: () async {
-                                final ImagePicker picker = ImagePicker();
-                                final XFile? image = await picker.pickImage(
-                                    source: ImageSource.camera);
-                                if (image != null) {
-                                  // Read the image file into a Uint8List
-                                  FileModel fileModel =
-                                      FileModel(path: image.path);
-                                  setState(() {
-                                    threads.add(Thread(
-                                        files: [fileModel],
-                                        createdAt: DateTime.now()
-                                            .subtract(const Duration(hours: 7)),
-                                        user: userExisting,
-                                        stoneId: "11111111"));
-                                  });
-
-                                  final bytes = await image.readAsBytes();
-
-                                  // Get the file extension
-                                  final extension = image.path.split(".").last;
-                                  final size = bytes.length;
-
-                                  var data = {
-                                    "filename": image.name,
-                                    "extension": extension,
-                                    "size": size,
-                                    "bytes": bytes,
-                                  };
-                                  final response = await api.uploadFile(data);
-                                  setState(() {
-                                    fileData = [response];
-                                  });
-
-                                  _sendMessage();
-                                }
-                              },
-                              icon: const Icon(Icons.camera_alt),
-                            ),
-                            Expanded(
-                              child: TextFormField(
-                                controller: messageController,
-                                onChanged: (value) {
-                                  setState(() {
-                                    isTextNotEmpty = value.isNotEmpty;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: 'Tin nhắn',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                    borderSide: BorderSide.none,
+                  blockChat == true
+                      ? isAdmin
+                          ? sendThread(threads, size)
+                          : SizedBox(
+                              height: 50,
+                              width: size.width,
+                              child: const Center(
+                                child: Text(
+                                  "Chỉ có quản trị viên mới có thể gửi tin nhắn",
+                                  style: TextStyle(
+                                    fontSize: 14,
                                   ),
-                                  // Kiểm tra biến isTextNotEmpty để xác định icon sẽ hiển thị
-                                  suffixIcon: isTextNotEmpty
-                                      ? IconButton(
-                                          onPressed: () {
-                                            // Xử lý sự kiện khi trường văn bản không trống
-                                            _sendMessage();
-                                          },
-                                          icon: const Icon(Icons.send),
-                                        )
-                                      : Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              onPressed: () =>
-                                                  handleFilePicked(),
-                                              icon:
-                                                  const Icon(Icons.attach_file),
-                                            ),
-                                            IconButton(
-                                              onPressed: () {
-                                                showModalBottomSheet(
-                                                    context: context,
-                                                    builder:
-                                                        (BuildContext context) {
-                                                      _startRecord();
-                                                      return Container(
-                                                        height:
-                                                            size.height * 0.4,
-                                                        width: size.width,
-                                                        // color: Colors.white,
-                                                        decoration:
-                                                            const BoxDecoration(
-                                                          color: Colors.white,
-                                                        ),
-                                                        child: Column(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .center,
-                                                            children: <Widget>[
-                                                              Container(
-                                                                width:
-                                                                    size.width *
-                                                                        0.8,
-                                                                height: 50,
-                                                                decoration: BoxDecoration(
-                                                                    color: Colors
-                                                                        .grey,
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                            18.0)),
-                                                                child:
-                                                                    const Center(
-                                                                        child:
-                                                                            Text(
-                                                                  'Đang ghi âm...',
-                                                                )),
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 20),
-                                                              const CircularProgressIndicator(),
-                                                              const SizedBox(
-                                                                  height: 20),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceAround,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .center,
-                                                                children: <Widget>[
-                                                                  RecordFunction(
-                                                                    icon: FontAwesomeIcons
-                                                                        .trash,
-                                                                    title:
-                                                                        'Huỷ',
-                                                                    onPressed:
-                                                                        () async {
-                                                                      await audioRecord
-                                                                          .stop();
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
-                                                                  RecordFunction(
-                                                                    icon: Icons
-                                                                        .send,
-                                                                    title:
-                                                                        'Gửi',
-                                                                    onPressed:
-                                                                        sendRecord,
-                                                                  ),
-                                                                ],
-                                                              )
-                                                            ]),
-                                                      );
-                                                    });
-                                              },
-                                              icon: const Icon(Icons.mic),
-                                            ),
-
-                                            // Thêm các IconButton khác nếu cần
-                                          ],
-                                        ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            )
+                      : sendThread(threads, size),
                   const SizedBox(height: 8.0),
                 ],
               ),
@@ -991,8 +782,468 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   ),
                 )
               : Container(),
+          isMention
+              ? Positioned(
+                  bottom: 60,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxHeight: 350,
+                    ),
+                    child: Container(
+                      width: size.width,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey,
+                          ),
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            mentionsSelected.isEmpty
+                                ? InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        mentionsSelected = mentionsShow;
+                                        isMention = false;
+                                        notiAll = true;
+                                      });
+                                      transferSelectedMentionsToText();
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 5),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.alternate_email_outlined,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          SizedBox(
+                                            width: 8,
+                                          ),
+                                          Text("Báo cho cả nhóm"),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : Container(),
+                            for (var i = 0; i < mentionsShow.length; i++)
+                              InkWell(
+                                onTap: () {
+                                  handleSelectUserMetion(mentionsShow[i]);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  child: Row(
+                                    children: [
+                                      mentionsShow[i].avatar != null
+                                          ? CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                  "${mentionsShow[i].avatar}"),
+                                              radius: 15,
+                                            )
+                                          : CircleAvatar(
+                                              radius: 15,
+                                              child: Text(
+                                                mentionsShow[i].name?[0] ?? '',
+                                                style: const TextStyle(
+                                                    fontSize: 40.0),
+                                              ),
+                                            ),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text(mentionsShow[i].name!),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : Container(),
         ],
       ),
+    );
+  }
+
+  Future<void> handleSelectUserMetion(User metionUser) async {
+    User selectedMention = User(
+      id: metionUser.id,
+      name: metionUser.name,
+      // Add other fields as necessary
+    );
+    await Future.delayed(Duration.zero);
+    setState(() {
+      mentionsSelected.add(selectedMention);
+      notiAll = false;
+      isMention = false;
+    });
+    transferSelectedMentionsToText();
+    // Filter mentionsDefault and assign the result to mentionsShow
+    List<User> mentionsChange = mentionsDefault
+        .where((element) => element.id != selectedMention.id)
+        .toList();
+    setState(() {
+      mentionsShow = mentionsChange;
+    });
+  }
+
+  transferSelectedMentionsToText() {
+    if (mentionsSelected.isNotEmpty && !notiAll) {
+      User mention = mentionsSelected[mentionsSelected.length - 1];
+      String mentionText = mention.name!;
+      setState(() {
+        List<String> targetMentions = messageController.text.split("@");
+
+        String currentText = targetMentions[targetMentions.length - 1];
+        if (mentionText.contains(currentText)) {
+          messageController.text = messageController.text.replaceRange(
+              messageController.text.length - currentText.length,
+              messageController.text.length,
+              "$mentionText ");
+        } else {
+          messageController.text += "$mentionText ";
+        }
+        messageController.selection = TextSelection.fromPosition(
+          TextPosition(offset: messageController.text.length),
+        );
+
+        // Add the mention to mentionsMap
+        mentionsMap.add({mention.id!: mention.name!});
+
+        myFocusNode.requestFocus();
+      });
+    }
+    if (notiAll) {
+      setState(() {
+        messageController.text = "@all ";
+        messageController.selection = TextSelection.fromPosition(
+          TextPosition(offset: messageController.text.length),
+        );
+        myFocusNode.requestFocus();
+      });
+    }
+  }
+
+  Row sendThread(
+    List<Thread> threads,
+    Size size,
+  ) {
+    handleFilePicked() async {
+      FilePickerResult? result = await FilePicker.platform
+          .pickFiles(withReadStream: true, allowMultiple: true);
+
+      List<PlatformFile> files = result!.files;
+      if (files.isNotEmpty) {
+        // add to thread show in UI
+        setState(() {});
+        List<FileModel> fileList = [];
+        for (var file in files) {
+          FileModel fileModel = FileModel(
+              path: file.path!,
+              filename: file.name,
+              size: convertToSize(file.size));
+          fileList.add(fileModel);
+        }
+        setState(() {
+          threads.add(Thread(
+              files: fileList,
+              createdAt: DateTime.now().subtract(const Duration(hours: 7)),
+              user: userExisting,
+              stoneId: "11111111"));
+        });
+
+        final response = await api.uploadFiles(files);
+        if (response == null) {
+          //remove thread
+          SnackBar snackBar = const SnackBar(
+            content: Text("Tải file thất bại"),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          setState(() {
+            threads.removeLast();
+          });
+        } else {
+          setState(() {
+            for (var i = 0;
+                i < threads[threads.length - 1].files!.length;
+                i++) {
+              var path = response[i]["path"];
+              threads[threads.length - 1].files![i].path = path;
+            }
+            fileData = response;
+          });
+
+          _sendMessage();
+        }
+      }
+    }
+
+    Future<void> sendRecord() async {
+      var path = await audioRecord.stop();
+      var uuid = const Uuid();
+      String randomFileName = uuid.v4();
+
+      // Create an instance of FlutterSoundHelper
+      final FlutterSoundHelper audioHelper = FlutterSoundHelper();
+
+      // Convert the audio file to mp3
+      final String mp3Path = path!.replaceFirst('.wav', '.mp3');
+      await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
+      // Now you have an mp3 file at the path mp3Path
+      path = mp3Path;
+      // Read the mp3 file as bytes
+      final mp3File = File(mp3Path);
+      FileModel fileModel = FileModel(path: mp3Path);
+      setState(() {
+        threads.add(Thread(
+            files: [fileModel],
+            createdAt: DateTime.now().subtract(const Duration(hours: 7)),
+            user: userExisting,
+            stoneId: "11111111"));
+      });
+      final bytes = await mp3File.readAsBytes();
+
+      // Get the file extension and size
+      final extension = mp3Path.split(".").last;
+      final size = bytes.length;
+
+      // Create the data object
+      var data = {
+        "filename": randomFileName + p.basename(mp3File.path),
+        "extension": extension,
+        "size": size,
+        "bytes": bytes,
+      };
+
+      final response = await api.uploadFile(data);
+      setState(() {
+        fileData = [response];
+      });
+      _sendMessage();
+      Navigator.pop(context);
+    }
+
+    triggerMentions(String text) {
+      List<String> targetMentions = text.split("@");
+
+      if (text.contains("@")) {
+        if (data != null) {
+          String searchTarget = targetMentions[targetMentions.length - 1];
+          if (data is Channel) {
+            Channel channel = data;
+            List<User> users = channel.users!;
+            List<User> mentionsSearch = [];
+            for (var user in users) {
+              String? name = user.name;
+              if (name != null &&
+                  name.toLowerCase().contains(searchTarget.toLowerCase())) {
+                mentionsSearch.add(user);
+              }
+            }
+            setState(() {
+              if (mentionsSelected.isNotEmpty) {
+                mentionsSearch = mentionsSearch.where((element) {
+                  return mentionsSelected.any((element2) {
+                    return element.id != element2.id;
+                  });
+                }).toList();
+              }
+
+              if (mentionsSelected.length == mentionsDefault.length) {
+                mentionsSearch = [];
+                isMention = false;
+              }
+
+              mentionsShow = mentionsSearch;
+            });
+          }
+        }
+      }
+    }
+
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () async {
+            final ImagePicker picker = ImagePicker();
+            final XFile? image =
+                await picker.pickImage(source: ImageSource.camera);
+            if (image != null) {
+              // Read the image file into a Uint8List
+              FileModel fileModel = FileModel(path: image.path);
+              setState(() {
+                threads.add(Thread(
+                    files: [fileModel],
+                    createdAt:
+                        DateTime.now().subtract(const Duration(hours: 7)),
+                    user: userExisting,
+                    stoneId: "11111111"));
+              });
+
+              final bytes = await image.readAsBytes();
+
+              // Get the file extension
+              final extension = image.path.split(".").last;
+              final size = bytes.length;
+
+              var data = {
+                "filename": image.name,
+                "extension": extension,
+                "size": size,
+                "bytes": bytes,
+              };
+              final response = await api.uploadFile(data);
+              setState(() {
+                fileData = [response];
+              });
+
+              _sendMessage();
+            }
+          },
+          icon: const Icon(Icons.camera_alt),
+        ),
+        Expanded(
+          child: TextFormField(
+            controller: messageController,
+            focusNode: myFocusNode,
+            onChanged: (value) {
+              String textTyping = value.split(" ").last;
+
+              if (textTyping.contains("@")) {
+                setState(() {
+                  isMention = true;
+                });
+                triggerMentions(value);
+              } else {
+                setState(() {
+                  isMention = false;
+                });
+              }
+
+              if (value.isEmpty) {
+                setState(() {
+                  mentionsSelected = [];
+                  mentionsMap = [];
+                });
+              } else {
+                for (Map<String, String> mention in List.from(mentionsMap)) {
+                  // Create a copy of mentionsMap to avoid concurrent modification
+                  String id = mention.keys.first;
+                  if (!value.contains("@${mention[id]}")) {
+                    // If a mention is not in the value, remove it from mentionsMap and selectionUser
+                    setState(() {
+                      mentionsMap.remove(mention);
+                      mentionsSelected.removeWhere((user) => user.id == id);
+                    });
+                  }
+                }
+              }
+
+              setState(() {
+                isTextNotEmpty = value.isNotEmpty;
+              });
+            },
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Tin nhắn',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.0),
+                borderSide: BorderSide.none,
+              ),
+              // Kiểm tra biến isTextNotEmpty để xác định icon sẽ hiển thị
+              suffixIcon: isTextNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        // Xử lý sự kiện khi trường văn bản không trống
+                        _sendMessage();
+                      },
+                      icon: const Icon(Icons.send),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () => handleFilePicked(),
+                          icon: const Icon(Icons.attach_file),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  _startRecord();
+                                  return Container(
+                                    height: size.height * 0.4,
+                                    width: size.width,
+                                    // color: Colors.white,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                    ),
+                                    child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          Container(
+                                            width: size.width * 0.8,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                                color: Colors.grey,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        18.0)),
+                                            child: const Center(
+                                                child: Text(
+                                              'Đang ghi âm...',
+                                            )),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          const CircularProgressIndicator(),
+                                          const SizedBox(height: 20),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: <Widget>[
+                                              RecordFunction(
+                                                icon: FontAwesomeIcons.trash,
+                                                title: 'Huỷ',
+                                                onPressed: () async {
+                                                  await audioRecord.stop();
+                                                  Navigator.pop(context);
+                                                },
+                                              ),
+                                              RecordFunction(
+                                                icon: Icons.send,
+                                                title: 'Gửi',
+                                                onPressed: sendRecord,
+                                              ),
+                                            ],
+                                          )
+                                        ]),
+                                  );
+                                });
+                          },
+                          icon: const Icon(Icons.mic),
+                        ),
+
+                        // Thêm các IconButton khác nếu cần
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1033,7 +1284,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             ],
           ),
           const Spacer(),
-          showAllPin
+          pinThreads.length <= 1 || showAllPin
               ? Container()
               : TextButton(
                   onPressed: () {
@@ -1072,6 +1323,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     late String cloudId;
     String type = widget.data["type"];
     String id = widget.data["id"];
+    print(widget.data);
     bool isChannel = false;
     bool isChat = false;
     bool isCloud = false;
@@ -1082,7 +1334,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             : isCloud = true;
 
     if (isChannel) {
-      members = widget.data["members"].map((e) => e["id"]).toList();
+      members = widget.data["members"].map((e) => e).toList();
     } else if (isChat) {
       receiveId = widget.data["receiverId"];
     } else {
@@ -1095,6 +1347,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         if (fileData.length > 0) "fileCreateDto": fileData,
         if (_replyStoneId.isNotEmpty) "replyId": _replyStoneId,
         if (_replyStoneId.isNotEmpty) "replysTo": replyThread.toMap(),
+        if (mentionsSelected.isNotEmpty)
+          "mentions": mentionsSelected.map((e) => e.id).toList(),
         if (isChannel) ...{
           "channelId": id,
           "members": members,
@@ -1108,15 +1362,16 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       setState(() {
         _reply = false;
       });
+      print(data);
 
-      SocketConfig.emit(SocketMessage.sendThread, data);
+      // SocketConfig.emit(SocketMessage.sendThread, data);
 
-      if (messageController.text.isNotEmpty) {
-        setState(() {
-          isTextNotEmpty = false;
-        });
-        messageController.clear();
-      }
+      // if (messageController.text.isNotEmpty) {
+      //   setState(() {
+      //     isTextNotEmpty = false;
+      //   });
+      //   messageController.clear();
+      // }
     }
   }
 }

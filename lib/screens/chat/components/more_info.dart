@@ -121,7 +121,6 @@ class _MoreInfoState extends State<MoreInfo> {
         filesUI.add(file);
       }
     }
-    print(isAdmin);
   }
 
   void updateChannel(String channelId, dynamic dataUpdate) {
@@ -205,22 +204,22 @@ class _MoreInfoState extends State<MoreInfo> {
                         mainAxisSpacing: 2,
                         crossAxisCount: 2,
                         children: [
-                          // for (var user in channel!.users!.take(4))
-                          //   user.avatar != null
-                          //       ? CircleAvatar(
-                          //           backgroundImage:
-                          //               NetworkImage(user.avatar ?? ""))
-                          //       : Center(
-                          //           child: CircleAvatar(
-                          //             child: Text(
-                          //               user.name.toString()[0],
-                          //               style: const TextStyle(
-                          //                 color: Colors.white,
-                          //                 fontSize: 25,
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         ),
+                          for (var user in channel!.users!.take(4))
+                            user.avatar != null
+                                ? CircleAvatar(
+                                    backgroundImage:
+                                        NetworkImage(user.avatar ?? ""))
+                                : Center(
+                                    child: CircleAvatar(
+                                      child: Text(
+                                        user.name.toString()[0],
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 25,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                         ],
                       ),
                     )
@@ -304,7 +303,8 @@ class _MoreInfoState extends State<MoreInfo> {
                           MyAppRouteConstants.addMemberRouteName,
                           extra: {
                             "members": members,
-                            "channelId": channel!.id
+                            "channelId": channel!.id,
+                            "blockUser": channel!.blockUser,
                           });
                     },
                   )

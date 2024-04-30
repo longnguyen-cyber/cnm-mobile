@@ -259,6 +259,7 @@ class MyAppRouter {
           dynamic params = state.extra as dynamic;
           List<String> members = params["members"] as List<String>;
           String channelId = params["channelId"] as String;
+          List<String> blockUser = params["blockUser"] as List<String>;
 
           return buildPageWithDefaultTransition<void>(
             context: context,
@@ -266,6 +267,7 @@ class MyAppRouter {
             child: AddMember(
               members: members,
               channelId: channelId,
+              blockUser: blockUser,
             ),
           );
         },

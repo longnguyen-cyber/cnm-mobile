@@ -46,6 +46,7 @@ class MessageBubble extends StatefulWidget {
     this.receiveId,
     this.typeRecall,
     this.id,
+    this.isPin,
   });
   final String? receiveId;
   final String stoneId;
@@ -60,6 +61,7 @@ class MessageBubble extends StatefulWidget {
   final bool? isReply;
   final Thread? replyThread;
   final String? typeRecall;
+  final bool? isPin;
   final String? id;
   final Function(String, String, String) onFuctionReply; // người rep và content
 
@@ -227,7 +229,7 @@ class _MessageBubbleState extends State<MessageBubble> {
         Align(
           alignment: alignment,
           child: GestureDetector(
-            onLongPress: () {
+            onTap: () {
               // if (!widget.isRecall!) {
               showPopover(
                 context: context,
@@ -239,6 +241,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   isRecall: widget.isRecall ?? false,
                   isFile: widget.files!.isNotEmpty,
                   content: widget.content != "" ? widget.content : null,
+                  isPin: widget.isPin ?? false,
                 ),
                 onPop: () {},
                 direction: PopoverDirection.bottom,
@@ -647,6 +650,18 @@ class _MessageBubbleState extends State<MessageBubble> {
     SocketConfig.emit(SocketMessage.deleteThread, data);
   }
 
+  void pinFnc() {
+    var data = {
+      "stoneId": widget.stoneId,
+      "type": widget.type,
+      "pin": !widget.isPin!,
+      "id": widget.id,
+    };
+
+    print(data);
+    SocketConfig.emit(SocketMessage.updateThread, data);
+  }
+
   void handleFunction(FunctionChat function) {
     switch (function) {
       case FunctionChat.delete:
@@ -670,13 +685,23 @@ class _MessageBubbleState extends State<MessageBubble> {
         break;
       case FunctionChat.share:
         // share fuc
+        if (widget.content != null) {
+          GoRouter.of(context).pushNamed(MyAppRouteConstants.forwardRouteName,
+              extra: widget.content);
+        }
         break;
+
       case FunctionChat.download:
         widget.files?.forEach((element) {
           downloadFnc(element.path!);
         });
 
         Navigator.pop(context);
+        break;
+      case FunctionChat.pin:
+        pinFnc();
+        Navigator.pop(context);
+
         break;
       default:
     }
@@ -705,6 +730,7 @@ class ListItems extends StatefulWidget {
     required this.userId,
     required this.isRecall,
     required this.isFile,
+    required this.isPin,
     this.content,
   });
 
@@ -714,6 +740,7 @@ class ListItems extends StatefulWidget {
   final String userId;
   final bool isRecall;
   final bool isFile;
+  final bool isPin;
   final String? content;
 
   @override
@@ -792,11 +819,18 @@ class _ListItemsState extends State<ListItems> {
                   func: FunctionChat.share,
                   onClick: () {
                     // GoRouter.of(context).pushNamed(MyAppRouteConstants.forwardRouteName, extra: widget.senderId);
-                    if (widget.content != null) {
-                      GoRouter.of(context).pushNamed(
-                          MyAppRouteConstants.forwardRouteName,
-                          extra: widget.content);
-                    }
+
+                    widget.onFunctionSelected(FunctionChat.share);
+                  },
+                ),
+              if (widget.isRecall == false)
+                MenuItemChat(
+                  title: widget.isPin == true ? 'Bỏ ghim' : 'Ghim',
+                  icon: FontAwesomeIcons.thumbtack,
+                  color: Colors.orange,
+                  func: FunctionChat.pin,
+                  onClick: () {
+                    widget.onFunctionSelected(FunctionChat.pin);
                   },
                 ),
               if (widget.senderId == widget.userId && widget.isRecall == false)

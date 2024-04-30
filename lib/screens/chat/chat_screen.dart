@@ -58,12 +58,15 @@ class _ChatScreenState extends State<ChatScreen> {
             .map((e) => Thread.fromMap(e))
             .toList();
         lastedThread = threads[threads.length - 1];
+        String message = lastedThread.messages == null
+            ? "File đính kèm"
+            : lastedThread.messages.message ?? "";
         cloud = {
           "id": response["data"]["id"],
           "timeThread": lastedThread.createdAt.toString(),
           "type": "cloud",
           "lastedThread": {
-            "messages": {"message": lastedThread.messages.message}
+            "messages": {"message": message}
           },
           "user": {
             "avatar":

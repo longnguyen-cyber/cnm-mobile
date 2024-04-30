@@ -1351,6 +1351,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           "mentions": mentionsSelected.map((e) => e.id).toList(),
         if (isChannel) ...{
           "channelId": id,
+          "name": name,
           "members": members,
         } else if (isChat) ...{
           "chatId": id,

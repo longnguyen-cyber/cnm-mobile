@@ -1,4 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:zalo_app/config/socket/socket.dart';
+import 'package:zalo_app/config/socket/socket_event.dart';
+import 'package:zalo_app/screens/chat/components/local_notifications.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +35,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
     with TickerProviderStateMixin {
   List<Chat> waitList = [];
   final Dio _dio = Dio();
+
   var baseUrl = dotenv.env['API_URL'];
   void getAll() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -194,13 +199,82 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final api = API();
   late String _token = "";
+  late dynamic dataRouter = null;
+  User? userExisting = User();
+
+  listenToNotifications() {
+    LocalNotifications.onClickNotification.stream.listen((event) {
+      // Navigator.pushNamed(context, routeName, arguments: event);
+      if (dataRouter != null) {
+        GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
+            extra: dataRouter);
+        if (mounted) {
+          setState(() {
+            dataRouter = null;
+          });
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-
     fetchToken();
     fecthUser();
+    SocketConfig.listen(
+      SocketEvent.updatedSendThread,
+      (response) {
+        var members = response['members'] != null
+            ? (response['members'] as List<dynamic>).map((e) => e).toList()
+            : [];
+        print(members.contains(userExisting!.id));
+        if (members.contains(userExisting!.id) ||
+            response["receiveId"] == userExisting!.id) {
+          String body = "";
+          if (response['messages'] != null &&
+              response['messages']['message'] != null &&
+              response['fileCreateDto'] == null) {
+            //only message
+            body = response['messages']['message'];
+          } else if (response['messages'] == null &&
+              response['fileCreateDto'] != null) {
+            //only file
+            body =
+                "Bạn vừa nhận được${(response['fileCreateDto'] as List).length} tệp tin";
+          } else {
+            //message and file
+            body = response['messages']['message'];
+          }
+
+          String id = response["type"] == "chat"
+              ? response["chatId"]
+              : response["channelId"];
+          String title = response["type"] == "chat"
+              ? response["user"]["name"]
+              : "Nhóm ${response["name"]}";
+          LocalNotifications.showSimpleNotification(
+            title: title,
+            body: body,
+            payload: id,
+            uniqueId: id,
+          );
+          if (mounted) {
+            setState(() {
+              dataRouter = {
+                "type": response["type"],
+                "id": id,
+                if (response["type"] == "chat") "user": response["user"],
+                if (response["type"] == "channel") "name": response["name"],
+                if (response["type"] == "channel") "users": members,
+              };
+            });
+          }
+        }
+      },
+    );
+    listenToNotifications();
+
     if (widget.index == null) {
       setState(() {
         widget.index = 0;
@@ -210,16 +284,19 @@ class _MainScreenState extends State<MainScreen> {
 
   void fecthUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
 
-    var userOfToken = prefs.getString(_token) ?? "";
+    var userOfToken = prefs.getString(token) ?? "";
     if (mounted) {
       if (userOfToken != "") {
-        User userExisting = User.fromJson(userOfToken);
+        User userCurrent = User.fromJson(userOfToken);
         // prefs.setString(response.data["data"]["token"], user.toJson());
-        var responseUser =
-            await api.get("users/${userExisting.id}/profile", {});
+        var responseUser = await api.get("users/${userCurrent.id}/profile", {});
         User userUpdate = User.fromMap(responseUser["data"]);
         prefs.setString(_token, userUpdate.toJson());
+        setState(() {
+          userExisting = userCurrent;
+        });
       }
     }
   }

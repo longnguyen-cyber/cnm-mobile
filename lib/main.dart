@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/config/routes/app_route_config.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/repository/user_repo.dart';
-
+import 'package:zalo_app/screens/chat/components/local_notifications.dart';
 import 'package:zalo_app/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalNotifications.init();
+
+//  handle in terminated state
+
   // SharedPreferences prefs = await SharedPreferences.getInstance();
   // prefs.clear();
   await dotenv.load(fileName: "lib/.env");
@@ -54,6 +57,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addObserver(this);
     getToken();
   }

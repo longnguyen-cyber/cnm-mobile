@@ -29,7 +29,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
-        android:label="zalo_app"
+        android:label="workchat"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

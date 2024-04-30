@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 /// Flutter code sample for [showModalBottomSheet].
 
 class BottomSheetApp extends StatelessWidget {
-  const BottomSheetApp({super.key});
-
+  const BottomSheetApp({super.key, this.data});
+  final dynamic data;
   @override
   Widget build(BuildContext context) {
+    print(data);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Bottom Sheet Sample')),

@@ -68,6 +68,7 @@ dependencies:
   flutter_local_notifications: ^15.1.1
   flutter_timezone: ^1.0.7
   rxdart: ^0.27.7
+  scrollable_positioned_list: ^0.3.8
 
   # zego_uikit_prebuilt_call: ^4.5.1
 

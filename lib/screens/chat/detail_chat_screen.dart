@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
@@ -60,6 +61,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   List<Thread> threadsChannel = [];
   List<Thread> threadsChat = [];
   List<Thread> threadsCloud = [];
+  List<Thread> threadsPosition = [];
   late dynamic data = null;
   late dynamic fileData = [];
   late AudioRecorder audioRecord;
@@ -77,6 +79,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   List<Map<String, String>> mentionsMap = [];
   late bool isMention = false;
   late bool notiAll = false;
+  late bool hasAutoScrolled = false;
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+  final scrollDuration = const Duration(seconds: 1);
 
   late bool typing = false;
 
@@ -523,12 +530,22 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
 
   SafeArea common(EdgeInsets viewInsets, List<Thread> threads, String type) {
     Size size = MediaQuery.of(context).size;
-    ScrollController controller = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (controller.hasClients) {
-        controller.jumpTo(controller.position.maxScrollExtent);
-      }
-    });
+    // ScrollController controller = ScrollController();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (controller.hasClients) {
+    //     controller.jumpTo(controller.position.maxScrollExtent);
+    //   }
+    // });
+    if (threads.isNotEmpty && !hasAutoScrolled) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (itemScrollController.isAttached) {
+          itemScrollController.jumpTo(index: threads.length - 1);
+          setState(() {
+            hasAutoScrolled = true;
+          });
+        }
+      });
+    }
     bool isDifferentDay(int index) {
       if (index == threads.length - 1) {
         return false; // Always false for the last message
@@ -542,6 +559,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
           currentMessageDate.year != nextMessageDate.year;
     }
 
+    setState(() {
+      if (threads.isNotEmpty) {
+        threadsPosition = threads;
+      }
+    });
     return SafeArea(
       child: Stack(
         children: [
@@ -555,232 +577,239 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                 top: 8.0,
                 bottom: (viewInsets.bottom > 0) ? 8.0 : 0.0,
               ),
-              child: Column(
-                children: <Widget>[
-                  Expanded(
-                    child: ListView.builder(
-                      controller: controller,
-                      itemCount: threads.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        Thread thread = threads[index];
-                        List<Widget> children = [];
-                        if (_replyStoneId.isNotEmpty) {
-                          replyThread = threads.firstWhere(
-                              (element) => element.stoneId == _replyStoneId);
-                        }
-
-                        if (thread.user == null) {
-                          children.add(
-                            Center(
-                              child: Text(
-                                thread.messages!.message,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          );
-                        } else {
-                          bool nameExisted = index > 0 &&
-                              threads[index - 1].user != null &&
-                              threads[index - 1].user!.name ==
-                                  thread.user!.name;
-                          if (thread.user!.id == userExisting!.id) {
-                            children.add(
-                              MessageBubble(
-                                stoneId: thread.stoneId!,
-                                user: userExisting!,
-                                receiveId: thread.receiveId != null
-                                    ? thread.receiveId!
-                                    : "",
-                                type: type,
-                                typeRecall:
-                                    thread.messages != null ? "text" : "image",
-                                content: thread.messages != null
-                                    ? thread.messages!.message
-                                    : "",
-                                timeSent: (thread.createdAt!),
-                                emojis:
-                                    thread.emojis != null ? thread.emojis! : [],
-                                files: thread.files!,
-                                isRecall: thread.isRecall,
-                                isReply: thread.isReply,
-                                id: widget.data["id"],
-                                isPin: thread.pin!,
-                                replyThread: thread.isReply == true
-                                    ? thread.replysTo
-                                    : null,
-                                onFuctionReply: (sender, content, stonedId) {
-                                  setState(() {
-                                    _reply = true;
-                                    _replyUser = sender;
-                                    _replyContent = content;
-                                    _replyStoneId = stonedId;
-                                  });
-                                },
-                              ),
-                            );
-                          } else {
-                            children.add(
-                              Message(
-                                id: widget.data["id"],
-                                stoneId: thread.stoneId!,
-                                sender: thread.user!,
-                                type: type,
-                                receiveId: thread.senderId != null
-                                    ? thread.senderId!
-                                    : "",
-                                content: thread.messages != null
-                                    ? thread.messages!.message
-                                    : "",
-                                messageType: MessageType.text,
-                                timeSent: thread.createdAt!,
-                                isPin: thread.pin!,
-                                onFuctionReply: (sender, content, stoneId) {
-                                  setState(() {
-                                    _reply = true;
-                                    _replyUser = sender;
-                                    _replyContent = content;
-                                    _replyStoneId = stoneId;
-                                  });
-                                },
-                                isReply: thread.isReply,
-                                replyThread: thread.isReply == true
-                                    ? thread.replysTo
-                                    : null,
-                                exist: !nameExisted,
-                                isRecall: thread.isRecall!,
-                                emojis: thread.emojis!,
-                                files: thread.files!,
-                              ),
-                            );
-                          }
-                        }
-
-                        if (isDifferentDay(index)) {
-                          DateTime currentMessageDate =
-                              (threads[index].createdAt!);
-                          DateTime now = DateTime.now();
-
-                          String formattedDate;
-                          if (currentMessageDate.year == now.year &&
-                              currentMessageDate.month == now.month &&
-                              currentMessageDate.day == now.day - 1) {
-                            formattedDate = 'Hôm nay';
-                          } else {
-                            formattedDate = DateFormat('dd/MM/yyyy')
-                                .format(currentMessageDate);
+              child: OrientationBuilder(
+                builder: (BuildContext context, Orientation orientation) =>
+                    Column(
+                  children: <Widget>[
+                    Expanded(
+                      child: ScrollablePositionedList.builder(
+                        itemCount: threads.length,
+                        itemScrollController: itemScrollController,
+                        itemPositionsListener: itemPositionsListener,
+                        itemBuilder: (BuildContext context, int index) {
+                          Thread thread = threads[index];
+                          List<Widget> children = [];
+                          if (_replyStoneId.isNotEmpty) {
+                            replyThread = threads.firstWhere(
+                                (element) => element.stoneId == _replyStoneId);
                           }
 
-                          children.add(
-                            Column(
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 0, horizontal: 60),
-                                  child: const Divider(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  formattedDate,
+                          if (thread.user == null) {
+                            children.add(
+                              Center(
+                                child: Text(
+                                  thread.messages!.message,
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 12,
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        }
-                        // Add a space above the first message if have pin thread
-                        if (true) {
-                          children.insert(0, const SizedBox(height: 40));
-                        }
-
-                        return Wrap(children: children);
-                      },
-                    ),
-                  ),
-                  _reply
-                      ? Row(children: <Widget>[
-                          Container(
-                            width: size.width * 0.9,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.white54,
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                ),
-                                Container(
-                                  width: 3, // Độ rộng của đường kẻ thẳng đứng
-                                  height:
-                                      40, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
-                                  color:
-                                      Colors.blue, // Màu sắc của đường kẻ thẳng
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                RichText(
-                                  textAlign: TextAlign.center,
-                                  text: TextSpan(
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: '  $_replyUser\n',
-                                        style: const TextStyle(
-                                            color: Colors.black, fontSize: 16),
-                                      ),
-                                      TextSpan(
-                                        text: _replyContent,
-                                        style: const TextStyle(
-                                            color: Colors.grey, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Spacer(),
-                                Positioned(
-                                  top: 0,
-                                  left: 0,
-                                  child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _reply = false;
-                                      });
-                                    },
-                                    icon: const Icon(Icons.close),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ])
-                      : Container(),
-                  const SizedBox(height: 10),
-                  blockChat == true
-                      ? isAdmin
-                          ? sendThread(threads, size)
-                          : SizedBox(
-                              height: 50,
-                              width: size.width,
-                              child: const Center(
-                                child: Text(
-                                  "Chỉ có quản trị viên mới có thể gửi tin nhắn",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                  ),
-                                ),
                               ),
-                            )
-                      : sendThread(threads, size),
-                  const SizedBox(height: 8.0),
-                ],
+                            );
+                          } else {
+                            bool nameExisted = index > 0 &&
+                                threads[index - 1].user != null &&
+                                threads[index - 1].user!.name ==
+                                    thread.user!.name;
+                            if (thread.user!.id == userExisting!.id) {
+                              children.add(
+                                MessageBubble(
+                                  stoneId: thread.stoneId!,
+                                  user: userExisting!,
+                                  receiveId: thread.receiveId != null
+                                      ? thread.receiveId!
+                                      : "",
+                                  type: type,
+                                  typeRecall: thread.messages != null
+                                      ? "text"
+                                      : "image",
+                                  content: thread.messages != null
+                                      ? thread.messages!.message
+                                      : "",
+                                  timeSent: (thread.createdAt!),
+                                  emojis: thread.emojis != null
+                                      ? thread.emojis!
+                                      : [],
+                                  files: thread.files!,
+                                  isRecall: thread.isRecall,
+                                  isReply: thread.isReply,
+                                  id: widget.data["id"],
+                                  isPin: thread.pin!,
+                                  replyThread: thread.isReply == true
+                                      ? thread.replysTo
+                                      : null,
+                                  onFuctionReply: (sender, content, stonedId) {
+                                    setState(() {
+                                      _reply = true;
+                                      _replyUser = sender;
+                                      _replyContent = content;
+                                      _replyStoneId = stonedId;
+                                    });
+                                  },
+                                ),
+                              );
+                            } else {
+                              children.add(
+                                Message(
+                                  id: widget.data["id"],
+                                  stoneId: thread.stoneId!,
+                                  sender: thread.user!,
+                                  type: type,
+                                  receiveId: thread.senderId != null
+                                      ? thread.senderId!
+                                      : "",
+                                  content: thread.messages != null
+                                      ? thread.messages!.message
+                                      : "",
+                                  messageType: MessageType.text,
+                                  timeSent: thread.createdAt!,
+                                  isPin: thread.pin!,
+                                  onFuctionReply: (sender, content, stoneId) {
+                                    setState(() {
+                                      _reply = true;
+                                      _replyUser = sender;
+                                      _replyContent = content;
+                                      _replyStoneId = stoneId;
+                                    });
+                                  },
+                                  isReply: thread.isReply,
+                                  replyThread: thread.isReply == true
+                                      ? thread.replysTo
+                                      : null,
+                                  exist: !nameExisted,
+                                  isRecall: thread.isRecall!,
+                                  emojis: thread.emojis!,
+                                  files: thread.files!,
+                                ),
+                              );
+                            }
+                          }
+
+                          if (isDifferentDay(index)) {
+                            DateTime currentMessageDate =
+                                (threads[index].createdAt!);
+                            DateTime now = DateTime.now();
+
+                            String formattedDate;
+                            if (currentMessageDate.year == now.year &&
+                                currentMessageDate.month == now.month &&
+                                currentMessageDate.day == now.day - 1) {
+                              formattedDate = 'Hôm nay';
+                            } else {
+                              formattedDate = DateFormat('dd/MM/yyyy')
+                                  .format(currentMessageDate);
+                            }
+
+                            children.add(
+                              Column(
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 0, horizontal: 60),
+                                    child: const Divider(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    formattedDate,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          // Add a space above the first message if have pin thread
+                          if (true) {
+                            children.insert(0, const SizedBox(height: 40));
+                          }
+
+                          return Wrap(children: children);
+                        },
+                      ),
+                    ),
+                    _reply
+                        ? Row(children: <Widget>[
+                            Container(
+                              width: size.width * 0.9,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.white54,
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                  ),
+                                  Container(
+                                    width: 3, // Độ rộng của đường kẻ thẳng đứng
+                                    height:
+                                        40, // Chiều cao tối thiểu để giữ khoảng cách giữa hai đoạn văn bản
+                                    color: Colors
+                                        .blue, // Màu sắc của đường kẻ thẳng
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      children: <TextSpan>[
+                                        TextSpan(
+                                          text: '  $_replyUser\n',
+                                          style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16),
+                                        ),
+                                        TextSpan(
+                                          text: _replyContent,
+                                          style: const TextStyle(
+                                              color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    child: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _reply = false;
+                                        });
+                                      },
+                                      icon: const Icon(Icons.close),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ])
+                        : Container(),
+                    const SizedBox(height: 10),
+                    blockChat == true
+                        ? isAdmin
+                            ? sendThread(threads, size)
+                            : SizedBox(
+                                height: 50,
+                                width: size.width,
+                                child: const Center(
+                                  child: Text(
+                                    "Chỉ có quản trị viên mới có thể gửi tin nhắn",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              )
+                        : sendThread(threads, size),
+                    const SizedBox(height: 8.0),
+                  ],
+                ),
               ),
             ),
           ),
@@ -915,6 +944,57 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   ),
                 )
               : Container(),
+          Positioned(
+            bottom: 60,
+            right: 0,
+            child: ValueListenableBuilder<Iterable<ItemPosition>>(
+              valueListenable: itemPositionsListener.itemPositions,
+              builder: (context, positions, child) {
+                int maxIndex = 0;
+                if (positions.isNotEmpty) {
+                  maxIndex = positions
+                      .where((ItemPosition position) =>
+                          position.itemTrailingEdge > 0)
+                      .reduce((ItemPosition max, ItemPosition position) =>
+                          position.index > max.index ? position : max)
+                      .index;
+                }
+                // Show the button only if the last item is not visible
+                return maxIndex >= threads.length - 4
+                    ? Container()
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        child: Container(
+                          width: 35.0,
+                          height: 35.0,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            //shadow
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 1,
+                                blurRadius: 1,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                            shape: BoxShape.circle,
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              scrollTo(threads.length - 1);
+                            },
+                            child: const Center(
+                              child: Icon(Icons.keyboard_arrow_down_sharp,
+                                  size: 35),
+                            ),
+                          ),
+                        ),
+                      );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -1324,7 +1404,15 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     );
   }
 
-  Container pinThread(Thread thread) {
+  void scrollTo(int index) => itemScrollController.scrollTo(
+      index: index,
+      duration: scrollDuration,
+      curve: Curves.easeInOutCubic,
+      alignment: 0);
+
+  void jumpTo(int index) =>
+      itemScrollController.jumpTo(index: index, alignment: 0);
+  GestureDetector pinThread(Thread thread) {
     String text = thread.messages!.message;
     int lengthEnable = showAllPin ? 30 : 20;
     if (text.toString().length > lengthEnable) {
@@ -1332,48 +1420,59 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     } else {
       text = text;
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey, width: 1.0),
+    return GestureDetector(
+      onTap: () {
+        // GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
+        //go to position of thread use stoneId
+        //find index of thread in threadsPosition
+        int index = threadsPosition
+            .indexWhere((element) => element.stoneId == thread.stoneId);
+        if (index != -1) {
+          setState(() {
+            showAllPin = false;
+          });
+          jumpTo(index);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Colors.grey, width: 1.0),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              // GoRouter.of(context).pushNamed(MyAppRouteConstants.mainRouteName);
-              //go to position of thread use stoneId
-            },
-            icon: const Icon(Icons.message_rounded, color: Colors.blue),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Tin nhắn",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text("${thread.user!.name}: $text"),
-            ],
-          ),
-          const Spacer(),
-          pinThreads.length <= 1 || showAllPin
-              ? Container()
-              : TextButton(
-                  onPressed: () {
-                    setState(() {
-                      showAllPin = true;
-                    });
-                  },
-                  child: const Text(
-                    "Xem tất cả",
+        child: Row(
+          children: [
+            const SizedBox(width: 5),
+            const Icon(Icons.message_rounded, color: Colors.blue),
+            const SizedBox(width: 5),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Tin nhắn",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-        ],
+                Text("${thread.user!.name}: $text"),
+              ],
+            ),
+            const Spacer(),
+            pinThreads.length <= 1 || showAllPin
+                ? Container()
+                : TextButton(
+                    onPressed: () {
+                      setState(() {
+                        showAllPin = true;
+                      });
+                    },
+                    child: const Text(
+                      "Xem tất cả",
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }

@@ -93,7 +93,7 @@ class MyAppRouter {
           // ));
           return MaterialPage(
               child: DetailChatScreen(
-            data: data,
+            data: dataChannel,
           ));
         },
       ),

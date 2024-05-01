@@ -11,7 +11,7 @@ import 'package:zalo_app/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LocalNotifications.init();
+  // await LocalNotifications.init();
 
 //  handle in terminated state
 

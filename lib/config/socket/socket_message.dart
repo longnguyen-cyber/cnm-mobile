@@ -19,4 +19,5 @@ class SocketMessage {
   static const String acceptAddFriend = 'acceptAddFriend';
   static const String rejectAddFriend = 'rejectAddFriend';
   static const String unfriend = 'unfriend';
+  static const String typing = 'typing';
 }

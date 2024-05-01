@@ -225,11 +225,20 @@ class _MainScreenState extends State<MainScreen> {
     SocketConfig.listen(
       SocketEvent.updatedSendThread,
       (response) {
+        var mentions = response['notifications'] != null
+            ? (response['notifications'] as List<dynamic>)
+                .map((e) => e["userId"])
+                .toList()
+            : [];
+
+        if (userExisting!.setting!.notify == false) {
+          return;
+        }
+
         var members = response['members'] != null
             ? (response['members'] as List<dynamic>).map((e) => e).toList()
             : [];
-        print(members.contains(userExisting!.id));
-        if (members.contains(userExisting!.id) ||
+        if (mentions.contains(userExisting!.id) ||
             response["receiveId"] == userExisting!.id) {
           String body = "";
           if (response['messages'] != null &&
@@ -245,6 +254,10 @@ class _MainScreenState extends State<MainScreen> {
           } else {
             //message and file
             body = response['messages']['message'];
+          }
+
+          if (response["type"] == "channel") {
+            body = "${response["user"]["name"]}: $body";
           }
 
           String id = response["type"] == "chat"

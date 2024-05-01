@@ -50,10 +50,18 @@ class _ChatItemState extends State<ChatItem> {
                     height: 80,
                     width: 80,
                     child: Center(
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(map["user"]["avatar"]),
-                      ),
+                      child: map["type"] == "cloud"
+                          ? // use asset image
+                          const CircleAvatar(
+                              radius: 25,
+                              backgroundImage:
+                                  AssetImage("assets/images/clouds.png"),
+                            )
+                          : CircleAvatar(
+                              radius: 25,
+                              backgroundImage:
+                                  NetworkImage(map["user"]["avatar"]),
+                            ),
                     ),
                   )
                 : Row(children: [

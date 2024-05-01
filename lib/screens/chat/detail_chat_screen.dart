@@ -1,10 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +44,7 @@ class DetailChatScreen extends StatefulWidget {
 
 class _DetailChatScreenState extends State<DetailChatScreen> {
   User? userExisting = User();
+  User? userTyping = User();
   FocusNode myFocusNode = FocusNode();
   final messageController = TextEditingController();
   bool isTextNotEmpty = false;
@@ -75,6 +77,8 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
   List<Map<String, String>> mentionsMap = [];
   late bool isMention = false;
   late bool notiAll = false;
+
+  late bool typing = false;
 
   final api = API();
   void setPath() async {
@@ -185,6 +189,31 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     setPath();
     name = widget.data["name"];
 
+    SocketConfig.listen(SocketEvent.typing, (response) {
+      if (mounted) {
+        userTyping = User.fromMap(response["user"]);
+        if (userTyping!.id != userExisting!.id) {
+          if (response["receiveId"] != null) {
+            if (response["receiveId"] == userExisting!.id &&
+                response["chatId"] == widget.data["id"]) {
+              setState(() {
+                typing = true;
+                userTyping = User.fromMap(response["user"]);
+              });
+            }
+          } else if (response["members"] != null) {
+            var members = (response["members"] as List).map((e) => e).toList();
+            if (response["channelId"] == widget.data["id"] &&
+                members.contains(userExisting!.id)) {
+              setState(() {
+                typing = true;
+                userTyping = User.fromMap(response["user"]);
+              });
+            }
+          }
+        }
+      }
+    });
     SocketConfig.listen(SocketEvent.channelWS, (response) {
       String? userId = userExisting!.id;
       var status = response['status'];
@@ -869,6 +898,23 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   ),
                 )
               : Container(),
+          typing
+              ? Positioned(
+                  bottom: 56,
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 50, right: 10),
+                    width: size.width,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      child: Text(
+                        "${userTyping!.name} đang nhập...",
+                        style: const TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                )
+              : Container(),
         ],
       ),
     );
@@ -1070,6 +1116,35 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       }
     }
 
+    typingMsg() {
+      late String receiveId;
+      late dynamic members;
+      String type = widget.data["type"];
+      String id = widget.data["id"];
+      bool isChannel = false;
+      bool isChat = false;
+      type == "channel" ? isChannel = true : isChat = true;
+
+      if (isChannel) {
+        members = widget.data["members"].map((e) => e).toList();
+      } else if (isChat) {
+        receiveId = widget.data["receiverId"];
+      }
+      if (messageController.text.isNotEmpty || fileData.length > 0) {
+        var data = {
+          if (isChannel) ...{
+            "channelId": id,
+            "members": members,
+          } else if (isChat) ...{
+            "chatId": id,
+            "receiveId": receiveId,
+          }
+        };
+
+        SocketConfig.emit(SocketMessage.typing, data);
+      }
+    }
+
     return Row(
       children: [
         IconButton(
@@ -1116,8 +1191,10 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             controller: messageController,
             focusNode: myFocusNode,
             onChanged: (value) {
+              if (value.isNotEmpty) {
+                typingMsg();
+              }
               String textTyping = value.split(" ").last;
-
               if (textTyping.contains("@")) {
                 setState(() {
                   isMention = true;
@@ -1323,7 +1400,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
     late String cloudId;
     String type = widget.data["type"];
     String id = widget.data["id"];
-    print(widget.data);
     bool isChannel = false;
     bool isChat = false;
     bool isCloud = false;
@@ -1363,16 +1439,15 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       setState(() {
         _reply = false;
       });
-      print(data);
 
-      // SocketConfig.emit(SocketMessage.sendThread, data);
+      SocketConfig.emit(SocketMessage.sendThread, data);
 
-      // if (messageController.text.isNotEmpty) {
-      //   setState(() {
-      //     isTextNotEmpty = false;
-      //   });
-      //   messageController.clear();
-      // }
+      if (messageController.text.isNotEmpty) {
+        setState(() {
+          isTextNotEmpty = false;
+        });
+        messageController.clear();
+      }
     }
   }
 }

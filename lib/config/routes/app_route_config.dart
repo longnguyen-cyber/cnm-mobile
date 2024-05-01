@@ -65,13 +65,13 @@ class MyAppRouter {
             "name": "cloud của tôi",
             "type": "cloud",
           };
-          return buildPageWithDefaultTransition<void>(
-            context: context,
-            state: state,
-            child: MainScreen(
-              index: 0,
-            ),
-          );
+          // return buildPageWithDefaultTransition<void>(
+          //   context: context,
+          //   state: state,
+          //   child: MainScreen(
+          //     index: 0,
+          //   ),
+          // );
 
           // return MaterialPage(
           //     child: DetailChatScreen(
@@ -91,10 +91,10 @@ class MyAppRouter {
           //   url: Uri.parse(
           //       "https://workchatprod.s3.ap-southeast-1.amazonaws.com/2024-04-05+19-07-31.mp4"),
           // ));
-          // return MaterialPage(
-          //     child: DetailChatScreen(
-          //   data: dataChannel,
-          // ));
+          return MaterialPage(
+              child: DetailChatScreen(
+            data: data,
+          ));
         },
       ),
       GoRoute(

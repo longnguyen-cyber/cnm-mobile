@@ -68,11 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
           "lastedThread": {
             "messages": {"message": message}
           },
-          "user": {
-            "avatar":
-                "https://workchatprod.s3.ap-southeast-1.amazonaws.com/memmme.jpg",
-            "name": "Cloud của tôi"
-          },
+          "user": {"avatar": "clouds.png", "name": "Cloud của tôi"},
         };
       });
     }
@@ -248,18 +244,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // all.insert(0, {
-    //   "id": "0",
-    //   "timeThread": "2021-09-01T00:00:00.000Z",
-    //   "lastedThread": {
-    //     "messages": {"message": "Xin chào"}
-    //   },
-    //   "user": {
-    //     "avatar":
-    //         "https://workchatprod.s3.ap-southeast-1.amazonaws.com/memmme.jpg",
-    //     "name": "Cloud của tôi"
-    //   },
-    // });
     return ListView(
       children: [
         cloud != null

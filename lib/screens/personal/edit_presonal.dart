@@ -165,71 +165,51 @@ class _EditPersonState extends State<EditPerson> {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             mainAxisSize: MainAxisSize.max,
                             children: <Widget>[
-                              ElevatedButton(
-                                style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all(Colors.white),
-                                  foregroundColor:
-                                      MaterialStateProperty.all(Colors.black),
-                                  padding: MaterialStateProperty.all(
-                                      const EdgeInsets.symmetric(
-                                          horizontal: 100, vertical: 15)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 100, vertical: 15),
+                                child: ElevatedButton(
+                                  onPressed: () async => {
+                                    result = await FilePicker.platform
+                                        .pickFiles(
+                                            withReadStream: true,
+                                            type: FileType.custom,
+                                            allowedExtensions: [
+                                          'jpg',
+                                          'jpeg',
+                                          'png'
+                                        ]),
+                                    // dynamic bytes = await image.readAsBytes(),
+                                    uploadImage(result!.files.first),
+                                    if (result == null)
+                                      {}
+                                    else
+                                      // ignore: unused_local_variable
+                                      {for (var element in result!.files) {}}
+                                  },
+                                  child: const Text('Cập nhật hình ảnh'),
                                 ),
-                                onPressed: () async => {
-                                  result = await FilePicker.platform.pickFiles(
-                                      withReadStream: true,
-                                      type: FileType.custom,
-                                      allowedExtensions: [
-                                        'jpg',
-                                        'jpeg',
-                                        'png'
-                                      ]),
-                                  // dynamic bytes = await image.readAsBytes(),
-                                  uploadImage(result!.files.first),
-                                  if (result == null)
-                                    {}
-                                  else
-                                    // ignore: unused_local_variable
-                                    {for (var element in result!.files) {}}
-                                },
-                                child: const Text('Cập nhật hình ảnh'),
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 100, vertical: 15),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    GoRouter.of(context).pushNamed(
+                                        MyAppRouteConstants.fullRouteName,
+                                        extra: userExisting!.avatar!);
+                                  },
+                                  child: const Text('Xem hình ảnh'),
+                                ),
                               ),
                               const SizedBox(
                                 height: 5,
                               ),
                               ElevatedButton(
-                                style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all(Colors.white),
-                                  foregroundColor:
-                                      MaterialStateProperty.all(Colors.black),
-                                  shadowColor: MaterialStateColor.resolveWith(
-                                      (states) => Colors.black),
-                                  padding: MaterialStateProperty.all(
-                                      const EdgeInsets.symmetric(
-                                          horizontal: 100, vertical: 15)),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  GoRouter.of(context).pushNamed(
-                                      MyAppRouteConstants.fullRouteName,
-                                      extra: userExisting!.avatar!);
-                                },
-                                child: const Text('Xem hình ảnh'),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              ElevatedButton(
-                                style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all(Colors.white),
-                                  foregroundColor:
-                                      MaterialStateProperty.all(Colors.red),
-                                  padding: MaterialStateProperty.all(
-                                      const EdgeInsets.symmetric(
-                                          horizontal: 100, vertical: 15)),
-                                ),
                                 onPressed: () => Navigator.pop(context),
                                 child: const Text('Đóng'),
                               ),

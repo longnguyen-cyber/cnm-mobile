@@ -11,6 +11,8 @@ class LocalNotifications {
   static void onNotificationTap(NotificationResponse notificationResponse) {
     int id = notificationResponse.payload.hashCode;
     messagesMap.remove(id);
+    print('onNotificationTap: ${notificationResponse.payload}');
+    print(messagesMap);
 
     onClickNotification.add(notificationResponse.payload!);
   }
@@ -57,6 +59,9 @@ class LocalNotifications {
       messagesMap[id] = [];
     }
     messagesMap[id]!.add(body);
+    print(messagesMap);
+    print('showSimpleNotification: $payload');
+    print('showSimpleNotification: $body');
 
     // Create the notification with all messages for this ID
     AndroidNotificationDetails androidNotificationDetails =

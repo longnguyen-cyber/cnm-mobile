@@ -94,6 +94,7 @@ class _EditSettingState extends State<EditSetting> {
       user.setting!.blockGuest = blockGuest;
       prefs.setString(token, user.toJson());
     }
+    print(prefs.getString(token));
   }
 
   @override

@@ -65,13 +65,19 @@ class MyAppRouter {
             "name": "cloud của tôi",
             "type": "cloud",
           };
-          // return buildPageWithDefaultTransition<void>(
-          //   context: context,
-          //   state: state,
-          //   child: MainScreen(
-          //     index: 0,
-          //   ),
-          // );
+
+          /// The above Dart code is using a function `buildPageWithDefaultTransition` to build a page
+          /// with a default transition in a Flutter application. It passes the `context` and `state`
+          /// parameters, along with a `MainScreen` widget as a child with an index of 0. This code
+          /// snippet is likely used to navigate to the `MainScreen` with a specific index within the
+          /// application.
+          return buildPageWithDefaultTransition<void>(
+            context: context,
+            state: state,
+            child: MainScreen(
+              index: 0,
+            ),
+          );
 
           // return MaterialPage(
           //     child: DetailChatScreen(
@@ -93,7 +99,7 @@ class MyAppRouter {
           // ));
           return MaterialPage(
               child: DetailChatScreen(
-            data: dataChannel,
+            data: data,
           ));
         },
       ),

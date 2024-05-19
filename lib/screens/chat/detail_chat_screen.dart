@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -397,7 +396,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             data["replysTo"] = response["replysTo"];
             data["isReply"] = true;
           }
-
           Thread thread = Thread.fromMap(data);
           if (members.contains(userExisting!.id)) {
             var index = threadsChannel.length - 1;
@@ -634,7 +632,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                   isRecall: thread.isRecall,
                                   isReply: thread.isReply,
                                   id: widget.data["id"],
-                                  isPin: thread.pin!,
+                                  isPin: thread.pin ?? false,
                                   replyThread: thread.isReply == true
                                       ? thread.replysTo
                                       : null,
@@ -663,7 +661,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                                       : "",
                                   messageType: MessageType.text,
                                   timeSent: thread.createdAt!,
-                                  isPin: thread.pin!,
+                                  isPin: thread.pin ?? false,
                                   onFuctionReply: (sender, content, stoneId) {
                                     setState(() {
                                       _reply = true;
@@ -1203,7 +1201,11 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       String id = widget.data["id"];
       bool isChannel = false;
       bool isChat = false;
-      type == "channel" ? isChannel = true : isChat = true;
+      type == "channel"
+          ? isChannel = true
+          : type == "chat"
+              ? isChat = true
+              : null;
 
       if (isChannel) {
         members = widget.data["members"].map((e) => e).toList();
@@ -1304,7 +1306,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
                   }
                 }
               }
-
               setState(() {
                 isTextNotEmpty = value.isNotEmpty;
               });
@@ -1509,12 +1510,13 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
             : isCloud = true;
 
     if (isChannel) {
-      members = widget.data["members"].map((e) => e).toList();
+      members = widget.data["members"].map((e) => e["id"]).toList();
     } else if (isChat) {
       receiveId = widget.data["receiverId"];
     } else {
       cloudId = widget.data["id"];
     }
+
     if (messageController.text.isNotEmpty || fileData.length > 0) {
       var data = {
         if (messageController.text.isNotEmpty)
@@ -1538,7 +1540,6 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       setState(() {
         _reply = false;
       });
-
       SocketConfig.emit(SocketMessage.sendThread, data);
 
       if (messageController.text.isNotEmpty) {

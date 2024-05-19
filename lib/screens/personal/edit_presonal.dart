@@ -158,7 +158,7 @@ class _EditPersonState extends State<EditPerson> {
                     context: context,
                     builder: (BuildContext context) {
                       return Container(
-                        height: 150,
+                        height: 170,
                         color: Colors.black,
                         child: Center(
                           child: Column(
@@ -194,6 +194,9 @@ class _EditPersonState extends State<EditPerson> {
                                 },
                                 child: const Text('Cập nhật hình ảnh'),
                               ),
+                              const SizedBox(
+                                height: 5,
+                              ),
                               ElevatedButton(
                                 style: ButtonStyle(
                                   backgroundColor:
@@ -213,6 +216,9 @@ class _EditPersonState extends State<EditPerson> {
                                       extra: userExisting!.avatar!);
                                 },
                                 child: const Text('Xem hình ảnh'),
+                              ),
+                              const SizedBox(
+                                height: 5,
                               ),
                               ElevatedButton(
                                 style: ButtonStyle(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/blocs/bloc_user/user_cubit.dart';
 import 'package:zalo_app/config/routes/app_route_config.dart';
@@ -11,19 +12,19 @@ import 'package:zalo_app/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await LocalNotifications.init();
+  await LocalNotifications.init();
 
 //  handle in terminated state
 
   // SharedPreferences prefs = await SharedPreferences.getInstance();
   // prefs.clear();
   await dotenv.load(fileName: "lib/.env");
-  // await FlutterDownloader.initialize(
-  //     debug:
-  //         true, // optional: set to false to disable printing logs to console (default: true)
-  //     ignoreSsl:
-  //         true // option: set to false to disable working with http links (default: false)
-  //     );
+  await FlutterDownloader.initialize(
+      debug:
+          true, // optional: set to false to disable printing logs to console (default: true)
+      ignoreSsl:
+          true // option: set to false to disable working with http links (default: false)
+      );
   runApp(MyApp(
     userService: UserService(),
   ));

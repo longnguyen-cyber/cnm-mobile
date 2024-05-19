@@ -123,9 +123,6 @@ class _ChatItemState extends State<ChatItem> {
                             : map["lastedThread"]["messages"]["message"]
                                 .toString())
                         : "New message"),
-                    style: map["lastedThread"] != null
-                        ? unReadMessageStyle
-                        : readMessageStyle,
                   )
                 ],
               ),
@@ -140,9 +137,6 @@ class _ChatItemState extends State<ChatItem> {
                     map["timeThread"],
                   ),
                 ),
-                style: map["lastedThread"] != null
-                    ? unReadMessageStyle.merge(const TextStyle(fontSize: 12))
-                    : readMessageStyle.merge(const TextStyle(fontSize: 12)),
               ),
             )
           ],

@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -97,8 +96,6 @@ class _CreateChannelScreenState extends State<CreateChannelScreen>
     SocketConfig.emit(SocketMessage.createChannel, obj);
   }
 
-  late final TabController _tabController =
-      TabController(length: 2, vsync: this);
   late String name = "";
   @override
   Widget build(BuildContext context) {

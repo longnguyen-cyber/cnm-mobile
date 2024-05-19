@@ -211,6 +211,39 @@ class _PersonState extends State<Person> {
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                InkWell(
+                  onTap: () {
+                    logout();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        const Icon(
+                          Icons.lock_outline,
+                          size: 30,
+                        ),
+                        const SizedBox(
+                          width: 3,
+                        ),
+                        SizedBox(
+                          width: size.width * 0.8,
+                          child: const Text(
+                            "Đăng xuất",
+                            style: TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Icon(Icons.logout)),
+                      ],
+                    ),
+                  ),
                 )
               ],
             ),

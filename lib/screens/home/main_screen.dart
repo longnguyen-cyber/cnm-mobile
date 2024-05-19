@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:zalo_app/config/socket/socket.dart';
 import 'package:zalo_app/config/socket/socket_event.dart';
@@ -201,27 +203,42 @@ class _MainScreenState extends State<MainScreen> {
   late String _token = "";
   late dynamic dataRouter = null;
   User? userExisting = User();
-
+  StreamSubscription? _notificationSubscription;
   listenToNotifications() {
     LocalNotifications.onClickNotification.stream.listen((event) {
-      // Navigator.pushNamed(context, routeName, arguments: event);
-      if (dataRouter != null) {
+      if (dataRouter != null && mounted) {
         GoRouter.of(context).pushNamed(MyAppRouteConstants.detailChatRouteName,
             extra: dataRouter);
-        if (mounted) {
-          setState(() {
-            dataRouter = null;
-          });
-        }
+        setState(() {
+          dataRouter = null;
+        });
       }
     });
   }
 
   @override
-  void initState() {
-    super.initState();
-    fetchToken();
-    fecthUser();
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  void notify() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token") ?? "";
+
+    var userOfToken = prefs.getString(token) ?? "";
+    if (mounted) {
+      if (userOfToken != "") {
+        User userCurrent = User.fromJson(userOfToken);
+        // prefs.setString(response.data["data"]["token"], user.toJson());
+        var responseUser = await api.get("users/${userCurrent.id}/profile", {});
+        User userUpdate = User.fromMap(responseUser["data"]);
+        prefs.setString(_token, userUpdate.toJson());
+        setState(() {
+          userExisting = userCurrent;
+        });
+      }
+    }
     SocketConfig.listen(
       SocketEvent.updatedSendThread,
       (response) {
@@ -272,6 +289,7 @@ class _MainScreenState extends State<MainScreen> {
             payload: id,
             uniqueId: id,
           );
+          print("notification");
           if (mounted) {
             setState(() {
               dataRouter = {
@@ -283,10 +301,18 @@ class _MainScreenState extends State<MainScreen> {
               };
             });
           }
+          listenToNotifications();
         }
       },
     );
-    listenToNotifications();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchToken();
+    fecthUser();
+    notify();
 
     if (widget.index == null) {
       setState(() {
@@ -317,7 +343,6 @@ class _MainScreenState extends State<MainScreen> {
   void fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
-
     setState(() {
       _token = token;
     });

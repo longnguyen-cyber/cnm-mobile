@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
-import 'package:zalo_app/utils/constants.dart';
 
 class ChatItem extends StatefulWidget {
   const ChatItem({

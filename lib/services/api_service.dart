@@ -89,19 +89,10 @@ class API {
         ),
       );
 
-      print(response);
       return response.data;
     } catch (error) {
+      // ignore: deprecated_member_use
       if (error is DioError) {
-        // Here's the error message
-        print("Dio error: ${error.message}");
-
-        // Here's the error response data
-        print("Dio error response data: ${error.response?.data}");
-
-        // Here's the request that caused the error
-        print("Dio error request: ${error.requestOptions.path}");
-
         // Handle the error
         if (error.response?.statusCode == 400) {
           return {"status": 400};

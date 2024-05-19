@@ -10,7 +10,7 @@ import 'package:zalo_app/services/api_service.dart';
 import 'package:zalo_app/utils/valid.dart';
 
 class EditSetting extends StatefulWidget {
-  const EditSetting({Key? key}) : super(key: key);
+  const EditSetting({super.key});
   @override
   State<EditSetting> createState() => _EditSettingState();
 }
@@ -94,7 +94,6 @@ class _EditSettingState extends State<EditSetting> {
       user.setting!.blockGuest = blockGuest;
       prefs.setString(token, user.toJson());
     }
-    print(prefs.getString(token));
   }
 
   @override

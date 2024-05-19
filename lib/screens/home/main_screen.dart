@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_init_to_null
+
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -127,7 +129,7 @@ class _BottomNavigatorsState extends State<BottomNavigator>
             size: 18,
           ),
 
-          waitList.length == 0
+          waitList.isEmpty
               ? const SizedBox()
               : Container(
                   color: Colors.black,
@@ -289,7 +291,6 @@ class _MainScreenState extends State<MainScreen> {
             payload: id,
             uniqueId: id,
           );
-          print("notification");
           if (mounted) {
             setState(() {
               dataRouter = {

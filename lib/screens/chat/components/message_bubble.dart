@@ -110,15 +110,7 @@ class _MessageBubbleState extends State<MessageBubble> {
   initDownloader() async {
     IsolateNameServer.registerPortWithName(
         _port.sendPort, 'downloader_send_port');
-    _port.listen((dynamic data) {
-      String id = data[0];
-      DownloadTaskStatus status = data[1];
-      int progress = data[2];
-      if (status == DownloadTaskStatus.complete) {
-        print("download complete");
-      }
-      setState(() {});
-    });
+    _port.listen((dynamic data) {});
 
     FlutterDownloader.registerCallback(downloadCallback);
   }

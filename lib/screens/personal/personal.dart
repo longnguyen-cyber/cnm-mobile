@@ -9,7 +9,7 @@ import 'package:zalo_app/model/user.model.dart';
 import 'package:zalo_app/services/api_service.dart';
 
 class Person extends StatefulWidget {
-  const Person({Key? key}) : super(key: key);
+  const Person({super.key});
   @override
   State<Person> createState() => _PersonState();
 }

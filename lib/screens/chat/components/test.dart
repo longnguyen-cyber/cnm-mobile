@@ -7,7 +7,6 @@ class BottomSheetApp extends StatelessWidget {
   final dynamic data;
   @override
   Widget build(BuildContext context) {
-    print(data);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Bottom Sheet Sample')),

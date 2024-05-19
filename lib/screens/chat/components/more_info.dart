@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
+// ignore_for_file: avoid_init_to_null
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zalo_app/config/routes/app_route_constants.dart';
@@ -54,7 +54,6 @@ class _MoreInfoState extends State<MoreInfo> {
       User admin = channel!.users!.firstWhere(
         (element) => element.id == currentUser.id!,
       );
-      print(admin);
       if (admin.role! == "ADMIN") {
         setState(() {
           isAdmin = true;

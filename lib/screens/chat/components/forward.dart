@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:zalo_app/config/socket/socket.dart';
@@ -6,7 +8,7 @@ import 'package:zalo_app/model/chat.model.dart';
 import 'package:zalo_app/services/api_service.dart';
 
 class Forward extends StatefulWidget {
-  const Forward({Key? key, required this.content}) : super(key: key);
+  const Forward({super.key, required this.content});
   final String content;
 
   @override

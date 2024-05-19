@@ -32,45 +32,6 @@ class MyAppRouter {
         name: MyAppRouteConstants.mainRouteName,
         path: '/',
         pageBuilder: (context, state) {
-          // return MaterialPage(child: BottomSheetApp());
-          // return MaterialPage(
-          //     child: MoreInfo(
-          //   data: {
-          //     "type": "channel",
-          //     "data": {
-          //       "id": "661e2a10db85acbc89a5732c",
-          //       "name": "update socket channel 300",
-          //       "type": "channel",
-          //       "members": [
-          //         "65bceb94ceda5567efc0b629",
-          //         "65dd4ae4cbeffa04dbbc5b16"
-          //       ]
-          //     }
-          //   },
-          // ));
-          dynamic data = {
-            "id": "661de3d568d65e1a851a2e2e",
-            "name": "nesdw",
-            "type": "chat",
-            "receiverId": "65dd4ae4cbeffa04dbbc5b16",
-          };
-          dynamic dataChannel = {
-            "id": "661e2a10db85acbc89a5732c",
-            "name": "update socket channel 300",
-            "type": "channel",
-            "members": ["65bceb94ceda5567efc0b629", "65dd4ae4cbeffa04dbbc5b16"]
-          };
-          dynamic dataCloud = {
-            "id": "661e158bcb9d1afaad63d296",
-            "name": "cloud của tôi",
-            "type": "cloud",
-          };
-
-          /// The above Dart code is using a function `buildPageWithDefaultTransition` to build a page
-          /// with a default transition in a Flutter application. It passes the `context` and `state`
-          /// parameters, along with a `MainScreen` widget as a child with an index of 0. This code
-          /// snippet is likely used to navigate to the `MainScreen` with a specific index within the
-          /// application.
           return buildPageWithDefaultTransition<void>(
             context: context,
             state: state,
@@ -78,29 +39,6 @@ class MyAppRouter {
               index: 0,
             ),
           );
-
-          // return MaterialPage(
-          //     child: DetailChatScreen(
-          //   data: data,
-          // ));
-          // return MaterialPage(child: LoginScreen());
-          // CallPage(callID: "L6KZla12", userID: "Dat", userName: "Đạt"));
-          // MainScreen());
-          // return const MaterialPage(
-          //     child: DetailChatScreen(
-          //   id: "65e480261644570261cadca4",
-          //   type: "channel",
-          //   name: "lam dep",
-          // ));
-          // return MaterialPage(
-          //     child: VideoPlayerPage(
-          //   url: Uri.parse(
-          //       "https://workchatprod.s3.ap-southeast-1.amazonaws.com/2024-04-05+19-07-31.mp4"),
-          // ));
-          return MaterialPage(
-              child: DetailChatScreen(
-            data: data,
-          ));
         },
       ),
       GoRoute(
@@ -207,7 +145,6 @@ class MyAppRouter {
         pageBuilder: (context, state) {
           dynamic params = state.extra as dynamic;
           dynamic data;
-          print("params: $params");
           if (params["type"] == "channel") {
             data = {
               "id": params["id"],

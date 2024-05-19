@@ -65,8 +65,6 @@ class AddMemberState extends State<AddMember> with TickerProviderStateMixin {
 
     if (mounted) {
       setState(() {
-        // if(responseSearch["data"])
-        print(responseSearch["data"]);
         searchFriends = (responseSearch["data"] as List)
             .map((e) => Chat.fromMap(e))
             .toList();

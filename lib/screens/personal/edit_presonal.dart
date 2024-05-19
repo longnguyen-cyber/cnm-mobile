@@ -15,7 +15,7 @@ import 'package:zalo_app/services/api_service.dart';
 import 'package:zalo_app/utils/valid.dart';
 
 class EditPerson extends StatefulWidget {
-  const EditPerson({Key? key}) : super(key: key);
+  const EditPerson({super.key});
   @override
   State<EditPerson> createState() => _EditPersonState();
 }

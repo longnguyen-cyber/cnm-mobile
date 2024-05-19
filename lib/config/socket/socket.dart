@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 // ignore: library_prefixes
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -17,7 +18,9 @@ class SocketConfig {
             }) // set the authorization header
             .build());
     socket.connect();
-    print('Connected to the socket server');
+    if (kDebugMode) {
+      print('Connected to the socket server');
+    }
   }
 
   //disconnect from the socket server

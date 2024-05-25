@@ -1120,7 +1120,7 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
         final FlutterSoundHelper audioHelper = FlutterSoundHelper();
 
         // Convert the audio file to mp3
-        final String mp3Path = path!.replaceFirst('.wav', '.mp3');
+        final String mp3Path = path.replaceFirst('.wav', '.mp3');
         await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
         // Now you have an mp3 file at the path mp3Path
         path = mp3Path;

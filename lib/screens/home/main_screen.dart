@@ -241,7 +241,6 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     }
-    print(userExisting!);
     SocketConfig.listen(
       SocketEvent.updatedSendThread,
       (response) {

@@ -42,6 +42,7 @@ class _MoreInfoState extends State<MoreInfo> {
 
   final api = API();
   void _isAdmin() async {
+    print(channel);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token") ?? "";
     var userOfToken = prefs.getString(token) ?? "";
@@ -51,9 +52,10 @@ class _MoreInfoState extends State<MoreInfo> {
       setState(() {
         userId = currentUser.id!;
       });
-      User admin = channel!.users!.firstWhere(
+      User admin = widget.data["data"].channel!.users!.firstWhere(
         (element) => element.id == currentUser.id!,
       );
+      print(admin.role!);
       if (admin.role! == "ADMIN") {
         setState(() {
           isAdmin = true;

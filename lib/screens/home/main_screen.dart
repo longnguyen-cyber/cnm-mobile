@@ -241,6 +241,7 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     }
+    print(userExisting!);
     SocketConfig.listen(
       SocketEvent.updatedSendThread,
       (response) {
@@ -249,6 +250,8 @@ class _MainScreenState extends State<MainScreen> {
                 .map((e) => e["userId"])
                 .toList()
             : [];
+
+        // print(userExisting);
 
         if (userExisting!.setting!.notify == false) {
           return;
@@ -313,7 +316,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     fetchToken();
     fecthUser();
-    notify();
+    // notify();
 
     if (widget.index == null) {
       setState(() {

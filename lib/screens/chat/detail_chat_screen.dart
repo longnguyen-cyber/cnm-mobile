@@ -1115,45 +1115,46 @@ class _DetailChatScreenState extends State<DetailChatScreen> {
       var path = await audioRecord.stop();
       var uuid = const Uuid();
       String randomFileName = uuid.v4();
+      if (path != null) {
+        // Create an instance of FlutterSoundHelper
+        final FlutterSoundHelper audioHelper = FlutterSoundHelper();
 
-      // Create an instance of FlutterSoundHelper
-      final FlutterSoundHelper audioHelper = FlutterSoundHelper();
+        // Convert the audio file to mp3
+        final String mp3Path = path!.replaceFirst('.wav', '.mp3');
+        await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
+        // Now you have an mp3 file at the path mp3Path
+        path = mp3Path;
+        // Read the mp3 file as bytes
+        final mp3File = File(mp3Path);
+        FileModel fileModel = FileModel(path: mp3Path);
+        setState(() {
+          threads.add(Thread(
+              files: [fileModel],
+              createdAt: DateTime.now().subtract(const Duration(hours: 7)),
+              user: userExisting,
+              stoneId: "11111111"));
+        });
+        final bytes = await mp3File.readAsBytes();
 
-      // Convert the audio file to mp3
-      final String mp3Path = path!.replaceFirst('.wav', '.mp3');
-      await audioHelper.convertFile(path, Codec.pcm16WAV, mp3Path, Codec.mp3);
-      // Now you have an mp3 file at the path mp3Path
-      path = mp3Path;
-      // Read the mp3 file as bytes
-      final mp3File = File(mp3Path);
-      FileModel fileModel = FileModel(path: mp3Path);
-      setState(() {
-        threads.add(Thread(
-            files: [fileModel],
-            createdAt: DateTime.now().subtract(const Duration(hours: 7)),
-            user: userExisting,
-            stoneId: "11111111"));
-      });
-      final bytes = await mp3File.readAsBytes();
+        // Get the file extension and size
+        final extension = mp3Path.split(".").last;
+        final size = bytes.length;
 
-      // Get the file extension and size
-      final extension = mp3Path.split(".").last;
-      final size = bytes.length;
+        // Create the data object
+        var data = {
+          "filename": randomFileName + p.basename(mp3File.path),
+          "extension": extension,
+          "size": size,
+          "bytes": bytes,
+        };
 
-      // Create the data object
-      var data = {
-        "filename": randomFileName + p.basename(mp3File.path),
-        "extension": extension,
-        "size": size,
-        "bytes": bytes,
-      };
-
-      final response = await api.uploadFile(data);
-      setState(() {
-        fileData = [response];
-      });
-      _sendMessage();
-      Navigator.pop(context);
+        final response = await api.uploadFile(data);
+        setState(() {
+          fileData = [response];
+        });
+        _sendMessage();
+        Navigator.pop(context);
+      }
     }
 
     triggerMentions(String text) {

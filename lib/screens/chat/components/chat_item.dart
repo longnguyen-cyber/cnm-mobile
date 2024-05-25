@@ -113,16 +113,19 @@ class _ChatItemState extends State<ChatItem> {
                     height: size.height * 0.01,
                   ),
                   Text(
-                    (map["lastedThread"] != null
-                        ? (map["lastedThread"]["messages"]["message"]
-                                    .toString()
-                                    .length >
-                                30
-                            ? "${map["lastedThread"]["messages"]["message"].toString().substring(0, 30)}..."
-                            : map["lastedThread"]["messages"]["message"]
-                                .toString())
-                        : "New message"),
-                  )
+                      (map["lastedThread"] != null
+                          ? (map["lastedThread"]["messages"]["message"]
+                                      .toString()
+                                      .length >
+                                  30
+                              ? "${map["lastedThread"]["messages"]["message"].toString().substring(0, 30)}..."
+                              : map["lastedThread"]["messages"]["message"]
+                                  .toString())
+                          : "New message"),
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ))
                 ],
               ),
             ),

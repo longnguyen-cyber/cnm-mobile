@@ -41,7 +41,6 @@ class _FriendTabScreenState extends State<FriendTabScreen>
 
     final responseWaitList = await api.get(urlWaitList, {});
     final responseWhiteList = await api.get(urlWhiteList, {});
-
     if (mounted) {
       setState(() {
         waitList = (responseWaitList["data"] as List)
@@ -204,6 +203,15 @@ class _FriendItemState extends State<FriendItem> {
     );
   }
 
+  void unReqAddFriend(String chatId) {
+    SocketConfig.emit(
+      SocketMessage.unReqAddFriend,
+      {
+        "chatId": chatId,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -275,6 +283,7 @@ class _FriendItemState extends State<FriendItem> {
                           child: ElevatedButton(
                             onPressed: () {
                               rejectFriend(chat.id!);
+                              unReqAddFriend(chat.id!);
                             },
                             child: const Icon(
                               Icons.close,
